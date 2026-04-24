@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDu0yqIgogNxij1umCllgxJbF5AVEC3Ano",
@@ -14,6 +15,11 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// ✅ عرف variables عادي (بدون export هنا)
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functions = getFunctions(app, "us-central1"); // 🔥 مهم جدًا
+
+
+// ✅ export مرة واحدة بس
+export { auth, db, functions };

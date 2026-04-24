@@ -7,10 +7,11 @@ import {
   setDoc,
   updateDoc
 } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { db, auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../store/useAuth";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebase";
 const ALL_PERMISSIONS = [
   "view_dashboard",
   "view_sales",
@@ -101,57 +102,34 @@ export default function Users() {
 
   // 🔐 Create
   const handleCreateUser = async () => {
-    const { name, email, password, role, branchId } = newUser;
+  const { name, email, password, role, branchId } = newUser;
 
-    if (!name || !email || !password) {
-      alert("كمل البيانات ❗");
-      return;
-    }
+  if (!name || !email || !password) {
+    alert("كمل البيانات ❗");
+    return;
+  }
 
-    if ((role === "branch_manager" || role === "employee") && !branchId) {
-      alert("اختار الفرع ❗");
-      return;
-    }
+  try {
+    const createUserFn = httpsCallable(functions, "createUser");
 
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
+await createUserFn({
+  name,
+  email,
+  password,
+  role,
+  branchId
+});
 
-      await setDoc(doc(db, "users", uid), {
-        name,
-        email,
-        role,
-        status: "active", // 🔥 جديد
-        ...(role !== "admin" && { branchId }),
-        
+    alert("User created successfully ✅");
 
-        // 🔥 permissions
-        permissions:
-  role === "admin"
-    ? ["*"]
-    : selectedPermissions.length
-    ? selectedPermissions
-    : ROLE_PERMISSIONS[role]
-      });
+    setShowModal(false);
+    fetchData();
 
-      setShowModal(false);alert("User created successfully ✅");
-      setSearch("");
-      setFilterBranch("all");
-
-      setNewUser({
-        name: "",
-        email: "",
-        password: "",
-        role: "employee",
-        branchId: ""
-      });
-
-      fetchData();
-
-    } catch (err) {
-      alert("في مشكلة ❌");
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("في مشكلة ❌");
+  }
+};
 
   // ❌ Delete
   const handleDelete = async (id) => {

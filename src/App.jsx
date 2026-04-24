@@ -17,8 +17,6 @@ import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Waste from "./pages/Waste";
 import Returns from "./pages/Returns";
-
-// ✅ NEW
 import Invoices from "./pages/Invoices";
 
 import Layout from "./components/Layout";
@@ -31,100 +29,105 @@ function App() {
 
   return (
     <>
-   <div className="global-bg-logo"></div>
-    <Router>
-      <Routes>
+      <div className="global-bg-logo"></div>
 
-        {/* 🔓 Login */}
-        <Route
-          path="/login"
-          element={!user ? <Login /> : <Navigate to="/home" />}
-        />
+      <Router>
+        <Routes>
 
-        <Route
-          path="/"
-          element={user ? <Navigate to="/home" /> : <Navigate to="/login" />}
-        />
+          {/* 🔓 Login */}
+          <Route
+            path="/login"
+            element={!user ? <Login /> : <Navigate to="/home" />}
+          />
 
-        {/* 🔐 Protected Layout */}
-        <Route element={user ? <Layout /> : <Navigate to="/login" />}>
+          {/* Root Redirect */}
+          <Route
+            path="/"
+            element={user ? <Navigate to="/home" /> : <Navigate to="/login" />}
+          />
 
-          <Route path="/home" element={<Home />} />
+          {/* 🔐 Protected App */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
 
-          {/* Dashboard */}
-          <Route element={<ProtectedRoute permissions={["view_dashboard"]} />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/home" element={<Home />} />
+
+              {/* Dashboard */}
+              <Route element={<ProtectedRoute permissions={["view_dashboard"]} />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Route>
+
+              {/* Sales */}
+              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+                <Route path="/sales" element={<SalesPage />} />
+              </Route>
+
+              {/* Expenses */}
+              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+                <Route path="/expenses" element={<Expenses />} />
+              </Route>
+
+              {/* Waste */}
+              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+                <Route path="/waste" element={<Waste />} />
+              </Route>
+
+              {/* Returns */}
+              <Route element={<ProtectedRoute permissions={["returns.view"]} />}>
+                <Route path="/returns" element={<Returns />} />
+              </Route>
+
+              {/* Invoices */}
+              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+                <Route path="/invoices" element={<Invoices />} />
+              </Route>
+
+              {/* Reports */}
+              <Route element={<ProtectedRoute permissions={["view_reports"]} />}>
+                <Route path="/reports" element={<Reports />} />
+              </Route>
+
+              {/* Inventory */}
+              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+                <Route path="/inventory" element={<Inventory />} />
+              </Route>
+
+              {/* Purchases */}
+              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+                <Route path="/purchases" element={<Purchases />} />
+              </Route>
+
+              {/* Customers */}
+              <Route element={<ProtectedRoute permissions={["view_customers"]} />}>
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/customers/:id" element={<CustomerProfile />} />
+              </Route>
+
+              {/* Branches */}
+              <Route element={<ProtectedRoute permissions={["view_branches"]} />}>
+                <Route path="/branches" element={<Branches />} />
+              </Route>
+
+              {/* Users */}
+              <Route element={<ProtectedRoute permissions={["view_users"]} />}>
+                <Route path="/users" element={<Users />} />
+              </Route>
+
+              {/* Settings */}
+              <Route element={<ProtectedRoute permissions={["view_settings"]} />}>
+                <Route path="/settings" element={<Settings />} />
+              </Route>
+
+              {/* Operations */}
+              <Route element={<ProtectedRoute permissions={["view_operations"]} />}>
+                <Route path="/operations" element={<Operations />} />
+              </Route>
+
+            </Route>
           </Route>
 
-          {/* Sales */}
-          <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
-            <Route path="/sales" element={<SalesPage />} />
-          </Route>
-
-          {/* Expenses */}
-          <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
-            <Route path="/expenses" element={<Expenses />} />
-          </Route>
-
-          {/* 🔥 Waste */}
-          <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
-            <Route path="/waste" element={<Waste />} />
-          </Route>
-          
-          <Route element={<ProtectedRoute permissions={["returns.view"]} />}>
-          <Route path="/returns" element={<Returns />} />
-        </Route>
-
-          {/* 🧾 Invoices */}
-          <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
-            <Route path="/invoices" element={<Invoices />} />
-          </Route>
-
-          {/* Reports */}
-          <Route element={<ProtectedRoute permissions={["view_reports"]} />}>
-            <Route path="/reports" element={<Reports />} />
-          </Route>
-
-          {/* Inventory */}
-          <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
-            <Route path="/inventory" element={<Inventory />} />
-          </Route>
-
-          {/* Purchases */}
-          <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
-            <Route path="/purchases" element={<Purchases />} />
-          </Route>
-
-          {/* Customers */}
-          <Route element={<ProtectedRoute permissions={["view_customers"]} />}>
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/customers/:id" element={<CustomerProfile />} />
-          </Route>
-
-          {/* Branches */}
-          <Route element={<ProtectedRoute permissions={["view_branches"]} />}>
-            <Route path="/branches" element={<Branches />} />
-          </Route>
-
-          {/* Users */}
-          <Route element={<ProtectedRoute permissions={["view_users"]} />}>
-            <Route path="/users" element={<Users />} />
-          </Route>
-
-          {/* Settings */}
-          <Route element={<ProtectedRoute permissions={["view_settings"]} />}>
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-
-          {/* Operations */}
-          <Route element={<ProtectedRoute permissions={["view_operations"]} />}>
-            <Route path="/operations" element={<Operations />} />
-          </Route>
-
-        </Route>
-
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
     </>
   );
 }

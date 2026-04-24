@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore"; // ✅ مهم
 import { auth, db } from "../firebase";
 
 let authUnsub = null;
-let docUnsub = null;
 
 export const useAuth = create((set) => ({
   user: null,
@@ -13,16 +12,11 @@ export const useAuth = create((set) => ({
   setUser: (user) => set({ user, loading: false }),
 
   initAuth: () => {
-    // امنع تكرار listeners
     if (authUnsub) return;
 
-    authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
-      // اقفل أي subscription قديم على الدوك
-      if (docUnsub) {
-        docUnsub();
-        docUnsub = null;
-      }
+    authUnsub = onAuthStateChanged(auth, async (firebaseUser) => {
 
+      // ❌ لو مفيش user
       if (!firebaseUser) {
         set({ user: null, loading: false });
         return;
@@ -30,43 +24,31 @@ export const useAuth = create((set) => ({
 
       try {
         const userRef = doc(db, "users", firebaseUser.uid);
+        const snap = await getDoc(userRef);
 
-        // 🔥 live data بدل getDoc
-        docUnsub = onSnapshot(
-          userRef,
-          (snap) => {
-            if (!snap.exists()) {
-              set({ user: null, loading: false });
-              return;
-            }
+        // 🔥 تجاهل أي user مش موجود في Firestore
+        if (!snap.exists()) {
+          console.warn("⚠️ Ignored unknown auth user");
+          return;
+        }
 
-            const data = snap.data();
+        const data = snap.data();
 
-            // 🔍 Debug
-            console.log("🔥 LIVE FIRESTORE DATA:", data);
-
-            set({
-              user: {
-              uid: firebaseUser.uid,
-              email: data.email || "",
-              name: data.name || "",
-              role: data.role || "",
-              branchId: data.branchId || "",
-              status: data.status || "active", // 🔥 ده المهم
-
-                // ضمان array
-                permissions: Array.isArray(data.permissions)
-                  ? data.permissions
-                  : Object.values(data.permissions || {})
-              },
-              loading: false
-            });
+        set({
+          user: {
+            uid: firebaseUser.uid,
+            email: data.email || "",
+            name: data.name || "",
+            role: data.role || "",
+            branchId: data.branchId || "",
+            status: data.status || "active",
+            permissions: Array.isArray(data.permissions)
+              ? data.permissions
+              : Object.values(data.permissions || {})
           },
-          (error) => {
-            console.error("Snapshot Error:", error);
-            set({ user: null, loading: false });
-          }
-        );
+          loading: false
+        });
+
       } catch (err) {
         console.error("Auth Error:", err);
         set({ user: null, loading: false });
@@ -76,10 +58,6 @@ export const useAuth = create((set) => ({
 
   logout: async () => {
     try {
-      if (docUnsub) {
-        docUnsub();
-        docUnsub = null;
-      }
       await signOut(auth);
       set({ user: null });
     } catch (err) {
