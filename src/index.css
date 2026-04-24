@@ -1,0 +1,509 @@
+  /* 🔥 Reset */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 🎯 Design System */
+  :root {
+    /* 🎨 Colors */
+    --bg: #f8fafc;
+    --card: #ffffff;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    --border: #e5e7eb;
+
+    /* 🔵 Brand */
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+
+    /* 🟢 Status */
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* 🎭 Effects */
+    --radius: 14px;
+
+    --shadow-sm: 0 4px 10px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 25px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+
+    /* 🧠 Fonts */
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* 🌍 Base */
+  body {
+  font-family: var(--font);
+  background: #f5f3ef;
+  color: var(--text-secondary);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+  /* 🔥 Logo Background */
+  .global-bg-logo {
+  position: fixed;
+  top: 50%;
+  left: 40%;   /* 👈 غير الرقم وهتشوف فرق واضح */
+
+  transform: translateY(-50%);  /* 👈 لغينا X */
+
+  width: 350px;
+  height: 350px;
+  background: url("/logo.png") no-repeat center;
+  background-size: contain;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0  ;
+}
+
+  /* 🧠 Typography */
+  h1, h2, h3, h4 {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  h1 { font-size: clamp(22px, 2vw, 32px); }
+  h2 { font-size: clamp(18px, 1.5vw, 22px); }
+  h3 { font-size: clamp(14px, 1.2vw, 16px); }
+  h4 { font-size: clamp(12px, 1vw, 13px); color: var(--text-muted); }
+
+  p {
+    color: var(--text-secondary);
+    font-size: clamp(13px, 1vw, 14px);
+  }
+
+  /* 📊 Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+  }
+
+  /* 🎯 Colored Cards */
+  .card-blue { background: #eff6ff; }
+  .card-green { background: #ecfdf5; }
+  .card-yellow { background: #fffbeb; }
+
+  /* 🔘 Buttons */
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: clamp(8px, 0.8vw, 12px) clamp(12px, 1vw, 16px);
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  button.primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  button.primary:hover {
+    background: var(--primary-hover);
+  }
+
+  /* 🔍 Inputs */
+  input {
+    width: 100%;
+    padding: clamp(8px, 0.8vw, 12px);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-primary);
+    outline: none;
+    transition: 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+  }
+
+  /* 🧭 Sidebar */
+  .sidebar-item {
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 10px;
+    border-radius: 10px;
+    transition: 0.2s;
+  }
+
+  .sidebar-item:hover {
+    background: #f1f5f9;
+    color: var(--text-primary);
+  }
+
+  .sidebar-active {
+    background: #e0edff;
+    color: var(--primary);
+    font-weight: 600;
+    border-left: 4px solid var(--primary);
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  /* 📊 Stats */
+  .stat-number {
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  /* 🧱 Layout */
+
+  .sidebar {
+    width: 220px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    padding: 8px 6px;
+
+    background: #fff;
+    border-right: 1px solid var(--border);
+  }
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+  }
+  .sidebar-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+  }
+
+  /* 📊 Dashboard Grid */
+  .dashboard-grid {
+    display: grid;
+    gap: clamp(12px, 1.5vw, 20px);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  /* 📦 Cards Row */
+  .cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  /* 📊 Charts */
+  .chart-container {
+    width: 100%;
+    height: 300px;
+  }
+
+  /* 📱 Responsive Sidebar */
+  @media (max-width: 1200px) {
+    .sidebar {
+      width: 200px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar {
+      display: none;
+    }
+  }
+
+  /* 📱 Mobile */
+  @media (max-width: 768px) {
+    .card {
+      padding: 12px;
+    }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    top: 50%;
+    left: 85px;
+    transform: translateY(-50%) scale(0.95);
+    opacity: 0;
+    background: #111;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: 0.15s;
+    z-index: 9999;
+  }
+
+  .tooltip::after {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent #111 transparent transparent;
+  }
+
+  a:hover .tooltip {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  @media (max-width: 1000px) {
+  .sales-layout {
+    grid-template-columns: 1fr;
+  }
+}
+  html {
+  font-size: 13px; /* 👈 كان 15 تقريبًا */
+}
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 12px 10px;
+  }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    
+  }
+  
+  .product-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 8px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04); /* 👈 جديد */
+
+    transition: 0.15s ease;
+  }
+  /* hover */
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    border-color: #dbeafe;
+  }
+
+  /* ضغط */
+  .product-card:active {
+    transform: scale(0.97);
+  }
+  .stock-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stock-badge.in {
+    background: #ecfdf5;
+    color: #16a34a;
+  }
+
+  .stock-badge.low {
+    background: #fffbeb;
+    color: #f59e0b;
+  }
+
+  .stock-badge.out {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  .middle-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .top-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between; /* 👈 ده الجديد */
+  }
+  .sales-layout {
+    grid-template-columns: 170px 1fr;
+    display: grid;
+    gap: 4px;
+  }
+
+  /* الشمال */
+  .left-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* 👈 ده المهم */
+  align-items: flex-start;
+  gap: 6px;
+  padding-right: 4px;
+  height: 100%;              /* 👈 مهم */
+}
+
+  /* الكارت */
+  
+
+.cart-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cart-footer {
+  border-top: 1px solid #eee;
+  padding: 10px;
+  background: white;
+}
+
+.payment-methods {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.payment-methods button {
+  flex: 1;
+  min-width: 80px;
+}
+.cart-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.cart-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: transparent;
+  color: #5c4432;
+  border: 1px solid #e6d3a3;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cart-btn:hover {
+  background: #c9a96e;
+  color: #fff;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  transition: 0.2s;
+}
+
+/* 👇 الأيقونات */
+.cat-item svg {
+  opacity: 0.7;
+}
+
+/* hover */
+.cat-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* active */
+.cat-item.active {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 👇 لما تبقى active */
+.cat-item.active svg {
+  opacity: 1;
+} 
+.cat-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+/* 🔲 Overlay */
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+  transition: 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.cart-overlay.open {
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+/* 📦 Cart Panel */
+.cart-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100%;
+  background: #fff;
+
+  transform: translateX(100%) scale(0.98);
+  opacity: 0;
+
+  transition: 
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease;
+
+  box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+  border-radius: 20px 0 0 20px;
+}
+
+/* 🔥 عند الفتح */
+.cart-panel.open {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+}
