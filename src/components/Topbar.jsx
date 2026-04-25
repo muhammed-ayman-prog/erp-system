@@ -12,6 +12,7 @@ export default function Topbar({
   setCollapsed,
   collapsed,
   branches,
+  openMobile
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
@@ -63,11 +64,35 @@ export default function Topbar({
         
         {/* 🔥 Menu Icon */}
         <div
-          onClick={() => setCollapsed(!collapsed)}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-        >
-          <Menu size={22} />
-        </div>
+        onClick={() => {
+          if (window.innerWidth < 768) {
+            openMobile();
+          } else {
+            setCollapsed(!collapsed);
+          }
+        }}
+        style={{
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "40px",
+          height: "40px",
+          borderRadius: "10px",
+          background: theme.colors.card,
+          border: `1px solid ${theme.colors.border}`,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          transition: "0.2s"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(0,0,0,0.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(0,0,0,0.05)";
+        }}
+      >
+        <Menu size={24} />
+      </div>
 
         {/* 🔥 Logo + Name */}
         <div

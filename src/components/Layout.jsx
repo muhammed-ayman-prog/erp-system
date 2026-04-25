@@ -369,7 +369,7 @@ export default function Layout() {
         <Topbar
           collapsed={collapsed}
           setCollapsed={setCollapsed}
-          openMobile={() => setMobileOpen(true)}
+          openMobile={() => setMobileOpen(true)} // 👈 مهم
           branches={branches}
           selectedBranch={selectedBranch}
           setSelectedBranch={setSelectedBranch}
