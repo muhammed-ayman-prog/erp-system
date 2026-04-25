@@ -251,9 +251,9 @@ export default function Cart({
   <div className="payment-methods">
 
     {[
-  { key: "cash", label: t("cash"), icon: <Banknote size={18} />, color: "#22c55e" },
-  { key: "visa", label: t("visa"), icon: <CreditCard size={18} />, color: "#b8962e" },
-  { key: "instapay", label: t("instapay"), icon: <Wallet size={18} />, color: "#8b5cf6" },
+  { key: "cash", label: t("payment.cash"), icon: <Banknote size={18} />, color: "#22c55e" },
+  { key: "visa", label: t("payment.visa"), icon: <CreditCard size={18} />, color: "#b8962e" },
+  { key: "instapay", label: t("payment.instapay"), icon: <Wallet size={18} />, color: "#8b5cf6" },
 ].map((method) => (
       <button
         key={method.key}

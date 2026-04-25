@@ -105,7 +105,7 @@ export default function Layout() {
         permission: "view_dashboard"
       },
       {
-        name: t("sales"),
+        name: t("navigation.sales"),
         path: "/sales",
         icon: <ShoppingCart size={collapsed ? 24 : 18} />,
         permission: "view_sales",
@@ -116,13 +116,13 @@ export default function Layout() {
     section: "Operations",
     items: [
       {
-        name: t("expenses"),
+        name: t("navigation.expenses"),
         path: "/expenses",
         icon: <Receipt size={collapsed ? 24 : 18} />,
         permission: "view_expenses"
       },
       {
-        name: t("waste"),
+        name: t("navigation.waste"),
         path: "/waste",
         icon: <Trash2 size={collapsed ? 24 : 18} />,
         permission: "view_waste"
@@ -151,25 +151,25 @@ export default function Layout() {
     section: "Management",
     items: [
       {
-        name: t("reports"),
+        name: t("navigation.reports"),
         path: "/reports",
         icon: <BarChart3 size={collapsed ? 24 : 18} />,
         permission: "view_reports"
       },
       {
-        name: t("customers"),
+        name: t("navigation.customers"),
         path: "/customers",
         icon: <Users2 size={collapsed ? 24 : 18} />,
         permission: "view_customers"
       },
       {
-        name: t("branches"),
+        name: t("navigation.branches"),
         path: "/branches",
         icon: <Building2 size={collapsed ? 24 : 18} />,
         permission: "view_branches"
       },
       {
-        name: t("users"),
+        name: t("navigation.users"),
         path: "/users",
         icon: <Users size={collapsed ? 24 : 18} />,
         permission: "view_users"
@@ -181,7 +181,7 @@ export default function Layout() {
         permission: "view_logs"
       },
       {
-        name: t("settings"),
+        name: t("navigation.settings"),
         path: "/settings",
         icon: <Settings size={collapsed ? 24 : 18} />,
         permission: "view_settings"

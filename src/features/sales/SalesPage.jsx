@@ -366,7 +366,7 @@ const cleanSize = selectedSize?.name
   {/* نخفي العنوان في الموبايل */}
   {!isMobile && (
     <div className="cat-title">
-      📦 {t("categories")}
+      📦 {t("products.categories")}
     </div>
   )}
 
@@ -386,7 +386,7 @@ const cleanSize = selectedSize?.name
       onClick={() => { setMainTab("french"); setSubTab(null); }}
     >
       <FlaskConical size={16} />
-      {t("french")}
+      {t("products.french")}
     </div>
 
     <div
@@ -397,7 +397,7 @@ const cleanSize = selectedSize?.name
       }}
     >
       <Leaf size={16} />
-      {t("oriental")}
+      {t("products.oriental")}
     </div>
 
     <div
@@ -408,7 +408,7 @@ const cleanSize = selectedSize?.name
       }}
     >
       <Sparkles size={16} />
-      {t("body")}
+      {t("products.body")}
     </div>
 
     <div
@@ -416,7 +416,7 @@ const cleanSize = selectedSize?.name
       onClick={() => { setMainTab("original"); setSubTab(null); }}
     >
       <Star size={16} />
-      {t("original")}
+      {t("products.original")}
     </div>
 
   </div>

@@ -8,18 +8,23 @@ export const useTranslate = () => {
     const keys = key.split(".");
     let value = translations[lang];
 
-    // ✅ يدعم nested
+    // ✅ nested
     for (let k of keys) {
       value = value?.[k];
     }
 
-    // ✅ fallback للـ old keys
+    // ✅ fallback old keys
     if (!value) {
       for (let section in translations[lang]) {
         if (translations[lang][section]?.[key]) {
           return translations[lang][section][key];
         }
       }
+    }
+
+    // 🔥 أهم إضافة
+    if (typeof value === "object") {
+      return value.title || key;
     }
 
     return value || key;
