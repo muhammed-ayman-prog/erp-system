@@ -1,60 +1,47 @@
-const functions = require("firebase-functions");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
-
+const { logAction } = require("./utils/log");
+const { withLog } = require("./utils/withLog");
 admin.initializeApp();
 
-exports.createUser = functions.https.onCall(async (data, context) => {
-  try {
-    // 🔒 لازم يكون المستخدم مسجل دخول
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "You must be logged in"
-      );
+exports.createUser = onCall(
+  withLog("CREATE_USER", async (request) => {
+
+    const data = request.data;
+    const auth = request.auth;
+
+    if (!auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in");
     }
 
     const { email, password, name, role, branchId } = data;
 
-    // 🔒 هات بيانات اليوزر اللي بينفذ (من Firestore)
+    if (!email || !password || !name || !role) {
+      throw new HttpsError("invalid-argument", "Missing fields");
+    }
+
     const callerDoc = await admin
       .firestore()
       .collection("users")
-      .doc(context.auth.uid)
+      .doc(auth.uid)
       .get();
 
     if (!callerDoc.exists) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        "User not found"
-      );
+      throw new HttpsError("not-found", "User not found");
     }
 
     const callerData = callerDoc.data();
 
-    // 🔒 تأكد إنه Admin
     if (callerData.role !== "admin") {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "Only admin can create users"
-      );
+      throw new HttpsError("permission-denied", "Only admin allowed");
     }
 
-    // 🔒 Validation بسيط
-    if (!email || !password || !name || !role) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Missing required fields"
-      );
-    }
-
-    // 🔥 إنشاء user في Authentication
     const userRecord = await admin.auth().createUser({
       email,
       password,
       displayName: name
     });
 
-    // 🔥 تحديد الصلاحيات
     const permissions =
       role === "admin"
         ? ["*"]
@@ -64,12 +51,16 @@ exports.createUser = functions.https.onCall(async (data, context) => {
             "view_sales",
             "view_reports",
             "view_inventory",
+            "view returns",
+            "view expenses",
+            "view waste",
+            "view purchases",
             "view_customers",
-            "view_operations"
+            "view_operations",
+            "view_logs"
           ]
         : ["view_dashboard", "view_sales"];
 
-    // 🔥 حفظه في Firestore
     await admin.firestore().collection("users").doc(userRecord.uid).set({
       name,
       email,
@@ -80,14 +71,93 @@ exports.createUser = functions.https.onCall(async (data, context) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    return { success: true };
+    return {
+      success: true,
+      targetId: userRecord.uid // 👈 مهم للـ log
+    };
+  })
+);
+exports.deleteUser = onCall(
+  withLog("DELETE_USER", async (request) => {
 
-  } catch (error) {
-    console.error("CreateUser Error:", error);
+    const auth = request.auth;
+    const { uid } = request.data;
 
-    throw new functions.https.HttpsError(
-      "internal",
-      error.message || "Something went wrong"
-    );
-  }
-});
+    // 🔐 لازم يكون مسجل
+    if (!auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in");
+    }
+
+    // 🔒 تأكد إنه admin
+    const callerDoc = await admin
+      .firestore()
+      .collection("users")
+      .doc(auth.uid)
+      .get();
+
+    if (!callerDoc.exists) {
+      throw new HttpsError("not-found", "User not found");
+    }
+
+    const callerData = callerDoc.data();
+
+    if (callerData.role !== "admin") {
+      throw new HttpsError("permission-denied", "Only admin allowed");
+    }
+
+    // 🔥 حذف من Auth
+    await admin.auth().deleteUser(uid);
+
+    // 🔥 حذف من Firestore
+    await admin.firestore().collection("users").doc(uid).delete();
+
+    return {
+      success: true,
+      targetId: uid // 👈 مهم للـ log
+    };
+  })
+);
+exports.updateUser = onCall(
+  withLog("UPDATE_USER", async (request) => {
+
+    const { uid, name, role, branchId, permissions } = request.data;
+    const auth = request.auth;
+
+    if (!auth) throw new HttpsError("unauthenticated", "Login first");
+
+    const caller = await admin.firestore().collection("users").doc(auth.uid).get();
+
+    if (caller.data().role !== "admin") {
+      throw new HttpsError("permission-denied", "Only admin");
+    }
+
+    await admin.firestore().collection("users").doc(uid).update({
+      name,
+      role,
+      branchId: role === "admin" ? "" : branchId,
+      permissions: role === "admin" ? ["*"] : permissions
+    });
+
+    return { success: true, targetId: uid };
+  })
+);
+exports.toggleUserStatus = onCall(
+  withLog("TOGGLE_USER_STATUS", async (request) => {
+
+    const { uid } = request.data;
+    const auth = request.auth;
+
+    if (!auth) throw new HttpsError("unauthenticated", "Login first");
+
+    const userRef = admin.firestore().collection("users").doc(uid);
+    const snap = await userRef.get();
+
+    const current = snap.data().status || "active";
+
+    const next = current === "active" ? "disabled" : "active";
+
+    await userRef.update({ status: next });
+
+    return { success: true, targetId: uid };
+  })
+);

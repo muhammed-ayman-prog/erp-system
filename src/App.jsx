@@ -21,10 +21,10 @@ import Invoices from "./pages/Invoices";
 
 import Layout from "./components/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import Logs from "./pages/Logs";  
 function App() {
   const { user, loading } = useAuth();
-
+  console.log("🔥 CURRENT USER:", user);
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -117,7 +117,11 @@ function App() {
               <Route element={<ProtectedRoute permissions={["view_settings"]} />}>
                 <Route path="/settings" element={<Settings />} />
               </Route>
-
+              <Route
+              element={<ProtectedRoute permissions={["view_logs"]} />}
+            >
+              <Route path="/logs" element={<Logs />} />
+            </Route>
               {/* Operations */}
               <Route element={<ProtectedRoute permissions={["view_operations"]} />}>
                 <Route path="/operations" element={<Operations />} />

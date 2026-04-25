@@ -19,7 +19,8 @@ import {
   PackagePlus,
   Receipt,
   Trash2,// 👈 NEW ICON
-  RefreshCw
+  RefreshCw,
+  FileText
 } from "lucide-react";
 
 
@@ -172,6 +173,12 @@ export default function Layout() {
         path: "/users",
         icon: <Users size={collapsed ? 24 : 18} />,
         permission: "view_users"
+      },
+      {
+        name: "Logs",
+        path: "/logs",
+        icon: <FileText size={collapsed ? 24 : 18} />,
+        permission: "view_logs"
       },
       {
         name: t("settings"),

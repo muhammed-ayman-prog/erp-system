@@ -81,11 +81,14 @@ export default function Users() {
       const usersSnap = await getDocs(collection(db, "users"));
       const branchesSnap = await getDocs(collection(db, "branches"));
 
-      setUsers(usersSnap.docs.map(doc => ({
-  id: doc.id,
-  status: "active", // default
-  ...doc.data()
-})));
+      setUsers(usersSnap.docs.map(doc => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    status: data.status || "active"
+  };
+}));
       setBranches(branchesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
     } catch (err) {
@@ -100,46 +103,69 @@ export default function Users() {
     fetchData();
   }, []);
 
+  
   // 🔐 Create
   const handleCreateUser = async () => {
-  const { name, email, password, role, branchId } = newUser;
-
-  if (!name || !email || !password) {
-    alert("كمل البيانات ❗");
-    return;
-  }
-
   try {
+    if (!auth.currentUser) {
+      alert("لازم تعمل تسجيل دخول الأول ❗");
+      return;
+    }
+    if (!newUser.name || !newUser.email || !newUser.password) {
+  alert("املأ كل البيانات ❗");
+  return;
+}
+if (newUser.role !== "admin" && !newUser.branchId) {
+  alert("اختار الفرع ❗");
+  return;
+}
+
+    // 🔥 أهم سطر
+    console.log("AUTH USER:", auth.currentUser); 
+    if (!auth.currentUser) {
+  alert("اعمل Login تاني");
+  return;
+}
+    const token = await auth.currentUser.getIdToken(true);
+    console.log("TOKEN:", token);
     const createUserFn = httpsCallable(functions, "createUser");
 
-await createUserFn({
-  name,
-  email,
-  password,
-  role,
-  branchId
+const res = await createUserFn({
+  name: newUser.name,
+  email: newUser.email,
+  password: newUser.password,
+  role: newUser.role,
+  branchId: newUser.branchId
 });
 
+console.log("RESULT:", res);
     alert("User created successfully ✅");
 
     setShowModal(false);
+    setNewUser({
+      name: "",
+      email: "",
+      password: "",
+      role: "employee",
+      branchId: ""
+    });
+
     fetchData();
 
   } catch (err) {
     console.error(err);
-    alert("في مشكلة ❌");
+    alert(err.message || err?.details || "حصل خطأ ❌");
   }
 };
 
   // ❌ Delete
   const handleDelete = async (id) => {
+  try {
     if (user?.uid === id) {
       alert("مش ينفع تمسح نفسك ❌");
       return;
     }
 
-
-    // 🔥 هنا بالظبط
     if (users.find(x => x.id === id)?.role === "admin") {
       alert("مينفعش تمسح Admin ❌");
       return;
@@ -147,74 +173,62 @@ await createUserFn({
 
     if (!window.confirm("متأكد؟")) return;
 
-  await deleteDoc(doc(db, "users", id));
-  fetchData();
+    const deleteUserFn = httpsCallable(functions, "deleteUser");
+
+    await deleteUserFn({ uid: id });
+
+    alert("Deleted ✅");
+
+    fetchData();
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
 };
 const toggleStatus = async (u) => {
   try {
-    const current = u.status || "active";
+    const toggleFn = httpsCallable(functions, "toggleUserStatus");
 
-    const next =
-      current === "active" ? "disabled" : "active";
+    await toggleFn({ uid: u.id });
 
-    console.log("OLD:", current);
-    console.log("NEW:", next);
-
-    await updateDoc(doc(db, "users", u.id), {
-      status: next
-    });
-
-    // 🔥 لو ده نفس اليوزر اللي داخل
-    if (u.id === auth.currentUser?.uid && next === "disabled") {
-      console.log("🚫 LOGOUT NOW");
+    if (u.id === auth.currentUser?.uid && u.status === "active") {
       await signOut(auth);
     }
 
     fetchData();
+
   } catch (err) {
-    alert("في مشكلة ❌");
+    console.error(err);
+    alert("Error ❌");
   }
 };
 
   // ✏️ Update
   const handleUpdateUser = async () => {
-    const { id, name, role, branchId } = editingUser;
+  try {
+    const updateUserFn = httpsCallable(functions, "updateUser");
 
-    if (!name) {
-      alert("اكتب الاسم ❗");
-      return;
-    }
+    await updateUserFn({
+      uid: editingUser.id,
+      name: editingUser.name,
+      role: editingUser.role,
+      branchId: editingUser.branchId,
+      permissions: selectedPermissions
+    });
 
-    if ((role === "branch_manager" || role === "employee") && !branchId) {
-      alert("اختار الفرع ❗");
-      return;
-    }
-    if (editingUser.role === "admin" && user.role !== "admin") {
-      alert("مش مسموح ❌");
-      return;
-    }
-    if (editingUser.id === user.uid) {
-    alert("مينفعش تعدل نفسك ❌");
-    return;
+    alert("Updated ✅");
+
+    setEditingUser(null);
+    setSelectedPermissions([]);
+
+    fetchData();
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
-    
-
-    try {
-  await updateDoc(doc(db, "users", id), {
-    name,
-    role,
-    ...(role !== "admin" && { branchId }),
-    permissions: role === "admin" ? ["*"] : selectedPermissions
-  });
-
-  setEditingUser(null);
-  setSelectedPermissions([]);
-  fetchData();
-
-} catch (err) {
-  alert("في مشكلة ❌");
-}
-  };
+};
 
   // 🔍 Filter
   const filteredUsers = useMemo(() => {
@@ -386,7 +400,7 @@ const toggleStatus = async (u) => {
       onClick={() => toggleStatus(u)}
       style={{
         background: (u.status || "active") === "active" ? "#fff3cd" : "#e6f0ff",
-        color: u.status === "active" ? "#856404" : "#004085",
+        color: (u.status || "active") === "active" ? "#856404" : "#004085",
         border: "none",
         padding: "4px 10px",
         borderRadius: "8px",
