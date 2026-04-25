@@ -6,14 +6,22 @@ import { Menu } from "lucide-react"; // 🔥 icon
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { Globe } from "lucide-react";
-
-
+import { useTranslate } from "../useTranslate";
+const branchMap = {
+  "Abbas Akkad 1": "abbasAkkad1",
+  "Abbas Akkad 2": "abbasAkkad2",
+  "Abbas Akkad 3": "abbasAkkad3",
+  "City Stars": "cityStars",
+  "El Obour": "elObour",
+  "El Rehab": "elRehab"
+};
 export default function Topbar({
   setCollapsed,
   collapsed,
   branches,
   openMobile
 }) {
+  const t = useTranslate();
   const branchOrder = [
   "Abbas Akkad 1",
   "Abbas Akkad 2",
@@ -151,7 +159,7 @@ export default function Topbar({
   })
   .map((b) => (
     <option key={b.id} value={b.id}>
-      {b.name}
+      {t(`branches.${branchMap[b.name]}`) || b.name}
     </option>
   ))}
       </select>

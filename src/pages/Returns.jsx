@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
-
+import { useTranslate } from "../useTranslate";
 export default function Returns() {
+  const t = useTranslate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,11 +52,11 @@ export default function Returns() {
         alignItems: "center",
         marginBottom: "20px"
       }}>
-        <h2>Returns 🔄</h2>
+        <h2>{t("returns.title")} 🔄</h2>
       </div>
 
       {/* Loading */}
-      {loading && <p>Loading...</p>}
+      {loading && <p>{t("common.loading")}</p>}
 
       {/* Table */}
       {!loading && (
@@ -69,11 +70,11 @@ export default function Returns() {
             
             <thead style={{ background: "#f9f9fb" }}>
               <tr style={{ textAlign: "left", fontSize: "13px", color: "#666" }}>
-                <th style={{ padding: "12px" }}>Invoice</th>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Type</th>
-                <th>Date</th>
+                <th style={{ padding: "12px" }}>{t("returns.invoice")}</th>
+                <th>{t("returns.product")}</th>
+                <th>{t("common.qty")}</th>
+                <th>{t("returns.type")}</th>
+                <th>{t("common.date")}</th>
               </tr>
             </thead>
 
@@ -81,7 +82,7 @@ export default function Returns() {
               {data.length === 0 && (
                 <tr>
                   <td colSpan="5" style={{ padding: "20px", textAlign: "center" }}>
-                    No returns yet
+                    {t("returns.noReturns")}
                   </td>
                 </tr>
               )}
@@ -112,7 +113,7 @@ export default function Returns() {
                       color:
                         r.type === "refund" ? "#ff3b30" : "#004085"
                     }}>
-                      {r.type}
+                      {t(`returns.${r.type}`)}
                     </span>
                   </td>
 

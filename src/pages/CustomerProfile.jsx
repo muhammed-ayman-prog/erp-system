@@ -17,8 +17,9 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-
+import { useTranslate } from "../useTranslate";
 export default function CustomerProfile() {
+  const t = useTranslate();
   const { id } = useParams();
 
   const [customer, setCustomer] = useState(null);
@@ -68,10 +69,10 @@ export default function CustomerProfile() {
   const totalSpent = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
   
   if (loading)
-    return <p style={{ padding: "20px" }}>Loading...</p>;
+    return <p style={{ padding: "20px" }}>{t("common.loading")}</p>;
 
   if (!customer)
-    return <p style={{ padding: "20px" }}>Not found</p>;
+    return <p style={{ padding: "20px" }}>{t("common.notFound")}</p>;
 
   const productStats = {};
 
@@ -117,7 +118,7 @@ const lastVisitDays = customer.lastPurchase
   alignItems: "center",
   gap: "8px"
 }}>
-  👤 {customer.name || "No Name"}
+  👤 {customer.name || t("customer.noName")}
 </h2>
         <p style={{ color: "#64748b", fontSize: "14px" }}>
           {customer.phone}
@@ -126,13 +127,13 @@ const lastVisitDays = customer.lastPurchase
 
       {/* 📊 Stats */}
       <div className="card" style={{ marginBottom: "20px" }}>
-  <h3 style={{ marginBottom: "10px" }}>Insights 🧠</h3>
+  <h3 style={{ marginBottom: "10px" }}>{t("reports.insights")} 🧠</h3>
 
-  <p>Type: <b>{customerType}</b></p>
-  <p>Avg Order: <b>{Math.round(avgSpend)} EGP</b></p>
+  <p>{t("customer.type")} <b>{customerType}</b></p>
+  <p>{t("customer.avgOrder")} <b>{Math.round(avgSpend)} EGP</b></p>
 
   {lastVisitDays && lastVisitDays > 30 && (
-    <p style={{ color: "red" }}>⚠️ Inactive customer</p>
+    <p style={{ color: "red" }}>⚠️ {t("customer.inactive")}</p>
   )}
 </div>
      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
@@ -159,7 +160,7 @@ const lastVisitDays = customer.lastPurchase
         {/* 💰 Total */}
         <div className="card">
           <p style={{ color: "#64748b", fontSize: "13px" }}>
-            Total Spent
+            {t("customer.totalSpent")}
           </p>
 
           <h2 style={{ color: "#0f172a", fontWeight: "bold" }}>
@@ -170,7 +171,7 @@ const lastVisitDays = customer.lastPurchase
         {/* 📦 Orders */}
         <div className="card">
           <p style={{ color: "#64748b", fontSize: "13px" }}>
-            Orders
+            {t("customer.orders")}
           </p>
 
           <h2 style={{ color: "#0f172a", fontWeight: "bold" }}>
@@ -181,7 +182,7 @@ const lastVisitDays = customer.lastPurchase
         {/* 📅 Last Visit */}
         <div className="card">
           <p style={{ color: "#64748b", fontSize: "13px" }}>
-            Last Visit
+            {t("customer.lastVisit")}
           </p>
 
           <h2 style={{ color: "#0f172a", fontWeight: "bold" }}>
@@ -196,11 +197,11 @@ const lastVisitDays = customer.lastPurchase
 
       <div className="card" style={{ marginBottom: "20px" }}>
   <h3 style={{ marginBottom: "10px" }}>
-    Top Products 🧠
+    {t("reports.topProducts")} 🧠
   </h3>
 
   {topProducts.length === 0 ? (
-    <p style={{ color: "var(--text-muted)" }}>No data</p>
+    <p style={{ color: "var(--text-muted)" }}>{t("common.noData")}</p>
   ) : (
     topProducts.map(([name, qty], i) => (
       <div
@@ -218,7 +219,7 @@ const lastVisitDays = customer.lastPurchase
   )}
 </div>
 <div className="card" style={{ marginBottom: "20px" }}>
-  <h3 style={{ marginBottom: "10px" }}>Spending Trend 📊</h3>
+  <h3 style={{ marginBottom: "10px" }}>{t("reports.spendingTrend")} 📊</h3>
 
   <ResponsiveContainer width="100%" height={200}>
     <LineChart data={chartData}>
@@ -237,12 +238,12 @@ const lastVisitDays = customer.lastPurchase
   fontSize: "16px",
   marginBottom: "10px"
 }}>
-  Purchases 🧾
+  {t("customer.purchases")} 🧾
 </h3>
 
         {filteredSales.length === 0 ? (
           <p style={{ color: "#64748b" }}>
-            No purchases yet
+            {t("customer.noPurchases")}
           </p>
         ) : (
           <div>
@@ -302,7 +303,7 @@ const lastVisitDays = customer.lastPurchase
       </div>
 
       <div style={{ fontSize: "12px", color: "#64748b" }}>
-        Qty: {item.qty}
+        {t("common.qty")} {item.qty}
       </div>
     </div>
 

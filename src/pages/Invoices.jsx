@@ -19,9 +19,19 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
+import { useTranslate } from "../useTranslate";
 const READY_TYPES = ["cream", "مخمرية", "original"];
+const branchMap = {
+  "Abbas Akkad 1": "abbasAkkad1",
+  "Abbas Akkad 2": "abbasAkkad2",
+  "Abbas Akkad 3": "abbasAkkad3",
+  "City Stars": "cityStars",
+  "El Obour": "elObour",
+  "El Rehab": "elRehab"
+};
 
 export default function Invoices() {
+  const t = useTranslate();
   const navigate = useNavigate();
   const { selectedBranch } = useApp();
   const [branchName, setBranchName] = useState("");
@@ -267,7 +277,7 @@ const total =
   selectedInvoice.totalQty ||
   selectedInvoice.items.reduce((s, i) => s + i.qty, 0);
 if (refunded >= total) {
-  alert("الفاتورة دي متقفلة (Refunded بالكامل) ❌");
+  alert(t("invoices.closed"));
   return;
 }
   
@@ -275,7 +285,7 @@ if (refunded >= total) {
   const validItems = (refundItems || []).filter(i => i.qty > 0);
 
  if (validItems.length === 0) {
-  alert("اختار كمية ❗");
+  alert(t("invoices.selectQty"));
   setLoading(false);
   return;
 }
@@ -363,7 +373,7 @@ if (refunded >= total) {
     setLoading(false); // 👈 هنا
   } catch (err) {
   console.error(err);
-  alert("Error ❌");
+  alert(t("common.error"));
   setLoading(false); // 👈 مهم
 }
 };
@@ -379,7 +389,7 @@ if (refunded >= total) {
 >
   {/* الشمال */}
   <div>
-    <h1 style={{ margin: 0 }}>Invoices</h1>
+    <h1 style={{ margin: 0 }}>{t("invoices.title")}</h1>
 
     <span
       style={{
@@ -387,7 +397,7 @@ if (refunded >= total) {
         fontSize: "13px"
       }}
     >
-      Manage and track all sales invoices
+      {t("invoices.subtitle")}
     </span>
   </div>
 
@@ -409,7 +419,7 @@ onMouseLeave={e => {
   e.currentTarget.style.background = theme.colors.card;
 }}
   >
-    ← Back
+    {t("common.back")}
   </button>
 </div>
 
@@ -420,7 +430,7 @@ onMouseLeave={e => {
         marginBottom: "15px"
         }}>
         <input
-  placeholder="Search by name / phone..."
+  placeholder={t("invoices.search")}
   value={search}
   onChange={(e) => setSearch(e.target.value)}
   style={{
@@ -456,10 +466,10 @@ onMouseLeave={e => {
 
       {/* 💰 CARDS */}
       <div style={{ display: "flex", gap: 10 }}>
-        <Card title="Total" value={totals.total} />
-        <Card title="Cash" value={totals.cash} />
-        <Card title="Visa" value={totals.visa} />
-        <Card title="Instapay" value={totals.instapay} />
+        <Card title={t("total")} value={totals.total} />
+        <Card title={t("cash")} value={totals.cash} />
+        <Card title={t("visa")} value={totals.visa} />
+        <Card title={t("instapay")} value={totals.instapay} />
       </div>
 
       <div style={{ display: "flex", gap: 20, marginTop: 20 }}>
@@ -485,12 +495,12 @@ onMouseLeave={e => {
   zIndex: 2
 }}>
             <tr>
-  <th style={{ padding: "10px" }}>Invoice</th>
-  <th style={{ padding: "10px" }}>Customer</th>
-  <th style={{ padding: "10px" }}>Date</th>
-  <th style={{ padding: "10px" }}>Payment</th>
-  <th style={{ padding: "10px" }}>Total</th>
-  <th style={{ padding: "10px" }}>Status</th>
+  <th style={{ padding: "10px" }}>{t("invoices.invoice")}</th>
+  <th style={{ padding: "10px" }}>{t("customer.title")}</th>
+  <th style={{ padding: "10px" }}>{t("common.date")}</th>
+  <th style={{ padding: "10px" }}>{t("payment.method")}</th>
+  <th style={{ padding: "10px" }}>{t("cart.total")}</th>
+  <th style={{ padding: "10px" }}>{t("common.status")}</th>
 </tr>
             </thead>
             <tbody>
@@ -541,7 +551,7 @@ return (
 
     {/* Payment */}
     <td style={{ padding: "12px" }}>
-      {s.paymentMethod}
+      {t(s.paymentMethod.toLowerCase())}  
     </td>
 
     {/* Total */}
@@ -567,10 +577,10 @@ return (
       >
         {
   refundedQty >= totalQty
-    ? "Refunded"
+    ? t("invoices.refunded")
     : refundedQty > 0
-    ? "Partial Refunded"
-    : "Completed"
+    ? t("invoices.partialRefunded")
+    : t("invoices.completed")
 }
       </span>
     </td>
@@ -600,11 +610,11 @@ return (
       cursor: "pointer"
     }}
   >
-    Prev
+    {t("common.prev")}
   </button>
 
   <span style={{ fontSize: "13px" }}>
-    Page {page} of {totalPages}
+    {t("common.page")} {page} of {totalPages}
   </span>
 
   <button
@@ -618,7 +628,7 @@ return (
       cursor: "pointer"
     }}
   >
-    Next
+    {t("common.next")}
   </button>
 </div>
         </div>
@@ -636,7 +646,7 @@ return (
   opacity: selectedInvoice ? 1 : 0.6,
   transition: "0.3s"
 }}>
-        {!selectedInvoice && <p>Select invoice</p>}
+        {!selectedInvoice && <p>{t("invoices.select")}</p>}
         
         {selectedInvoice && (
           
@@ -670,7 +680,7 @@ return (
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
   }}
     >
-      Actions ⌄
+      {t("common.actions")} ⌄
     </button>
 
     {/* Dropdown */}
@@ -689,9 +699,9 @@ return (
         minWidth: "150px"
       }}>
         {[
-  { key: "refund", label: "Refund", color: theme.colors.warning },
-  { key: "exchange", label: "Exchange", color: theme.colors.primary },
-  { key: "cancel", label: "Cancel", color: theme.colors.danger }
+  { key: t("invoices.refund"), label: "Refund", color: theme.colors.warning },
+  { key: t("invoices.exchange"), label: "Exchange", color: theme.colors.primary },
+  { key: t("common.cancel"), label: "Cancel", color: theme.colors.danger }
 ].map(a => (
   <div
     key={a.key}
@@ -735,8 +745,13 @@ return (
   gap: "15px",
   flexWrap: "wrap"
 }}>
-  <div>Branch: {branchName || selectedInvoice.branchId}</div>
-  <div>Payment: {selectedInvoice.paymentMethod}</div>
+  <div>
+  {t("branches.title")}: {t(`branches.${branchMap[branchName]}`) || branchName}
+</div>
+
+<div>
+  {t("payment.method")}: {t(selectedInvoice.paymentMethod?.toLowerCase())}
+</div>
 </div>
             
             {(() => {
@@ -762,10 +777,10 @@ return (
     >
       {
         refunded >= total
-          ? "Refunded"
-          : refunded > 0
-          ? "Partial Refunded"
-          : "Completed"
+        ? t("invoices.refunded")
+        : refunded > 0
+        ? t("invoices.partialRefunded")
+        : t("invoices.completed")
       }
     </div>
   );
@@ -812,9 +827,9 @@ return (
             color: theme.colors.textSecondary,
             marginBottom: "8px"
         }}>
-            <span style={{ flex: 2 }}>Item</span>
-            <span style={{ flex: 1, textAlign: "center" }}>Qty</span>
-            <span style={{ flex: 1, textAlign: "right" }}>Price</span>
+            <span style={{ flex: 2 }}>{t("products.title")}</span>
+            <span style={{ flex: 1, textAlign: "center" }}>{t("common.qty")}</span>
+            <span style={{ flex: 1, textAlign: "right" }}>{t("common.price")}</span>
         </div>
 
         {/* 🔹 Items */}
@@ -835,7 +850,7 @@ return (
       color: theme.colors.textSecondary,
       marginTop: "2px"
     }}>
-      Oil: {item.oilQty} ml × {item.qty}
+      {t("products.oil")}: {item.oilQty} ml × {item.qty}
     </div>
   )}
 </div>
@@ -863,7 +878,7 @@ return (
     justifyContent: "space-between",
     fontSize: "14px"
   }}>
-    <span>Subtotal</span>
+    <span>{t("cart.subtotal")}</span>
     <span>{selectedInvoice.total} EGP</span>
   </div>
 
@@ -872,7 +887,7 @@ return (
     justifyContent: "space-between",
     fontSize: "14px"
   }}>
-    <span>Discount</span>
+    <span>{t("cart.discount")}</span>
     <span>{selectedInvoice.discount || 0} EGP</span>
   </div>
 
@@ -883,7 +898,7 @@ return (
     marginTop: "6px",
     fontSize: "15px"
   }}>
-    <span>Total</span>
+    <span>{t("cart.total")}</span>
     <span>{selectedInvoice.total} EGP</span>
   </div>
 
@@ -914,7 +929,7 @@ return (
               e.currentTarget.style.background = theme.colors.primary;
             }}
             >
-            🖨 Print Invoice
+            🖨 {t("invoices.print")}
             </button>
             </div>
         )}
@@ -938,7 +953,7 @@ return (
       width: "400px"
       }}>
 
-      <h3>Refund Items</h3>
+      <h3>{t("invoices.refundItems")}</h3>
 
       {selectedInvoice?.items.map((item, i) => {
   const alreadyRefunded = previousReturns
@@ -953,12 +968,12 @@ return (
         {item.name}
 
         <span style={{ fontSize: "12px", marginLeft: "6px" }}>
-          ({alreadyRefunded} / {item.qty})
+          ({alreadyRefunded} / {t("common.qty")})
         </span>
 
         {remaining === 0 && (
           <span style={{ color: "red", marginLeft: "6px" }}>
-            Refunded
+            {t("invoices.refunded")}
           </span>
         )}
       </div>
@@ -988,7 +1003,7 @@ return (
 }
           
         >
-        {loading ? "Processing..." : "Confirm Refund"}
+        {loading ? t("common.processing") : t("invoices.confirmRefund")}
       </button>
 
       <button
@@ -997,7 +1012,7 @@ return (
     setRefundItems([]);
   }}
 >
-        Cancel
+        {t("common.cancel")}
       </button>
 
     </div>
@@ -1007,7 +1022,7 @@ return (
       {showConfirm && (
         <div style={modalStyle}>
           <div style={modalBox}>
-            <p>Are you sure you want to {action}?</p>
+            <p>{t("common.confirmAction")}</p>
             <button
   onClick={() => setShowConfirm(false)}
   style={{
@@ -1017,7 +1032,7 @@ return (
     marginRight: "8px"
   }}
 >
-  Cancel
+  {t("common.cancel")}
 </button>
 
 <button
@@ -1030,7 +1045,7 @@ return (
     border: "none"
   }}
 >
-  Confirm
+  {t("common.confirm")}
 </button>
           </div>
         </div>

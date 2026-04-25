@@ -16,8 +16,9 @@ import { db } from "../firebase";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
-
+import { useTranslate } from "../useTranslate";
 export default function Waste() {
+  const t = useTranslate();
   const { user } = useAuth();
   const { selectedBranch } = useApp();
 
@@ -124,7 +125,7 @@ export default function Waste() {
   // 🔥 Submit Waste
   const handleWaste = async () => {
   if (!branchToUse || branchToUse === "all") {
-    setToastText("اختار فرع ❗");
+    setToastText(t("branches.select"));
     setShowToast(true);
     return;
   }
@@ -134,7 +135,7 @@ export default function Waste() {
   );
 
   if (!validItems.length) {
-    setToastText("ضيف منتجات ❗");
+    setToastText(t("waste.addItems"));
     setShowToast(true);
     return;
   }
@@ -148,13 +149,13 @@ export default function Waste() {
         const snap = await transaction.get(ref);
 
         if (!snap.exists()) {
-          throw new Error("❌ المنتج مش موجود");
+          throw new Error(t("waste.productNotFound"));
         }
 
         const current = snap.data().quantity || 0;
 
         if (Number(item.quantity) > current) {
-          throw new Error("❌ الكمية أكبر من المخزون");
+          throw new Error(t("waste.qtyExceeded"));
         }
 
         transaction.update(ref, {
@@ -182,12 +183,12 @@ export default function Waste() {
     setItems([{ productId: "", quantity: "" }]);
     setNote("");
 
-    setToastText("تم تسجيل الهدر ✅");
+    setToastText(t("waste.success"));
     setShowToast(true);
 
   } catch (err) {
     console.error(err);
-    setToastText(err.message || "في مشكلة ❌");
+    setToastText(err.message || t("common.error"));
     setShowToast(true);
   }
 };
@@ -200,7 +201,7 @@ export default function Waste() {
         minHeight: "100vh"
       }}
     >
-      <h1 style={{ marginBottom: "20px" }}>Waste Management ♻️</h1>
+      <h1 style={{ marginBottom: "20px" }}>{t("navigation.waste")} ♻️</h1>
 
       {/* FORM */}
       <div
@@ -237,7 +238,7 @@ export default function Waste() {
                 color: theme.colors.text
               }}
             >
-              <option value="">Select product</option>
+              <option value="">{t("products.select")}</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({stockMap[p.id] || 0})
@@ -247,7 +248,7 @@ export default function Waste() {
 
             <input
               type="number"
-              placeholder="Qty"
+              placeholder={t("common.qty")}
               value={item.quantity}
               onChange={(e) => {
                 const newItems = [...items];
@@ -269,11 +270,11 @@ export default function Waste() {
         ))}
 
         <button onClick={addRow} style={{ marginBottom: "10px" }}>
-          + Add Item
+          + {t("waste.addItem")}
         </button>
 
         <textarea
-          placeholder="سبب الهدر (اختياري)"
+          placeholder={t("waste.reason")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           style={{
@@ -296,13 +297,13 @@ export default function Waste() {
             cursor: "pointer"
           }}
         >
-          Add Waste
+          {t("waste.add")}
         </button>
       </div>
 
       {/* HISTORY */}
       <div>
-        <h3>Waste History</h3>
+        <h3>{t("waste.history")}</h3>
 
         {wasteList.map((w) => (
           <div
@@ -316,7 +317,7 @@ export default function Waste() {
             }}
           >
             <div>
-              Qty: {w.quantity} | {w.note || "—"}
+              {t("common.qty")}: {w.quantity} | {w.note || "—"}
             </div>
             <div style={{ fontSize: "12px", opacity: 0.6 }}>
               {new Date(

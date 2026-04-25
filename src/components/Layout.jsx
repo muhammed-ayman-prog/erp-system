@@ -33,7 +33,7 @@ export default function Layout() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { user, logout, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>{t("common.loading")}</div>;
 
   useEffect(() => {
     if (user?.status === "disabled") {
@@ -96,7 +96,7 @@ export default function Layout() {
   // 🔥 MENU
  const menu = [
   {
-    section: "Main",
+    section: t("navigation.main"),
     items: [
       {
         name: t("dashboard"),
@@ -113,7 +113,7 @@ export default function Layout() {
     ]
   },
   {
-    section: "Operations",
+    section: t("navigation.operations"),
     items: [
       {
         name: t("navigation.expenses"),
@@ -128,7 +128,7 @@ export default function Layout() {
         permission: "view_waste"
       },
       {
-      name: "Returns",
+      name: t("navigation.returns"),
       path: "/returns",
       icon: <RefreshCw size={collapsed ? 24 : 18} />,
       permission: "view_returns"
@@ -148,7 +148,7 @@ export default function Layout() {
     ]
   },
   {
-    section: "Management",
+    section: t("navigation.management"),
     items: [
       {
         name: t("navigation.reports"),
@@ -175,7 +175,7 @@ export default function Layout() {
         permission: "view_users"
       },
       {
-        name: "Logs",
+        name: t("navigation.logs"),
         path: "/logs",
         icon: <FileText size={collapsed ? 24 : 18} />,
         permission: "view_logs"
@@ -248,7 +248,7 @@ export default function Layout() {
   {isExpanded && (
     <>
       <span style={{ fontWeight: "600", fontSize: "14px" }}>
-        A Perfume Story
+        {t("system.name")}
       </span>
       <span style={{
         fontSize: "11px",
@@ -257,7 +257,7 @@ export default function Layout() {
         opacity: 0.5,
         textTransform: "uppercase"
       }}>
-        ERP System
+        {t("system.subtitle")}
       </span>
     </>
   )}
@@ -382,6 +382,6 @@ export default function Layout() {
           <Outlet />
         </div>
       </div>
-    </div>
-  );
+</div>
+);
 }

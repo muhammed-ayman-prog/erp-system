@@ -16,11 +16,12 @@ import ProductPopup from "./components/ProductPopup";
 import { useSales } from "./hooks/useSales";
 import { FlaskConical, Leaf, Sparkles, Star } from "lucide-react";
 import { createPortal } from "react-dom";
+
 export default function SalesPage() {
   const t = useTranslate();
   const [branches, setBranches] = useState([]);
   const getBranchName = (id) => {
-  return branches.find(b => b.id === id)?.name || "Unknown";
+  return branches.find(b => b.id === id)?.name || t("common.unknown");
 };
   const [pricing, setPricing] = useState([]);
   useEffect(() => {
@@ -295,7 +296,7 @@ const cleanSize = selectedSize?.name
         alignItems: "center",
         marginBottom: "10px"
       }}>
-        <h3>Cart 🧾</h3>
+        <h3>{t("cart.title")} 🧾</h3>
         <button onClick={() => setShowCart(false)}>✖</button>
       </div>
 
@@ -447,14 +448,14 @@ const cleanSize = selectedSize?.name
       border: `1px solid ${theme.colors.border}`
     }}>
       <div style={{ fontSize: "18px", fontWeight: "700" }}>
-        🧾 Sales
+        🧾 {t("navigation.sales")}
       </div>
 
       <div style={{
         fontSize: "12px",
         color: theme.colors.textSecondary
       }}>
-        Branch: {selectedBranch ? getBranchName(selectedBranch) : "—"}
+        {t("branches.title")}: {selectedBranch ? getBranchName(selectedBranch) : "—"}
       </div>
     </div>
 
@@ -479,7 +480,7 @@ const cleanSize = selectedSize?.name
       cursor: "pointer"
     }}
   >
-    📄 Invoices
+    📄 {t("invoices.title")}
   </button>
 
   {/* 🛒 Cart */}
@@ -497,7 +498,7 @@ const cleanSize = selectedSize?.name
   }}
   onClick={() => setShowCart(true)}
 >
-    🛒 Cart
+    🛒 {t("cart.title")}
 <span style={{
   background: "#ef4444",
   borderRadius: "50%",
@@ -516,7 +517,7 @@ const cleanSize = selectedSize?.name
   {/* 🔍 Search */}
   <input
     type="text"
-    placeholder="🔍 Search products..."
+    placeholder={`🔍 ${t("products.search")}`}
     value={search}
     onChange={(e) => setSearch(e.target.value)}
     style={{
@@ -553,7 +554,7 @@ const cleanSize = selectedSize?.name
   });
 
 if (name) {
-  setToastText(`${name} added 🔥`);
+  setToastText(`${name} ${t("cart.added")}`);
   setShowToast(true);
 }
       return;

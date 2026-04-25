@@ -5,8 +5,9 @@ import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { serverTimestamp } from "firebase/firestore";
-
+import { useTranslate } from "../useTranslate";
 export default function Expenses() {
+  const t = useTranslate();
   const { user } = useAuth();
   const { selectedBranch } = useApp();
 
@@ -45,12 +46,12 @@ export default function Expenses() {
   // ➕ add expense
   const handleAddExpense = async () => {
     if (!branchToUse || branchToUse === "all") {
-      alert("اختار فرع ❗");
+      alert(t("branches.select"));
       return;
     }
 
     if (!amount) {
-      alert("اكتب المبلغ ❗");
+      alert(t("expenses.enterAmount"));
       return;
     }
 
@@ -79,7 +80,7 @@ export default function Expenses() {
       );
 
     } catch (err) {
-      alert("في مشكلة ❌");
+      alert(t("common.error"));
     }
   };
 
@@ -90,12 +91,12 @@ export default function Expenses() {
       minHeight: "100vh"
     }}>
 
-      <h1 style={{ marginBottom: "20px" }}>Expenses 💸</h1>
+      <h1 style={{ marginBottom: "20px" }}>{t("navigation.expenses")} 💸</h1>
 
       {/* ⚠️ اختار فرع */}
       {user?.role === "admin" && !selectedBranch && (
         <p style={{ color: theme.colors.muted }}>
-          اختار فرع من فوق 👆
+          {t("branches.select")}
         </p>
       )}
 
@@ -110,7 +111,7 @@ export default function Expenses() {
       }}>
         <input
           type="number"
-          placeholder="Amount"
+          placeholder={t("expenses.amount")}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           style={{
@@ -125,7 +126,7 @@ export default function Expenses() {
         />
 
         <input
-          placeholder="Note"
+          placeholder={t("expenses.note")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           style={{
@@ -151,7 +152,7 @@ export default function Expenses() {
             cursor: "pointer"
           }}
         >
-          Add Expense
+          {t("expenses.add")}
         </button>
       </div>
 
@@ -163,7 +164,7 @@ export default function Expenses() {
       }}>
         {expenses.length === 0 && (
           <p style={{ color: theme.colors.muted }}>
-            No expenses yet
+            {t("expenses.noExpenses")}
           </p>
         )}
 

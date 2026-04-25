@@ -13,8 +13,10 @@ import {
 
 import { exportToExcel, exportToPDF } from "../utils/exportReports";
 import logo from "../assets/logo.png"; // ✅ اللوجو
+import { useTranslate } from "../useTranslate";
 
 export default function Dashboard() {
+  const t = useTranslate();
   const today = new Date().toISOString().split("T")[0];
 
   const [range, setRange] = useState({ from: today, to: today });
@@ -161,7 +163,7 @@ export default function Dashboard() {
 
   return (
     <div style={page(isMobile)}>
-      <h2 style={{ marginBottom: "10px" }}>📊 Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>📊 {t("navigation.dashboard")}</h2>
 
       {/* FILTER + EXPORT */}
       <div style={topBar}>
@@ -175,18 +177,18 @@ export default function Dashboard() {
 
         <div style={exportBtns}>
           <motion.button whileHover={{ scale: 1.1 }} onClick={handleExcel} style={btn}>
-            <Download size={14}/> Excel
+            <Download size={14}/> {t("common.excel")}
           </motion.button>
 
           <motion.button whileHover={{ scale: 1.1 }} onClick={handlePDF} style={btn}>
-            <Download size={14}/> PDF
+            <Download size={14}/> {t("common.pdf")}
           </motion.button>
         </div>
       </div>
 
       {/* EXPORT PER BRANCH */}
       <div style={branchExportBox}>
-  <h4 style={{ marginBottom: 10 }}>📤 Export by Branch</h4>
+  <h4 style={{ marginBottom: 10 }}>📤 {t("reports.exportByBranch")}</h4>
 
   <div style={branchGrid}>
     {data.salesByBranch.map(b => (
@@ -205,19 +207,19 @@ export default function Dashboard() {
 
       {/* ALERT */}
       <motion.div style={alerts} whileHover={{ scale: 1.03 }}>
-        <AlertTriangle size={18}/> ❌ {data.alerts.out} | ⚠️ {data.alerts.low}
+        <AlertTriangle size={18}/> ❌ ❌ {data.alerts.out} {t("inventory.outOfStock")} | ⚠️ {data.alerts.low} {t("inventory.lowStock")}
       </motion.div>
 
       {/* CARDS */}
       <div style={grid}>
-        <StatCard icon={<DollarSign />} title="Sales" value={data.totalSales}/>
-        <StatCard icon={<FileText />} title="Invoices" value={data.invoices}/>
-        <StatCard icon={<TrendingUp />} title="Best" value={data.bestBranch?.name}/>
-        <StatCard icon={<TrendingUp />} title="Worst" value={data.worstBranch?.name}/>
+        <StatCard icon={<DollarSign />} title={t("reports.sales")} value={data.totalSales}/>
+        <StatCard icon={<FileText />} title={t("reports.invoices")} value={data.invoices}/>
+        <StatCard icon={<TrendingUp />} title={t("reports.best")} value={data.bestBranch?.name}/>
+        <StatCard icon={<TrendingUp />} title={t("reports.worst")} value={data.worstBranch?.name}/>
       </div>
 
       {/* CHART */}
-      <AnimatedCard title="Sales Over Time">
+      <AnimatedCard title={t("reports.salesOverTime")}>
         <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <LineChart data={data.salesPerDay}>
             <XAxis dataKey="date" />
@@ -230,8 +232,8 @@ export default function Dashboard() {
 
       {/* LISTS */}
       <div style={grid}>
-        <List title="Top Customers" icon={<Users />} data={data.topCustomers} field="total"/>
-        <List title="Oil Usage" icon={<Droplets />} data={data.oilUsage} field="qty"/>
+        <List title={t("reports.topCustomers")} icon={<Users />} data={data.topCustomers} field="total"/>
+        <List title={t("reports.oilUsage")} icon={<Droplets />} data={data.oilUsage} field="qty"/>
       </div>
     </div>
   );
