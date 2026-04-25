@@ -161,11 +161,14 @@ if (branchToUse === "all") {
     alert("في مشكلة ❌");
   }
 };
-
+const isMobile = window.innerWidth < 768;
+const productsMap = Object.fromEntries(
+  products.map(p => [p.id, p])
+);
     return (
       
     <div style={{
-  padding: "25px",
+  padding: isMobile ? "10px" : "25px",
   background: theme.colors.background,
   minHeight: "100vh"
 }}>
@@ -185,7 +188,13 @@ if (branchToUse === "all") {
     Manage and track your purchases
   </span>
 </div>
-    <div style={{ display: "flex", gap: "30px", alignItems: "stretch", alignItems: "flex-start" }}>
+    <div style={{ 
+      display: "flex",
+      flexDirection: isMobile ? "column" : "row",
+      gap: "20px",
+      alignItems: "flex-start",
+      width: "100%" // 🔥 ده اللي ناقصك
+    }}>
 
   {user?.role === "admin" && !selectedBranch && (
   <p style={{
@@ -199,8 +208,8 @@ if (branchToUse === "all") {
   <div style={{
     background: theme.colors.card,
     border: `1px solid ${theme.colors.border}`,
-    width: "420px",
-    padding: "24px",
+    width: isMobile ? "100%" : "420px",
+    padding: isMobile ? "16px" : "24px",
     borderRadius: "24px",
     boxShadow: "0 20px 50px rgba(0,0,0,0.08)",
     flexShrink: 0,
@@ -211,6 +220,7 @@ if (branchToUse === "all") {
         {items.map((item, index) => (
     <div key={index} style={{
         display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         gap: "10px",
         marginBottom: "10px"
     }}>
@@ -221,6 +231,7 @@ if (branchToUse === "all") {
         onChange={(e) => updateItem(index, "productId", e.target.value)}
         style={{
             flex: 2,
+            width: isMobile ? "100%" : "auto",
             padding: "10px",
             borderRadius: "10px",
             border: `1px solid ${theme.colors.border}`,
@@ -245,6 +256,7 @@ if (branchToUse === "all") {
         onChange={(e) => updateItem(index, "quantity", e.target.value)}
         style={{
             flex: 1,
+            width: isMobile ? "100%" : "auto",
             padding: "12px",
             borderRadius: "12px",
             border: `1px solid ${theme.colors.border}`,
@@ -262,7 +274,8 @@ if (branchToUse === "all") {
             border: "none",
             borderRadius: "8px",
             cursor: "pointer",
-            padding: "0 8px"
+            width: isMobile ? "100%" : "auto",
+            padding: "10px",
         }}
         >
         ❌
@@ -279,7 +292,8 @@ if (branchToUse === "all") {
         padding: "10px",
         color: theme.colors.text,
         borderRadius: "10px",
-        cursor: "pointer"
+        cursor: "pointer",
+        width: "100%"
     }}
     >
     + Add Item
@@ -316,23 +330,31 @@ if (branchToUse === "all") {
     
     <div style={{
   flex: 1,
-  maxHeight: "80vh",
+  width: "100%", // 🔥 أهم سطر
+  maxWidth: "100%", // 🔥 يمنع أي ضغط
+  maxHeight: isMobile ? "none" : "80vh",
   overflowY: "auto",
   paddingRight: "5px",
   marginTop: "5px"
 }}>
         <div
+        
   onClick={() => setShowHistory(!showHistory)}
-  onMouseEnter={(e) =>
-  (e.currentTarget.style.background = theme.colors.secondary)
-}
-onMouseLeave={(e) =>
-  (e.currentTarget.style.background = theme.colors.card)
-}
+  onMouseEnter={(e) => {
+  if (!isMobile) {
+    e.currentTarget.style.background = theme.colors.secondary;
+  }
+}}
+onMouseLeave={(e) => {
+  if (!isMobile) {
+    e.currentTarget.style.background = theme.colors.card;
+  }
+}}
   style={{
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: isMobile ? "column" : "row",
+    gap: "6px",
+    alignItems: isMobile ? "flex-start" : "center",
     cursor: "pointer",
     background: theme.colors.card,
     border: `1px solid ${theme.colors.border}`,
@@ -366,7 +388,8 @@ onMouseLeave={(e) =>
     width: "100%",
     marginBottom: "10px",
     padding: "12px",
-    borderRadius: "12px"
+    borderRadius: "12px",
+    display: "block",
   }}
 />
     {purchases.length === 0 && (
@@ -390,7 +413,7 @@ onMouseLeave={(e) =>
   {purchases
   .filter(p =>
     p.items.some(i =>
-      products.find(x => x.id === i.productId)?.name
+      productsMap[i.productId]?.name
         ?.toLowerCase()
         .includes(search.toLowerCase())
     )
@@ -413,18 +436,22 @@ onMouseLeave={(e) =>
       {/* 🔘 HEADER */}
       <div
         onClick={() => setOpenId(isOpen ? null : p.id)}
-        onMouseEnter={(e) =>
-  (e.currentTarget.style.background = theme.colors.secondary)
-}
-onMouseLeave={(e) =>
-  (e.currentTarget.style.background = theme.colors.card)
-}
+        onMouseEnter={(e) => {
+          if (!isMobile) {
+            e.currentTarget.style.background = theme.colors.secondary;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isMobile) {
+            e.currentTarget.style.background = theme.colors.card;
+          }
+        }}
         style={{
           padding: "14px 16px",
           cursor: "pointer",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: isMobile ? "flex-start" : "center",
           transition: "0.2s"
         }}
       >
@@ -454,15 +481,16 @@ onMouseLeave={(e) =>
           gap: "6px"
         }}>
           {p.items.map((item, i) => {
-  const product = products.find(x => x.id === item.productId);
+  const product = productsMap[item.productId];
 
   return (
     <div
       key={i}
       style={{
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
+        flexDirection: isMobile ? "column" : "row",
+        gap: "6px",
+        alignItems: isMobile ? "flex-start" : "center",
         background: theme.colors.secondary,
         padding: "10px",
         borderRadius: "10px"

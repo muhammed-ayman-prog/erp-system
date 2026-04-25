@@ -157,10 +157,11 @@ export default function Dashboard() {
       `Branch_${branch}`
     );
   };
+  const isMobile = window.innerWidth < 768;
 
   return (
-    <div style={page}>
-      <h2>📊 Dashboard</h2>
+    <div style={page(isMobile)}>
+      <h2 style={{ marginBottom: "10px" }}>📊 Dashboard</h2>
 
       {/* FILTER + EXPORT */}
       <div style={topBar}>
@@ -217,7 +218,7 @@ export default function Dashboard() {
 
       {/* CHART */}
       <AnimatedCard title="Sales Over Time">
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <LineChart data={data.salesPerDay}>
             <XAxis dataKey="date" />
             <YAxis />
@@ -240,7 +241,11 @@ export default function Dashboard() {
 
 function StatCard({ icon, title, value }) {
   return (
-    <motion.div style={card} whileHover={{ scale: 1.05 }}>
+    <motion.div
+  style={card}
+  whileHover={{ scale: 1.05, y: -5 }}
+  transition={{ type: "spring", stiffness: 200 }}
+>
       <div style={row}>{icon}{title}</div>
       <div style={big}>{value || "-"}</div>
     </motion.div>
@@ -272,14 +277,62 @@ function List({ title, icon, data, field }) {
 
 // STYLES
 
-const page = { padding: 20, background: "#f8fafc" };
-const topBar = { display: "flex", justifyContent: "space-between", marginBottom: 15 };
-const filter = { display: "flex", gap: 10 };
-const exportBtns = { display: "flex", gap: 10 };
-const btn = { padding: "6px 12px", borderRadius: 8, cursor: "pointer", background: "#fff", border: "1px solid #ddd" };
-const alerts = { padding: 10, background: "#fff3cd", borderRadius: 10, marginBottom: 15 };
+const page = (isMobile) => ({
+  padding: isMobile ? 10 : 20,
+  background: "#f8fafc"
+});
+const topBar = {
+  display: "flex",
+  justifyContent: "space-between",
+  flexWrap: "wrap", // 🔥 مهم
+  gap: 10,
+  marginBottom: 15
+};
+const filter = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap"
+};
+const exportBtns = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  width: "100%"
+};
+const btn = {
+  padding: "10px 14px",
+  borderRadius: 10,
+  cursor: "pointer",
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  flex: "1 1 120px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  fontWeight: "500",
+  transition: "0.2s"
+};
+const alerts = {
+  padding: 12,
+  background: "#fff7ed",
+  borderRadius: 12,
+  marginBottom: 15,
+  border: "1px solid #fde68a",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  fontWeight: "500"
+};
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 15 };
-const card = { background: "#fff", padding: 15, borderRadius: 12, boxShadow: "0 5px 15px rgba(0,0,0,0.05)" };
+const card = {
+  background: "#fff",
+  padding: 16,
+  borderRadius: 16,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+  transition: "0.3s",
+  border: "1px solid #f1f1f1"
+};
 const row = { display: "flex", alignItems: "center", gap: 8 };
 const listItem = { display: "flex", justifyContent: "space-between", padding: "5px 0" };
 const big = { fontSize: 20, fontWeight: "bold" };
@@ -292,15 +345,17 @@ const branchExportBox = {
 };
 
 const branchGrid = {
-  display: "flex",
-  flexWrap: "wrap",
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
   gap: 10
 };
 
 const branchBtn = {
-  padding: "6px 12px",
-  borderRadius: 8,
-  border: "1px solid #ddd",
-  background: "#f8fafc",
-  cursor: "pointer"
+  padding: "8px 12px",
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  cursor: "pointer",
+  transition: "0.2s",
+  fontWeight: "500"
 };

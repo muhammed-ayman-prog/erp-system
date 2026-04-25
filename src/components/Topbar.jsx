@@ -14,6 +14,7 @@ export default function Topbar({
   branches,
   openMobile
 }) {
+  const isMobile = window.innerWidth < 768;
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
   const navigate = useNavigate();
@@ -50,9 +51,11 @@ export default function Topbar({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        flexWrap: "wrap", // 🔥 مهم
+        gap: "10px",
         background: theme.colors.card,
         color: theme.colors.text,
-        padding: "12px 20px",
+        padding: isMobile ? "10px" : "12px 20px",
         borderRadius: "12px",
         boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
         borderBottom: `1px solid ${theme.colors.border}`,
@@ -114,14 +117,15 @@ export default function Topbar({
         onChange={(e) => setSelectedBranch(e.target.value)}
         disabled={user?.role !== "admin"}
         style={{
-  padding: "8px 14px",
-  borderRadius: "999px",
-  border: `1px solid ${theme.colors.border}`,
-  background: theme.colors.secondary,
-  color: theme.colors.text,
-  cursor: "pointer",
-  fontWeight: "500"
-}}
+          padding: "8px 14px",
+          borderRadius: "999px",
+          border: `1px solid ${theme.colors.border}`,
+          background: theme.colors.secondary,
+          color: theme.colors.text,
+          cursor: "pointer",
+          fontWeight: "500",
+          width: isMobile ? "100%" : "auto" // 🔥 ده الجديد
+        }}
       >
         {user?.role === "admin" && (
           <option value="all">All Branches</option>
@@ -135,7 +139,15 @@ export default function Topbar({
       </select>
 
       {/* 🔹 Right */}
-      <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+      <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        flexWrap: "wrap", // 🔥 مهم
+        width: isMobile ? "100%" : "auto"
+      }}
+    >
         
   {/* 🌐 Language */}
   <div ref={langRef} style={{ position: "relative" }}>
@@ -250,16 +262,18 @@ onMouseLeave={(e) =>
           }}
           onClick={() => setShowMenu(!showMenu)}
         >
-          <span style={{ fontSize: "13px", fontWeight: "500" }}>
-  {user?.name?.split(" ")[0] || "User"}
-</span>
+          {!isMobile && (
+        <span style={{ fontSize: "13px", fontWeight: "500" }}>
+          {user?.name?.split(" ")[0] || "User"}
+        </span>
+      )}
 
           <img
             src={`https://ui-avatars.com/api/?name=${user?.name || "User"}`}
             alt="avatar"
             style={{
-              width: "32px",
-              height: "32px",
+              width: isMobile ? "28px" : "32px",
+              height: isMobile ? "28px" : "32px",
               borderRadius: "50%"
             }}
           />

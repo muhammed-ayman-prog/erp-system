@@ -259,6 +259,7 @@ const cleanSize = selectedSize?.name
   ?.trim();
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
+  const isMobile = window.innerWidth < 768;
   return (
   <>
   
@@ -279,7 +280,7 @@ const cleanSize = selectedSize?.name
         top: 0,
         right: 0,
         height: "100%",
-        width: "360px",
+        width: isMobile ? "100%" : "360px",
         background: "#fff",
         padding: "10px",
         overflowY: "auto",
@@ -349,8 +350,8 @@ const cleanSize = selectedSize?.name
   </div>
 )}
     <div className="sales-layout" style={{
-  display: "grid",
-  gridTemplateColumns: "220px 1fr",
+  display: isMobile ? "block" : "grid",
+  gridTemplateColumns: isMobile ? "1fr" : "220px 1fr",
   width: "100%",
   alignItems: "start"
 }}>
@@ -359,62 +360,70 @@ const cleanSize = selectedSize?.name
       
       {/* المنتجات */}
       <div className="left-side" style={{
-  display: "flex",
-  flexDirection: "column",
-  
+  marginBottom: isMobile ? "10px" : "0"
 }}>
-          <div className="cat-title">
-  📦 {t("categories")}
+
+  {/* نخفي العنوان في الموبايل */}
+  {!isMobile && (
+    <div className="cat-title">
+      📦 {t("categories")}
+    </div>
+  )}
+
+  {/* 🔥 ده الجديد */}
+  <div
+    style={{
+      display: "flex",
+      flexDirection: isMobile ? "row" : "column",
+      overflowX: isMobile ? "auto" : "visible",
+      gap: "8px",
+      scrollBehavior: "smooth"
+    }}
+  >
+
+    <div
+      className={`cat-item ${mainTab === "french" ? "active" : ""}`}
+      onClick={() => { setMainTab("french"); setSubTab(null); }}
+    >
+      <FlaskConical size={16} />
+      {t("french")}
+    </div>
+
+    <div
+      className={`cat-item ${mainTab === "oriental" ? "active" : ""}`}
+      onClick={() => {
+        setPopupStep("oriental");
+        setShowPopup(true);
+      }}
+    >
+      <Leaf size={16} />
+      {t("oriental")}
+    </div>
+
+    <div
+      className={`cat-item ${mainTab === "body" ? "active" : ""}`}
+      onClick={() => {
+        setPopupStep("body");
+        setShowPopup(true);
+      }}
+    >
+      <Sparkles size={16} />
+      {t("body")}
+    </div>
+
+    <div
+      className={`cat-item ${mainTab === "original" ? "active" : ""}`}
+      onClick={() => { setMainTab("original"); setSubTab(null); }}
+    >
+      <Star size={16} />
+      {t("original")}
+    </div>
+
+  </div>
 </div>
-
-          <div
-          className={`cat-item ${mainTab === "french" ? "active" : ""}`}
-          onClick={() => { setMainTab("french"); setSubTab(null); }}
-        >
-          <FlaskConical size={16} />
-          {t("french")}
-        </div>
-
-          <div
-          className={`cat-item ${mainTab === "oriental" ? "active" : ""}`}
-          onClick={() => {
-            setPopupStep("oriental");
-            setShowPopup(true);
-          }}
-        >
-          <Leaf size={16} />
-          {t("oriental")}
-        </div>
-
-          <div
-          className={`cat-item ${mainTab === "body" ? "active" : ""}`}
-          onClick={() => {
-            setPopupStep("body");
-            setShowPopup(true);
-          }}
-        >
-          <Sparkles size={16} />
-          {t("body")}
-        </div>
-
-          <div
-          className={`cat-item ${mainTab === "original" ? "active" : ""}`}
-          onClick={() => { setMainTab("original"); setSubTab(null); }}
-        >
-          <Star size={16} />
-          {t("original")}
-        </div>
-
-          {/* Sub Tabs */}
-          <div style={{ marginTop: "20px" }}>
-
-            
-
-          </div>
-        </div>
         <div style={{
-  padding: "12px 12px 12px 0",
-  maxHeight: "calc(100vh - 140px)"
+  padding: isMobile ? "10px" : "12px 12px 12px 0",
+  maxHeight: isMobile ? "none" : "calc(100vh - 140px)"
   
 }}>
           <div className="middle-layout" style={{ width: "100%" }}>
@@ -423,7 +432,8 @@ const cleanSize = selectedSize?.name
   <div className="top-bar"
   style={{
   display: "flex",
-  gap: "12px",
+  flexWrap: "wrap", // 🔥 مهم
+  gap: "10px",
   alignItems: "center",
   marginBottom: "12px"
 }}>
@@ -451,8 +461,9 @@ const cleanSize = selectedSize?.name
     {/* زرار */}
     <div style={{
   display: "flex",
-  alignItems: "center",
-  gap: "10px"
+  flexWrap: "wrap",
+  gap: "10px",
+  width: isMobile ? "100%" : "auto"
 }}>
 
   {/* 📄 Invoices */}
@@ -474,6 +485,16 @@ const cleanSize = selectedSize?.name
   {/* 🛒 Cart */}
   <div
   className="cart-btn"
+    style={{
+    width: isMobile ? "100%" : "auto",
+    textAlign: "center",
+    padding: "10px",
+    borderRadius: "10px",
+    background: theme.colors.secondary,
+    border: `1px solid ${theme.colors.border}`,
+    cursor: "pointer",
+    fontWeight: "600"
+  }}
   onClick={() => setShowCart(true)}
 >
     🛒 Cart
@@ -500,6 +521,7 @@ const cleanSize = selectedSize?.name
     onChange={(e) => setSearch(e.target.value)}
     style={{
       width: "100%",
+      maxWidth: "100%",
       padding: "14px 16px",
       borderRadius: "12px",
       background: theme.colors.card,

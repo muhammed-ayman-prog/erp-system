@@ -138,6 +138,7 @@ export default function Reports() {
   };
 
   return (
+  
     <div style={page}>
       <h2>📊 Reports</h2>
 
@@ -177,6 +178,11 @@ export default function Reports() {
         <Stat icon={<TrendingUp/>} title="Avg"
               value={invoices ? Math.round(sales / invoices) : 0}/>
       </div>
+      <div style={insights}>
+  <div>🔥 Best Day: {salesPerDay.at(-1)?.date || "-"}</div>
+  <div>📉 Worst Day: {salesPerDay[0]?.date || "-"}</div>
+  <div>🏆 Top Branch: {salesByBranch[0]?.name || "-"}</div>
+</div>
 
       {/* CHARTS */}
       <div style={grid2}>
@@ -186,9 +192,12 @@ export default function Reports() {
               <XAxis dataKey="date"/>
               <YAxis/>
               <Tooltip/>
-              <Area dataKey="total"
-                onClick={(e) => handleDrill("day", e?.activeLabel)}
-              />
+              <Area
+              dataKey="total"
+              stroke="#6366f1"
+              fillOpacity={0.2}
+              onClick={(e) => handleDrill("day", e?.activeLabel)}
+            />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
@@ -199,9 +208,11 @@ export default function Reports() {
               <XAxis dataKey="name"/>
               <YAxis/>
               <Tooltip/>
-              <Bar dataKey="total"
-                onClick={(e) => handleDrill("branch", e?.payload?.name)}
-              />
+              <Bar
+              dataKey="total"
+              radius={[6, 6, 0, 0]}
+              onClick={(e) => handleDrill("branch", e?.payload?.name)}
+            />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -256,10 +267,14 @@ function Stat({ icon, title, value }) {
     </motion.div>
   );
 }
-
+const isMobile = window.innerWidth < 768;
 function Card({ title, children }) {
   return (
-    <motion.div style={card} whileHover={{ scale: 1.02 }}>
+    <motion.div
+      style={card}
+      whileHover={{ scale: 1.03, y: -4 }}
+      transition={{ type: "spring", stiffness: 200 }}
+    >
       <h4>{title}</h4>
       {children}
     </motion.div>
@@ -267,14 +282,73 @@ function Card({ title, children }) {
 }
 
 // styles
-const page = { padding: 20, background: "#f8fafc" };
+const page = {
+  padding: isMobile ? 10 : 20,
+  background: "#f8fafc"
+};
 const grid = { display: "grid", gap: 10 };
-const grid2 = { display: "grid", gap: 15, marginTop: 20 };
-const stat = { background: "#fff", padding: 10 };
-const card = { background: "#fff", padding: 15, borderRadius: 10 };
-const filterBar = { display: "flex", gap: 10 };
+const grid2 = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", // 🔥
+  gap: 15,
+  marginTop: 20
+};
+const stat = {
+  background: "#fff",
+  padding: 16,
+  borderRadius: 16,
+  border: "1px solid #f1f1f1",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+  display: "flex",
+  flexDirection: "column",
+  gap: 6
+};
+const card = {
+  background: "#fff",
+  padding: 16,
+  borderRadius: 16,
+  border: "1px solid #f1f1f1",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.05)"
+};
+const filterBar = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 10,
+  background: "#fff",
+  padding: 10,
+  borderRadius: 12,
+  border: "1px solid #eee",
+  marginBottom: 15
+};
 const filterItem = { display: "flex", gap: 5, background: "#fff", padding: 5 };
-const btn = { padding: 6, cursor: "pointer" };
+const btn = {
+  padding: "10px 14px",
+  borderRadius: 10,
+  cursor: "pointer",
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px"
+};
 const overlay = { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)" };
-const modal = { background: "#fff", padding: 20, margin: "100px auto", width: 400 };
+const modal = {
+  background: "#fff",
+  padding: 20,
+  margin: "50px auto",
+  width: window.innerWidth < 768 ? "90%" : 400,
+  maxHeight: "80vh",
+  overflowY: "auto",
+  borderRadius: 12
+};
 const row = { display: "flex", justifyContent: "space-between" };
+const insights = {
+  background: "#fff",
+  padding: 15,
+  borderRadius: 12,
+  border: "1px solid #eee",
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 10,
+  marginBottom: 20
+};

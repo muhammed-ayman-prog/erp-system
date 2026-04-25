@@ -225,7 +225,7 @@ const renderSection = (title, type, isSub = false) => {
 </div>
       <div style={{
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
   gap: "15px"
 }}>
       {items.map((p) => {
@@ -273,8 +273,8 @@ border:
     : isLowStock
     ? `1px solid ${theme.colors.warning}`
     : `1px solid ${theme.colors.border}`,
-    padding: "16px",
-    borderRadius: "18px",
+    padding: isMobile ? "12px" : "16px",
+    borderRadius: "20px",
     margin: "10px 0",
     boxShadow: "0 6px 16px rgba(0,0,0,0.05)",
     transition: "0.2s",
@@ -282,17 +282,21 @@ border:
   }}
 
   onMouseEnter={(e) => {
-  e.currentTarget.style.transform = "translateY(-6px)";
-  e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.12)";
+  if (window.innerWidth > 768) {
+    e.currentTarget.style.transform = "translateY(-6px)";
+    e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.12)";
+  }
 }}
 
- onMouseLeave={(e) => {
-  e.currentTarget.style.transform = "translateY(0)";
+onMouseLeave={(e) => {
+  if (window.innerWidth > 768) {
+    e.currentTarget.style.transform = "translateY(0)";
+  }
 }}
 >
             <div>
               <strong style={{
-  fontSize: "16px",
+  fontSize: isMobile ? "14px" : "16px",
   fontWeight: "600",
   color: theme.colors.text
 }}>
@@ -516,9 +520,9 @@ useEffect(() => {
 const getBranchName = (id) => {
   return branches.find(b => b.id === id)?.name || "Unknown";
 };
-
+const isMobile = window.innerWidth < 768;
 return (
-  <div style={{ padding: "20px" }}>
+  <div style={{ padding: isMobile ? "10px" : "20px" }}>
 
     
 
@@ -532,7 +536,8 @@ return (
     border: "none",
     background: theme.colors.primary,
     color: "#fff",
-    cursor: "pointer"
+    cursor: "pointer",
+    width: "100%"
   }}
 >
   📦 Returned Items ({returnedItems.length})
@@ -547,7 +552,8 @@ return (
     borderRadius: "10px",
     border: `1px solid ${theme.colors.border}`,
     background: theme.colors.card,
-    color: theme.colors.text
+    color: theme.colors.text,
+    width: "100%"
   }}
 />
 
@@ -560,7 +566,8 @@ return (
 {/* 🔥 Stats */}
 <div style={{
   display: "flex",
-  gap: "15px",
+  flexWrap: "wrap", // 🔥 مهم
+  gap: "10px",
   marginBottom: "25px"
 }}>
   {[
@@ -592,9 +599,9 @@ return (
     { label: "Out", value: products.filter(p => p.quantity === 0).length, icon: "❌" }
   ].map((card, i) => (
     <div
-      key={i}
+      key={i} 
       style={{
-        flex: 1,
+        flex: "1 1 120px",
         background: theme.colors.card,
         border: `1px solid ${theme.colors.border}`,
         backdropFilter: "blur(10px)",
@@ -604,6 +611,7 @@ return (
         transition: "0.2s"
       }}
       onMouseEnter={(e) => {
+        if (window.innerWidth > 768)
         e.currentTarget.style.transform = "translateY(-4px)";
       }}
       onMouseLeave={(e) => {
@@ -624,7 +632,7 @@ return (
   ))}
 </div>
 {/* 🔍 Search */}
-<div style={{ position: "relative", marginBottom: "30px" }}>
+<div style={{ position: "relative", marginBottom: "20px" }}>
   <span style={{
     position: "absolute",
     left: "12px",
@@ -642,6 +650,7 @@ return (
     style={{
       padding: "14px 18px 14px 35px",
       width: "100%",
+      maxWidth: "100%", // 🔥 ضيف دي
       borderRadius: "16px",
       border: `1px solid ${theme.colors.border}`,
       background: theme.colors.card,
@@ -803,7 +812,13 @@ return (
   </div>
 )}
 
-  <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+  <div
+  style={{
+    display: "flex",
+    flexDirection: isMobile ? "column" : "row", // 🔥
+    gap: "10px"
+  }}
+>
     <input
       type="number"
       value={data.price ?? ""}

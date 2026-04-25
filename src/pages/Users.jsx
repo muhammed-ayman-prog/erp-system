@@ -239,7 +239,7 @@ const toggleStatus = async (u) => {
     )
     .filter(u => filterBranch === "all" ? true : u.branchId === filterBranch);
     }, [users, search, filterBranch]);
-
+    const isMobile = window.innerWidth < 768;
   return (
     <div style={{ flex: 1, background: "#f5f5f7", padding: "20px" }}>
 
@@ -278,28 +278,35 @@ const toggleStatus = async (u) => {
       {loading && <p>جارى التحميل...</p>}
 
       {/* Filters */}
-      <div style={{
-  display: "flex",
-  gap: "10px",
-  marginBottom: "10px"
-}}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap", // 🔥 مهم جدًا
+          gap: "10px",
+          marginBottom: "10px"
+        }}
+      >
         <input
-  placeholder="Search users..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  style={{
-    padding: "12px",
-    borderRadius: "12px",
-    border: "1px solid #ddd",
-    outline: "none",
-    fontSize: "14px",
-    background: "#fff"
-  }}
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+          padding: "12px",
+          borderRadius: "12px",
+          border: "1px solid #ddd",
+          outline: "none",
+          fontSize: "14px",
+          background: "#fff",
+          flex: "1 1 200px" // 🔥 ده المهم
+        }}
 />
 
         <select
           value={filterBranch}
           onChange={(e) => setFilterBranch(e.target.value)}
+          style={{
+            flex: "1 1 150px" // 🔥 مهم
+          }}
         >
           <option value="all">All Branches</option>
           {branches.map(b => (
@@ -315,13 +322,14 @@ const toggleStatus = async (u) => {
   overflow: "hidden",
   boxShadow: "0 6px 20px rgba(0,0,0,0.05)"
 }}>
-  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+  <div style={{ overflowX: "auto", width: "100%" }}>
+  <table style={{ minWidth: "600px" }}>
       
 
     {/* Header */}
     <thead style={{ background: "#f9f9fb" }}>
       <tr style={{ textAlign: "left", fontSize: "13px", color: "#666" }}>
-        <th style={{ padding: "12px" }}>User</th>
+        <th style={{ padding: "8px",fontSize: "13px" }}>User</th>
         <th>Role</th>
         <th>Branch</th>
         <th>Status</th>
@@ -402,7 +410,7 @@ const toggleStatus = async (u) => {
         background: (u.status || "active") === "active" ? "#fff3cd" : "#e6f0ff",
         color: (u.status || "active") === "active" ? "#856404" : "#004085",
         border: "none",
-        padding: "4px 10px",
+        padding: "6px 8px",
         borderRadius: "8px",
         cursor: "pointer",
         fontSize: "12px"
@@ -430,7 +438,8 @@ const toggleStatus = async (u) => {
       style={{
         background: "#f2f2f7",
         border: "none",
-        padding: "6px 12px",
+        padding: "6px 8px",
+        fontSize: "12px",
         borderRadius: "8px",
         cursor: "pointer"
       }}
@@ -444,7 +453,8 @@ const toggleStatus = async (u) => {
         background: "#ffecec",
         color: "#ff3b30",
         border: "none",
-        padding: "6px 12px",
+        padding: "6px 8px",
+        fontSize: "12px",
         borderRadius: "8px",
         cursor: "pointer"
       }}
@@ -461,6 +471,8 @@ const toggleStatus = async (u) => {
     </tbody>
   </table>
 </div>
+</div>
+
       
 
       {/* Modal Create */}
@@ -478,12 +490,14 @@ const toggleStatus = async (u) => {
   }}
 >
   <div
-  onClick={(e) => e.stopPropagation()}  // 🔥 دي أهم سطر
+  onClick={(e) => e.stopPropagation()}
   style={{
     background: "#fff",
-    padding: "24px",
+    padding: isMobile ? "16px" : "24px",
     borderRadius: "20px",
-    width: "380px",
+    width: isMobile ? "90%" : "380px", // 🔥 أهم سطر
+    maxHeight: "90vh",
+    overflowY: "auto",
     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
     border: "1px solid #eee"
   }}
@@ -491,68 +505,92 @@ const toggleStatus = async (u) => {
   <h3 style={{ marginBottom: "10px" }}>
   Add User 👤
 </h3>
-          <input style={{
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    outline: "none",
-    fontSize: "14px"
-  }} placeholder="Name"
-            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-          />
 
-          <input style={{
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    outline: "none",
-    fontSize: "14px"
-  }} placeholder="Email"
-            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-          />
-
-          <input style={{
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    outline: "none",
-    fontSize: "14px"
-  }} type="password"
-            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-          />
-          <select style={{
-    padding: "10px",
-    borderRadius: "10px",
-    border: "1px solid #ddd"
+<div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px"
   }}
+>
+
+  <input
+    style={{
+      padding: "10px 12px",
+      borderRadius: "10px",
+      border: "1px solid #ddd",
+      fontSize: "14px",
+      width: "100%"
+    }}
+    placeholder="Name"
+    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+  />
+
+  <input
+    style={{
+      padding: "10px 12px",
+      borderRadius: "10px",
+      border: "1px solid #ddd",
+      fontSize: "14px",
+      width: "100%"
+    }}
+    placeholder="Email"
+    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+  />
+
+  <input
+    type="password"
+    style={{
+      padding: "10px 12px",
+      borderRadius: "10px",
+      border: "1px solid #ddd",
+      fontSize: "14px",
+      width: "100%"
+    }}
+    placeholder="Password"
+    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+  />
+
+  <select
+    style={{
+      padding: "10px",
+      borderRadius: "10px",
+      border: "1px solid #ddd",
+      width: "100%"
+    }}
     value={newUser.role}
     onChange={(e) =>
       setNewUser({ ...newUser, role: e.target.value })
     }
->
-  <option value="employee">Employee</option>
-  <option value="branch_manager">Branch Manager</option>
-  <option value="admin">Admin</option>
-</select>
-
-{newUser.role !== "admin" && (
-  <select 
-  style={{
-    padding: "10px",
-    borderRadius: "10px",
-    border: "1px solid #ddd"
-  }}
-    value={newUser.branchId}
-    onChange={(e) =>
-      setNewUser({ ...newUser, branchId: e.target.value })
-    }
   >
-    <option value="">Select Branch</option>
-    {branches.map(b => (
-      <option key={b.id} value={b.id}>{b.name}</option>
-    ))}
+    <option value="employee">Employee</option>
+    <option value="branch_manager">Branch Manager</option>
+    <option value="admin">Admin</option>
   </select>
-)}
+
+  {newUser.role !== "admin" && (
+    <select
+      style={{
+        padding: "10px",
+        borderRadius: "10px",
+        border: "1px solid #ddd",
+        width: "100%"
+      }}
+      value={newUser.branchId}
+      onChange={(e) =>
+        setNewUser({ ...newUser, branchId: e.target.value })
+      }
+    >
+      <option value="">Select Branch</option>
+      {branches.map(b => (
+        <option key={b.id} value={b.id}>{b.name}</option>
+      ))}
+    </select>
+  )}
+
+</div>
+
+
 
           <button onClick={handleCreateUser}>Create</button>
           <button
@@ -583,9 +621,11 @@ const toggleStatus = async (u) => {
   }}>
     <div style={{
       background: "#fff",
-      padding: "20px",
+      padding: isMobile ? "16px" : "20px",
       borderRadius: "12px",
-      width: "350px"
+      width: isMobile ? "90%" : "350px",
+      maxHeight: "90vh",
+      overflowY: "auto"
     }}>
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 
@@ -690,14 +730,15 @@ setSelectedPermissions(prev =>
       {/* Buttons */}
       <button
   onClick={handleUpdateUser}
-  style={{
+    style={{
     background: "#007aff",
     color: "#fff",
     border: "none",
-    padding: "10px",
+    padding: "12px",
     borderRadius: "10px",
     fontWeight: "bold",
-    cursor: "pointer"
+    cursor: "pointer",
+    width: "100%"
   }}
 >
   Save
@@ -708,14 +749,14 @@ setSelectedPermissions(prev =>
     setSelectedPermissions([]);
   }}
   style={{
-    background: "#f5f5f7",
-    border: "1px solid #e0e0e0",
-    padding: "10px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "500",
-    transition: "0.2s"
-  }}
+  background: "#f5f5f7",
+  border: "1px solid #e0e0e0",
+  padding: "12px",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "500",
+  width: "100%"
+}}
   onMouseEnter={(e) => e.target.style.background = "#eaeaea"}
   onMouseLeave={(e) => e.target.style.background = "#f5f5f7"}
 >

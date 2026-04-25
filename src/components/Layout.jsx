@@ -361,8 +361,11 @@ export default function Layout() {
       {/* 📦 Content */}
       <div style={{ 
   flex: 1, 
-  minWidth: 0,   // 🔥 أهم سطر في حياتك النهاردة
-  padding: "20px", 
+  minWidth: 0,
+  padding: isMobile ? "10px" : "20px", // 👈 الحل
+  width: "100%",
+  maxWidth: "100%",
+  overflowX: "hidden",
   position: "relative", 
   zIndex: 1 
 }}>

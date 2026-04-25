@@ -27,7 +27,7 @@ export default function ProductPopup({
 }) {
   if (!showPopup) return null;
 const selectedValue = selectedSize?.size || selectedSize?.name;
-
+const isMobile = window.innerWidth < 768;
 const price = selectedSize
   ? getPrice(selectedProduct, selectedValue, containerType)
   : 0;
@@ -43,7 +43,8 @@ const price = selectedSize
         background: "rgba(15,23,42,0.6)",
         display: "grid",
         placeItems: "center",
-        zIndex: 9999
+        zIndex: 9999,
+        animation: "fadeIn 0.25s ease-out"
       }}
     >
 
@@ -55,12 +56,15 @@ const price = selectedSize
           width: "90%",
           maxWidth: "420px",
           maxHeight: "90vh",
-          overflowY: "auto"
+          overflowY: "auto",
+          padding: "16px"
         }}
       >
               
               {selectedProduct && !popupStep && (
-                <h3>{selectedProduct.name}</h3>
+                <h3 style={{ marginBottom: "10px" }}>
+  {selectedProduct.name}
+</h3>
               )}
       {popupStep === "oriental" && (
     <>
@@ -129,6 +133,13 @@ const price = selectedSize
   {!popupStep && (
   <>
     <p>Choose Container:</p>
+    <div
+  style={{
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px"
+  }}
+>
 
 {/* ❌ نخفيهم في حالة Musk */}
 {!isMusk && (
@@ -169,6 +180,7 @@ const price = selectedSize
   </>
 )}
 
+
 {/* ✅ Samples يفضل ظاهر دايماً */}
 <button
   onClick={() => {
@@ -186,6 +198,7 @@ const price = selectedSize
 >
   Samples
 </button>
+</div>
 
     <hr />
     
@@ -194,7 +207,7 @@ const price = selectedSize
 
     <div style={{
       display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
+      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
       gap: "12px",
       marginTop: "15px"
     }}>
@@ -232,7 +245,7 @@ const price = selectedSize
     .map(p => {
       const stock = inventoryMap[p.id] || 0;
       
-      
+  
   return (
       <div
   key={p.id}
@@ -241,7 +254,7 @@ const price = selectedSize
     setSelectedSize(p);
   }}
   style={{
-    padding: "18px",
+    padding: isMobile ? "12px" : "18px",
     background: selectedSize?.id === p.id
       ? theme.colors.primary
       : theme.colors.secondary,
@@ -311,7 +324,8 @@ const price = selectedSize
       padding: "10px",
       marginTop: "10px",
       borderRadius: "10px",
-      border: `1px solid ${theme.colors.border}`
+      border: `1px solid ${theme.colors.border}`,
+      fontSize: "16px"
     }}
   />
 )}
@@ -319,6 +333,7 @@ const price = selectedSize
 
         <div style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           gap: "10px",
           marginTop: "20px"
         }}>
