@@ -14,6 +14,14 @@ export default function Topbar({
   branches,
   openMobile
 }) {
+  const branchOrder = [
+  "Abbas Akkad 1",
+  "Abbas Akkad 2",
+  "Abbas Akkad 3",
+  "City Stars",
+  "El Obour",
+  "El Rehab"
+];
   const isMobile = window.innerWidth < 768;
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
@@ -128,14 +136,24 @@ export default function Topbar({
         }}
       >
         {user?.role === "admin" && (
-          <option value="all">All Branches</option>
+          <option value="all">🌍 All Branches</option>
         )}
 
-        {(branches || []).map((b) => (
-          <option key={b.id} value={b.id}>
-            {b.name}
-          </option>
-        ))}
+        {[...(branches || [])]
+  .sort((a, b) => {
+    const indexA = branchOrder.indexOf(a.name);
+    const indexB = branchOrder.indexOf(b.name);
+
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+
+    return indexA - indexB;
+  })
+  .map((b) => (
+    <option key={b.id} value={b.id}>
+      {b.name}
+    </option>
+  ))}
       </select>
 
       {/* 🔹 Right */}
@@ -184,15 +202,19 @@ export default function Topbar({
     {openLang && (
       <div
         style={{
-          position: "absolute",
-          top: "45px",
-          right: 0,
+          position: window.innerWidth < 768 ? "fixed" : "absolute",
+          top: window.innerWidth < 768 ? "auto" : "45px",
+          bottom: window.innerWidth < 768 ? "20px" : "auto",
+          left: window.innerWidth < 768 ? "50%" : "auto",
+          right: window.innerWidth < 768 ? "auto" : 0,
+          transform: window.innerWidth < 768 ? "translateX(-50%)" : "none",
+          width: window.innerWidth < 768 ? "90%" : "140px",
           background: theme.colors.card,
           borderRadius: "12px",
           boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-          width: "140px",
           padding: "6px",
-          border: `1px solid ${theme.colors.border}`
+          border: `1px solid ${theme.colors.border}`,
+          zIndex: 9999
         }}
       >
 

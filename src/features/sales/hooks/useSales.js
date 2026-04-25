@@ -125,10 +125,13 @@ const getPrice = (product, size, containerType) => {
 
   const normalizeSize = (s) =>
     s?.toLowerCase().replace(/\s/g, "");
+  const sizeValue = typeof size === "object"
+  ? size.size || size.name
+  : size;
 
   // 🟢 FIX container naming
   // 🟣 READY PRODUCTS (fixed price)
-  if (product.price > 0) return product.price;
+  
 
   // 🔥 MUSK (sample only)
   const isMuskProduct =
@@ -143,7 +146,7 @@ if (isMuskProduct) {
   const found = pricing.find(p =>
     p.category === `musk_${type}` &&
     p.container === "sample" &&
-    normalizeSize(p.size) === normalizeSize(size)
+    normalizeSize(p.size) === normalizeSize(sizeValue)
   );
 
   if (!found) {
@@ -174,7 +177,7 @@ if (!grade) return 0; // A / B / C
   p.category === "oriental" &&
   p.grade === grade &&
   p.container === containerType &&
-  normalizeSize(p.size) === normalizeSize(size)
+  normalizeSize(p.size) === normalizeSize(sizeValue)
 );
 
       return found?.price || 0;
@@ -196,15 +199,22 @@ if (!grade) return 0; // A / B / C
   }
 
   // 🔵 FRENCH
-  if (cat === "french") {
-    const found = pricing.find(p =>
-      p.category === "french" &&
-      p.container === containerType &&
-      normalizeSize(p.size) === normalizeSize(size)
-    );
+  if (cat.includes("french")) {
 
-    return found?.price || 0;
+  // 🔥 BOX → من الكونتينر
+  if (containerType === "box") {
+    return size?.price || 0;
   }
+
+  // 🟡 Bottle / Sample → من pricing
+  const found = pricing.find(p =>
+    p.category === "french" &&
+    p.container === containerType &&
+    normalizeSize(p.size) === normalizeSize(sizeValue)
+  );
+
+  return found?.price || 0;
+}
 
   return 0;
 };  

@@ -57,11 +57,11 @@ export default function Cart({
   display: "flex",
   flexDirection: "column"
 }}>
-        <h2>{t("cart")} 🧾</h2>
+        <h2>{t("cart.title")} 🧾</h2>
         <div className="cart-content">
         {cart.length === 0 && (
           <p style={{ color: theme.colors.textSecondary, textAlign: "center" }}>
-            {t("cartEmpty")} 🛒
+            {t("cart.empty")}
           </p>
         )}
         {cart.map((item) => (
@@ -158,10 +158,10 @@ export default function Cart({
 
         <hr />
         <div style={{ marginTop: "15px" }}>
-        <p>{t("customerInfo")}</p>
+        <p>t("customer.info")</p>
         <input
           type="text"
-          placeholder={t("phone")}
+          placeholder={t("customer.phone")}
           value={customerPhone}
           onChange={(e) => {
             setCustomerPhone(e.target.value);
@@ -181,7 +181,7 @@ export default function Cart({
         />
         <input
           type="text"
-          placeholder={t("customerName")}
+          placeholder={t("customer.name")}
           value={customerName}
           onChange={(e) => {
             setCustomerName(e.target.value);
@@ -209,14 +209,14 @@ export default function Cart({
   <div className="cart-footer">
   {/* Subtotal */}
   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-    <span style={{ color: "#666" }}>Subtotal</span>
+    <span style={{ color: "#666" }}>{t("cart.subtotal")}</span>
     <span>{subtotal} EGP</span>
   </div>
 
   {/* Discount */}
   {discount > 0 && (
   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-    <span style={{ color: "#666" }}>Discount</span>
+    <span style={{ color: "#666" }}>{t("cart.discount")}</span>
     <span>- {discount} EGP</span>
   </div>
 )}
@@ -225,7 +225,7 @@ export default function Cart({
   <div style={{ height: "1px", background: "#eee", margin: "8px 0" }} />
 <input
   type="number"
-  placeholder="Add discount"
+  placeholder={t("cart.discount")}
   value={discount === 0 ? "" : discount}
   onChange={(e) => setDiscount(Number(e.target.value))}
   style={{
@@ -238,7 +238,7 @@ export default function Cart({
 />
   {/* Total */}
   <div style={{ display: "flex", justifyContent: "space-between" }}>
-    <span style={{ fontWeight: "700", fontSize: "16px" }}>Total</span>
+    <span style={{ fontWeight: "700", fontSize: "16px" }}>{t("cart.total")}</span>
     <span style={{ fontWeight: "700", fontSize: "18px", color: "#16a34a" }}>
       {total} EGP
     </span>
@@ -246,7 +246,7 @@ export default function Cart({
 </div>
         
         <div style={{ marginTop: "15px" }}>
-  <p style={{ marginBottom: "8px" }}>{t("paymentMethod")}</p>
+  <p style={{ marginBottom: "8px" }}>{t("payment.method")}</p>
 
   <div className="payment-methods">
 
@@ -304,7 +304,7 @@ export default function Cart({
             userSelect: "none"
           }}
         >
-          {t("Clear Cart")}
+          {t("cart.clear")}
         </button>
         <button
         onClick={() => {
@@ -340,7 +340,7 @@ export default function Cart({
           e.currentTarget.style.transform = "scale(1)";
         }}
         >
-          {loadingCheckout ? t("processing") : t("checkout")}
+          {loadingCheckout ? t("common.processing") : t("cart.checkout")}
         </button>
         </div>
         </div>

@@ -29,7 +29,7 @@ export default function ProductPopup({
 const selectedValue = selectedSize?.size || selectedSize?.name;
 const isMobile = window.innerWidth < 768;
 const price = selectedSize
-  ? getPrice(selectedProduct, selectedValue, containerType)
+  ? getPrice(selectedProduct, selectedSize, containerType)
   : 0;
   return createPortal(
   <div

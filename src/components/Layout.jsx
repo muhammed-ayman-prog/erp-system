@@ -134,7 +134,7 @@ export default function Layout() {
       permission: "view_returns"
     },
       {
-        name: t("inventory"),
+        name: t("inventory.title"),
         path: "/inventory",
         icon: <Boxes size={collapsed ? 24 : 18} />,
         permission: "view_inventory"
