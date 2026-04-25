@@ -16,9 +16,20 @@ import ProductPopup from "./components/ProductPopup";
 import { useSales } from "./hooks/useSales";
 import { FlaskConical, Leaf, Sparkles, Star } from "lucide-react";
 import { createPortal } from "react-dom";
-
+const branchMap = {
+  "Abbas Akkad 1": "abbasAkkad1",
+  "Abbas Akkad 2": "abbasAkkad2",
+  "Abbas Akkad 3": "abbasAkkad3",
+  "City Stars": "cityStars",
+  "El Obour": "elObour",
+  "El Rehab": "elRehab"
+};
 export default function SalesPage() {
   const t = useTranslate();
+  const translateBranch = (id) => {
+  const name = getBranchName(id);
+  return t(`branches.${branchMap[name]}`) || name;
+};
   const [branches, setBranches] = useState([]);
   const getBranchName = (id) => {
   return branches.find(b => b.id === id)?.name || t("common.unknown");
@@ -455,7 +466,7 @@ const cleanSize = selectedSize?.name
         fontSize: "12px",
         color: theme.colors.textSecondary
       }}>
-        {t("branches.title")}: {selectedBranch ? getBranchName(selectedBranch) : "—"}
+        {t("branches.title")}: {selectedBranch ? translateBranch(selectedBranch) : "—"}
       </div>
     </div>
 

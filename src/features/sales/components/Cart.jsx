@@ -158,7 +158,7 @@ export default function Cart({
 
         <hr />
         <div style={{ marginTop: "15px" }}>
-        <p>t("customer.info")</p>
+        <p>{t("customer.info")}</p>
         <input
           type="text"
           placeholder={t("customer.phone")}
