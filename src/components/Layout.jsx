@@ -227,7 +227,7 @@ export default function Layout() {
   
   {/* Logo */}
   <img
-  src="/src/assets/logo.png"
+  src="/logo.png"
   alt="logo"
   style={{
     width: "40px",
