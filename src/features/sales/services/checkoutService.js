@@ -143,7 +143,10 @@ await Promise.all(
         productId: item.size,
         quantity: item.qty,
         type: "sale",
+        price: item.price || 0,
+        total: (item.price || 0) * item.qty,
         branchId: branchToUse,
+        branchName: branchMap[branchToUse] || "Unknown",
         createdAt: serverTimestamp()
       })
     );
@@ -154,7 +157,10 @@ await Promise.all(
           productId: item.id,
           quantity: item.oilQty * item.qty,
           type: "sale",
+          price: item.oilPrice || 0,
+          total: (item.oilPrice || 0) * item.oilQty * item.qty,
           branchId: branchToUse,
+          branchName: branchMap[branchToUse] || "Unknown",
           createdAt: serverTimestamp()
         })
       );
