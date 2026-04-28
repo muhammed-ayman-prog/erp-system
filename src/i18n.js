@@ -27,6 +27,7 @@ export const translations = {
       cancel: "Cancel",
       confirmAction: "Are you sure?",
       price: "Price",
+      
     },
     
 
@@ -137,7 +138,12 @@ export const translations = {
       refundItems: "Refund Items",
       confirmRefund: "Confirm Refund",
       closed: "Invoice fully refunded",
-      selectQty: "Select quantity"
+      selectQty: "Select quantity",
+      "salesName": "Seller",
+      "enteredBy": "Entered by",
+      "filter": {
+        "sales": "Filter by sales"
+      }
     },
 
     inventory: {
@@ -234,7 +240,8 @@ export const translations = {
       cancel: "إلغاء",
       confirmAction: "هل أنت متأكد؟",
       price: "السعر",
-      loading: "جاري التحميل..."
+      loading: "جاري التحميل...",
+      
     },
 
     
@@ -265,7 +272,6 @@ export const translations = {
       branches: "الفروع",
       users: "المستخدمين",
       settings: "الإعدادات",
-      sales: "المبيعات",
       main: "الرئيسية",
       returns: "المرتجعات",
       logs: "السجلات",
@@ -360,7 +366,12 @@ export const translations = {
       refundItems: "استرجاع منتجات",
       confirmRefund: "تأكيد الاسترجاع",
       closed: "الفاتورة متقفلة",
-      selectQty: "اختار كمية"
+      selectQty: "اختار كمية",
+      "salesName": "اسم البائع",
+      "enteredBy": "تم بواسطة",
+      "filter": {
+        "sales": "فلترة بالبائع"
+      }
     },
 
     inventory: {

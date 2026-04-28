@@ -25,7 +25,9 @@ export const processCheckout = async ({
   total,
   paymentMethod,
   customerName,
-  customerPhone
+  customerPhone,
+  salesName, // 👈 ضيف دي
+  user       // 👈 ودي
 }) => {
 
     await runTransaction(db, async (transaction) => {
@@ -194,18 +196,22 @@ await Promise.all(
 
     // 🟢 3) SAVE INVOICE
     const saleRef = await addDoc(collection(db, "sales"), {
-      invoiceNumber,
-      items: cart,
-      total: total,
-      paymentMethod: paymentMethod,
-      customerName: customerName,
-      customerPhone: customerPhone,
-      branchId: branchToUse,
-      createdAt: serverTimestamp(),
-      totalQty: cart.reduce((sum, i) => sum + i.qty, 0),
-      refundedQty: 0,
-      
-    });
+    invoiceNumber,
+    items: cart,
+    total: total,
+    paymentMethod: paymentMethod,
+    customerName: customerName,
+    customerPhone: customerPhone,
+    branchId: branchToUse,
+    createdAt: serverTimestamp(),
+    totalQty: cart.reduce((sum, i) => sum + i.qty, 0),
+    refundedQty: 0,
+
+    // 👇 دول المهمين
+    salesName: salesName || user?.name || "—",
+    enteredBy: user?.name || "—",
+    enteredById: user?.id || null
+  });
     // 🔗 ربط العميل
 if (customerPhone) {
   const q = query(

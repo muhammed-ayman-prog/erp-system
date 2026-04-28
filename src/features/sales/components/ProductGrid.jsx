@@ -1,3 +1,4 @@
+
 export default function ProductGrid({
   productsWithStock,
   search,
@@ -11,29 +12,38 @@ export default function ProductGrid({
   setPopupStep,
   setShowPopup
 }) {
+  console.log(productsWithStock.map(p => p.category)); // 👈 حطه هنا
   return (
     <div className="products-grid">
           {productsWithStock
             .filter(p => {
+            const tab = (mainTab || "").toLowerCase();
+            const cat = (p.category || "").toLowerCase();
 
-              if (mainTab === "french") return p.category === "French";
-
-              if (mainTab === "oriental") {
-              return subTab
-                ? p.category === `Oriental-${subTab}`
-                : p.category?.toLowerCase()?.includes("oriental")
+            if (tab === "french") {
+              return cat.includes("french");
             }
 
-              if (mainTab === "body") {
-                return subTab
-                  ? p.category?.toLowerCase() === subTab.toLowerCase()
-                  : false;
+            if (tab === "oriental") {
+              if (subTab) {
+                return cat.includes("oriental") && cat.includes(subTab.toLowerCase());
               }
+              return cat.includes("oriental");
+            }
 
-              if (mainTab === "original") return p.type === "original";
+            if (tab === "body") {
+              if (subTab) {
+                return cat.includes(subTab.toLowerCase());
+              }
+              return cat.includes("body");
+            }
 
-              return false;
-            })
+            if (tab === "original") {
+              return cat.includes("original") || p.type === "original";
+            }
+
+            return false;
+          })
             .filter(p =>
               (p.name || "").toLowerCase().includes(search.toLowerCase()) ||
               (p.category || "").toLowerCase().includes(search.toLowerCase())

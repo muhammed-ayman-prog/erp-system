@@ -222,6 +222,8 @@ const handleCheckout = async (params) => {
   const {
     customerName,
     customerPhone,
+    salesName,
+    user,
     paymentMethod,
     selectedBranch,
     setToastText,
@@ -234,7 +236,7 @@ const handleCheckout = async (params) => {
     setDiscount,
     setPaymentMethod,
     setCustomerName,
-    setCustomerPhone
+    setCustomerPhone,
   } = params;
 if (!paymentMethod) {
   showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
@@ -264,13 +266,17 @@ if (!customerName?.trim()) {
 
   try {
     const invoiceNumber = await processCheckout({
-    cart,
-    branchToUse: selectedBranch,
-    total,
-    paymentMethod,
-    customerName,
-    customerPhone
-  });
+  cart,
+  branchToUse: selectedBranch,
+  total,
+  paymentMethod,
+  customerName,
+  customerPhone,
+
+  // 👇 ضيف دول
+  salesName,
+  user
+});
 
     showToast(setToastText, setShowToast, `Invoice: ${invoiceNumber} ✅`);
     setCart([]);

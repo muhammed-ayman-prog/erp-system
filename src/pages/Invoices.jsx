@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
+import { createPortal } from "react-dom";
 const READY_TYPES = ["cream", "مخمرية", "original"];
 const branchMap = {
   "Abbas Akkad 1": "abbasAkkad1",
@@ -51,15 +52,19 @@ export default function Invoices() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Exchange state
-  const [exchangeItem, setExchangeItem] = useState(null);
-  const [newProductId, setNewProductId] = useState("");
-  const [newQty, setNewQty] = useState(1);
   const [showRefundPopup, setShowRefundPopup] = useState(false);
   const [refundItems, setRefundItems] = useState([]);
+  const hasValidRefund = useMemo(
+  () => refundItems.some(i => i.qty > 0),
+  [refundItems]
+);
+  const refundMap = useMemo(() =>
+  Object.fromEntries(refundItems.map(i => [i.id, i.qty])),
+[refundItems]);
   const [loading, setLoading] = useState(false);
   const [previousReturns, setPreviousReturns] = useState([]);
+  const [salesFilter, setSalesFilter] = useState("");
 
-  // 🔥 Fetch
   useEffect(() => {
     const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, snap => {
@@ -105,32 +110,44 @@ useEffect(() => {
 
   fetchReturns();
 }, [selectedInvoice]);
+useEffect(() => {
+  if (showRefundPopup || showConfirm) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+}, [showRefundPopup, showConfirm]);
 
   // 🔍 Filter
   const filtered = useMemo(() => {
-    return sales.filter(s => {
-      const key = (search || "").toLowerCase();
+  return sales.filter(s => {
+    const key = (search || "").toLowerCase();
+    const salesKey = (salesFilter || "").toLowerCase();
 
-      const match =
-  (s.customerName || "").toLowerCase().includes(key) ||
-  (s.customerPhone || "").includes(key) ||   // 👈 ضيف دي هنا
-  s.invoiceNumber?.toString().includes(key);
+    const match =
+      (s.customerName || "").toLowerCase().includes(key) ||
+      (s.customerPhone || "").includes(key) ||
+      s.invoiceNumber?.toString().includes(key);
 
-      const date = s.createdAt?.seconds
-        ? new Date(s.createdAt.seconds * 1000)
-        : null;
+    const matchSales =
+      !salesKey ||
+      (s.salesName || "").toLowerCase().includes(salesKey);
 
-      let ok = true;
-      if (fromDate && date) ok = date >= new Date(fromDate);
-      if (toDate && date) {
-        const end = new Date(toDate);
-        end.setHours(23, 59, 59);
-        ok = ok && date <= end;
-      }
+    const date = s.createdAt?.seconds
+      ? new Date(s.createdAt.seconds * 1000)
+      : null;
 
-      return match && ok;
-    });
-  }, [sales, search, fromDate, toDate]);
+    let ok = true;
+    if (fromDate && date) ok = date >= new Date(fromDate);
+    if (toDate && date) {
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59);
+      ok = ok && date <= end;
+    }
+
+    return match && matchSales && ok;
+  });
+}, [sales, search, salesFilter, fromDate, toDate]);
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
@@ -177,46 +194,7 @@ useEffect(() => {
 
     await deleteDoc(doc(db, "sales", inv.id));
   };
-
-  // 🟢 REFUND
-  const handleRefund = async () => {
-  console.warn("Old refund disabled ❌");
-  return;
-};
-
-  // 🟡 EXCHANGE (أساسي)
-  const handleExchange = async () => {
-    if (!exchangeItem || !newProductId) return;
-
-    const inv = selectedInvoice;
-
-    // القديم
-    if (isReady(exchangeItem)) {
-      await updateDoc(
-        doc(db, "inventory", `${inv.branchId}_${exchangeItem.id}`),
-        { quantity: increment(exchangeItem.qty) }
-      );
-    } else {
-      await addDoc(collection(db, "returned_items"), {
-        productId: exchangeItem.id,
-        name: exchangeItem.name,
-        quantity: exchangeItem.qty,
-        branchId: inv.branchId,
-        reason: "exchange",
-        createdAt: serverTimestamp()
-      });
-    }
-
-    // الجديد
-    await updateDoc(
-      doc(db, "inventory", `${inv.branchId}_${newProductId}`),
-      { quantity: increment(-newQty) }
-    );
-
-    alert("Exchange done (logic basic)");
-  };
-
-  // 🎬 Execute Action
+// 🎬 Execute Action
   const confirmAction = async () => {
     if (!selectedInvoice) return;
 
@@ -248,6 +226,7 @@ useEffect(() => {
   `);
 
   win.document.close();
+  win.focus();
   win.print();
 };
 const handleRefundQty = (item, qty) => {
@@ -354,6 +333,8 @@ if (refunded >= total) {
       (sum, i) => sum + i.qty,
       0
     );
+
+    
     await updateDoc(doc(db, "sales", selectedInvoice.id), {
   hasRefund: true,
   refundedQty: increment(totalRefundedNow),
@@ -369,7 +350,7 @@ if (refunded >= total) {
 
     setShowRefundPopup(false);
     setRefundItems([]);
-    setSelectedInvoice(null);
+    setSelectedInvoice(prev => ({ ...prev }));
     setLoading(false); // 👈 هنا
   } catch (err) {
   console.error(err);
@@ -377,6 +358,10 @@ if (refunded >= total) {
   setLoading(false); // 👈 مهم
 }
 };
+
+
+
+ 
   return (
     <div style={{ padding: 20 }}>
  <div
@@ -439,6 +424,19 @@ onMouseLeave={e => {
     borderRadius: "10px",
     border: `1px solid ${theme.colors.border}`,
     outline: "none",
+    fontSize: "14px"
+  }}
+/>
+<input
+  placeholder={t("invoices.filter.sales")}
+  value={salesFilter}
+  onChange={(e) => setSalesFilter(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: "10px",
+    border: `1px solid ${theme.colors.border}`,
+    marginTop: "8px",
     fontSize: "14px"
   }}
 />
@@ -695,22 +693,23 @@ return (
         padding: "6px 0",
         boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
         overflow: "hidden",
-        zIndex: 9999,
+        zIndex: 1000,
         minWidth: "150px"
       }}>
         {[
-  { key: t("invoices.refund"), label: "Refund", color: theme.colors.warning },
-  { key: t("invoices.exchange"), label: "Exchange", color: theme.colors.primary },
-  { key: t("common.cancel"), label: "Cancel", color: theme.colors.danger }
+  { key: "refund", label: "Refund", color: theme.colors.warning },
+  { key: "cancel", label: "Cancel", color: theme.colors.danger }
 ].map(a => (
   <div
     key={a.key}
     onClick={() => {
   if (a.key === "refund") {
-    setRefundItems([]); // 👈 ضيف دي
+    setRefundItems([]);
     setShowRefundPopup(true);
-  } else {
-    setAction(a.key);
+  } 
+  
+  else {
+    setAction("cancel");
     setShowConfirm(true);
   }
 
@@ -740,18 +739,54 @@ return (
             <div style={{
   marginTop: "10px",
   fontSize: "13px",
-  color: theme.colors.textSecondary,
-  display: "flex",
-  gap: "15px",
-  flexWrap: "wrap"
+  color: theme.colors.textSecondary
 }}>
-  <div>
-  {t("branches.title")}: {t(`branches.${branchMap[branchName]}`) || branchName}
-</div>
 
-<div>
-  {t("payment.method")}: {t(selectedInvoice.paymentMethod?.toLowerCase())}
-</div>
+  {/* 🔵 Sales Info */}
+  <div style={{
+    display: "flex",
+    gap: "10px",
+    marginBottom: "6px",
+    flexWrap: "wrap"
+  }}>
+    <span style={{
+      padding: "4px 10px",
+      borderRadius: "999px",
+      background: "#eef2ff",
+      fontSize: "12px",
+      fontWeight: "600"
+    }}>
+      👨‍💼 {t("invoices.salesName")}: {selectedInvoice.salesName || "—"}
+    </span>
+
+    {selectedInvoice.enteredBy !== selectedInvoice.salesName && (
+  <span style={{
+    padding: "4px 10px",
+    borderRadius: "999px",
+    background: "#ecfeff",
+    fontSize: "12px"
+  }}>
+    🖥️ {t("invoices.enteredBy")}: {selectedInvoice.enteredBy || "—"}
+  </span>
+)}
+
+
+  </div>
+
+  {/* 🏪 Branch */}
+  <div>
+    {t("branches.title")}: {
+      branchMap[branchName]
+        ? t(`branches.${branchMap[branchName]}`)
+        : branchName
+    }
+  </div>
+
+  {/* 💳 Payment */}
+  <div>
+    {t("payment.method")}: {t(selectedInvoice.paymentMethod?.toLowerCase())}
+  </div>
+
 </div>
             
             {(() => {
@@ -937,6 +972,7 @@ return (
         </div>
       </div>
       {showRefundPopup && (
+        createPortal(
       <div style={{
       position: "fixed",
       inset: 0,
@@ -944,7 +980,7 @@ return (
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      zIndex: 9999
+      zIndex: 1000
       }}>
       <div style={{
       background: "#fff",
@@ -982,11 +1018,16 @@ return (
         type="number"
         min="0"
         max={remaining}
+        onBlur={(e) => {
+        let value = Number(e.target.value) || 0;
+
+        if (value > remaining) value = remaining;
+
+        handleRefundQty(item, value);
+      }}
         disabled={remaining === 0}
         placeholder="Qty"
-        value={
-          refundItems.find(i => i.id === item.id)?.qty || ""
-        }
+        value={refundMap[item.id] || ""}
         onChange={(e) =>
           handleRefundQty(item, e.target.value)
         }
@@ -997,10 +1038,7 @@ return (
 
         <button
           onClick={handlePartialRefund}
-          disabled={
-  loading ||
-  refundItems.filter(i => i.qty > 0).length === 0
-}
+         disabled={loading || !hasValidRefund}
           
         >
         {loading ? t("common.processing") : t("invoices.confirmRefund")}
@@ -1016,10 +1054,13 @@ return (
       </button>
 
     </div>
-  </div>
+  </div>,
+  document.body
+  )
 )}
       {/* 🔴 CONFIRM MODAL */}
       {showConfirm && (
+        createPortal(
         <div style={modalStyle}>
           <div style={modalBox}>
             <p>{t("common.confirmAction")}</p>
@@ -1048,7 +1089,9 @@ return (
   {t("common.confirm")}
 </button>
           </div>
-        </div>
+        </div>,
+      document.body
+        )
       )}
     </div>
   );
@@ -1091,14 +1134,20 @@ const modalStyle = {
   background: "rgba(0,0,0,0.5)",
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "center",
+  zIndex: 1000   // 👈 مهم
 };
 
 const modalBox = {
   background: theme.colors.card,
   padding: 20,
   borderRadius: 12,
-  width: "300px",
+  width: "90vw",        // 👈 بدل 300px
+  maxWidth: "900px",    // 👈 مهم
+  height: "80vh",       // 👈 عشان السكرول
+  overflow: "auto",     // 👈 مهم جدًا
   textAlign: "center",
-  boxShadow: "0 20px 40px rgba(0,0,0,0.2)"
+  boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+  position: "relative",
+  zIndex: 1000
 };

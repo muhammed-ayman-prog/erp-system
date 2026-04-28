@@ -49,6 +49,7 @@ export default function Cart({
   selectedBranch,
   user
 }) {
+  const [salesName, setSalesName] = useState("");
   const [showErrors, setShowErrors] = useState(false);
   return (
     <div className="card cart" style={{
@@ -200,6 +201,20 @@ export default function Cart({
               : "none"
           }}
         />
+        <div style={{ marginBottom: "10px" }}>
+  <input
+    type="text"
+    placeholder={t("invoices.salesName")}
+    value={salesName}
+    onChange={(e) => setSalesName(e.target.value)}
+    style={{
+      width: "100%",
+      padding: "10px",
+      borderRadius: "10px",
+      border: `1px solid ${theme.colors.border}`
+    }}
+  />
+</div>
 
         
       </div>
@@ -309,7 +324,7 @@ export default function Cart({
         <button
         onClick={() => {
   setShowErrors(true);
-  handleCheckout();
+  handleCheckout(salesName); // 👈 ابعت القيمة
 }}
         disabled={
         loadingCheckout ||

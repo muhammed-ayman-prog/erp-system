@@ -335,12 +335,17 @@ const cleanSize = selectedSize?.name
         total={total}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
-        handleCheckout={() =>
+        handleCheckout={(salesName) =>
           handleCheckout({
             customerName,
             customerPhone,
             paymentMethod,
             selectedBranch,
+
+            // 👇 الجديد
+            salesName,
+            user,
+
             setToastText,
             setShowToast,
             setLoadingCheckout,
