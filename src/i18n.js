@@ -143,7 +143,8 @@ export const translations = {
       "enteredBy": "Entered by",
       "filter": {
         "sales": "Filter by sales"
-      }
+      },
+      "cancelled": "Cancelled"
     },
 
     inventory: {
@@ -335,7 +336,7 @@ export const translations = {
       body: "منتجات الجسم",
       original: "أورجينال",
       select: "اختار منتج",
-      oil: "زيت"
+      oil: "كمية الزيت"
     },
 
     payment: {
@@ -371,7 +372,8 @@ export const translations = {
       "enteredBy": "تم بواسطة",
       "filter": {
         "sales": "فلترة بالبائع"
-      }
+      },
+      "cancelled": "ملغي"
     },
 
     inventory: {

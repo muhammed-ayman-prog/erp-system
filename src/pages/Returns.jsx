@@ -41,8 +41,11 @@ export default function Returns() {
       return "-";
     }
   };
-
+  const totalReturns = data.length;
+  const totalQty = data.reduce((sum, r) => sum + r.quantity, 0);
+  
   return (
+    
     <div style={{ padding: "20px" }}>
       
       {/* Header */}
@@ -53,7 +56,12 @@ export default function Returns() {
         marginBottom: "20px"
       }}>
         <h2>{t("returns.title")} 🔄</h2>
+        
       </div>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      <Card title="Returns" value={totalReturns} />
+      <Card title="Items" value={totalQty} />
+    </div>
 
       {/* Loading */}
       {loading && <p>{t("common.loading")}</p>}
@@ -68,8 +76,16 @@ export default function Returns() {
         }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             
-            <thead style={{ background: "#f9f9fb" }}>
-              <tr style={{ textAlign: "left", fontSize: "13px", color: "#666" }}>
+            <thead style={{
+            background: "#f9fafb",
+            fontSize: "13px",
+            color: "#666"
+          }}>
+              <tr style={{
+                borderTop: "1px solid #eee",
+                transition: "0.2s",
+                cursor: "pointer"
+              }}>
                 <th style={{ padding: "12px" }}>{t("returns.invoice")}</th>
                 <th>{t("returns.product")}</th>
                 <th>{t("common.qty")}</th>
@@ -81,8 +97,10 @@ export default function Returns() {
             <tbody>
               {data.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ padding: "20px", textAlign: "center" }}>
-                    {t("returns.noReturns")}
+                  <td colSpan="5" style={{ padding: "30px", textAlign: "center" }}>
+                    <div style={{ opacity: 0.6 }}>
+                      No returns yet 🔄
+                    </div>
                   </td>
                 </tr>
               )}
@@ -98,9 +116,23 @@ export default function Returns() {
                     (e.currentTarget.style.background = "transparent")
                   }
                 >
-                  <td style={{ padding: "12px" }}>{r.invoiceId}</td>
-                  <td>{r.productName}</td>
-                  <td>{r.quantity}</td>
+                 <td style={{ padding: "12px" }}>{r.invoiceId}</td>
+                 <td style={{ padding: "12px" }}>
+                  <div style={{ fontWeight: "500" }}>
+                    {r.productName}
+                  </div>
+
+                  <div style={{ fontSize: "12px", opacity: 0.6 }}>
+                  {[
+                    r.container,
+                    r.size ? `${r.size}${r.unit || ""}` : null
+                  ]
+                    .filter(Boolean)
+                    .join(" • ")
+                  }
+                </div>
+                 </td>
+                 <td>{r.quantity}</td>
 
                   {/* Type Badge */}
                   <td>
@@ -128,3 +160,19 @@ export default function Returns() {
     </div>
   );
 }
+const Card = ({ title, value }) => (
+  <div style={{
+    background: "#fff",
+    padding: "12px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+    flex: 1
+  }}>
+    <div style={{ fontSize: "12px", opacity: 0.6 }}>
+      {title}
+    </div>
+    <div style={{ fontSize: "18px", fontWeight: "600" }}>
+      {value}
+    </div>
+  </div>
+);

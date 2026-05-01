@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useAuth } from "./store/useAuth";
 
 import Login from "./pages/Login";
-import Home from "./pages/Home";
 import SalesPage from "./features/sales/SalesPage";
 import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
@@ -22,6 +21,7 @@ import Invoices from "./pages/Invoices";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Logs from "./pages/Logs";  
+import { Toaster } from "react-hot-toast";
 function App() {
   const { user, loading } = useAuth();
   console.log("🔥 CURRENT USER:", user);
@@ -37,20 +37,19 @@ function App() {
           {/* 🔓 Login */}
           <Route
             path="/login"
-            element={!user ? <Login /> : <Navigate to="/home" />}
+            element={!user ? <Login /> : <Navigate to="/dashboard" />}
           />
 
           {/* Root Redirect */}
           <Route
             path="/"
-            element={user ? <Navigate to="/home" /> : <Navigate to="/login" />}
+            element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
           />
 
           {/* 🔐 Protected App */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
 
-              <Route path="/home" element={<Home />} />
 
               {/* Dashboard */}
               <Route element={<ProtectedRoute permissions={["view_dashboard"]} />}>
@@ -129,9 +128,13 @@ function App() {
 
             </Route>
           </Route>
-
+        <Route
+          path="*"
+          element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
+        />
         </Routes>
       </Router>
+      <Toaster position="top-right" />
     </>
   );
 }

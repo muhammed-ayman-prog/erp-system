@@ -14,14 +14,16 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
-  where
+  where,
+  writeBatch
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
 import { createPortal } from "react-dom";
-const READY_TYPES = ["cream", "مخمرية", "original"];
+import toast from "react-hot-toast";
+import { DollarSign, Banknote, CreditCard, Smartphone } from "lucide-react";
 const branchMap = {
   "Abbas Akkad 1": "abbasAkkad1",
   "Abbas Akkad 2": "abbasAkkad2",
@@ -50,7 +52,7 @@ export default function Invoices() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [action, setAction] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
-
+  const [debouncedSearch, setDebouncedSearch] = useState(search); 
   // Exchange state
   const [showRefundPopup, setShowRefundPopup] = useState(false);
   const [refundItems, setRefundItems] = useState([]);
@@ -64,7 +66,18 @@ export default function Invoices() {
   const [loading, setLoading] = useState(false);
   const [previousReturns, setPreviousReturns] = useState([]);
   const [salesFilter, setSalesFilter] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const handleRowHover = (e, active) => {
+  if (!active) {
+    e.currentTarget.style.transform = "scale(1.01)";
+    e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.1)";
+  }
+};
 
+const handleRowLeave = (e) => {
+  e.currentTarget.style.transform = "scale(1)";
+  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
+};
   useEffect(() => {
     const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, snap => {
@@ -117,17 +130,36 @@ useEffect(() => {
     document.body.style.overflow = "auto";
   }
 }, [showRefundPopup, showConfirm]);
+useEffect(() => {
+  setPage(1);
+}, [search, salesFilter, fromDate, toDate]);
+useEffect(() => {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @keyframes pulse {
+      0% { opacity: 0.5 }
+      50% { opacity: 1 }
+      100% { opacity: 0.5 }
+    }
+  `;
+  document.head.appendChild(style);
+}, []);
+useEffect(() => {
+  const t = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 300);
 
+  return () => clearTimeout(t);
+}, [search]);
   // 🔍 Filter
+  const searchKey = (debouncedSearch || "").toLowerCase();
+  const salesKey = (salesFilter || "").toLowerCase();
   const filtered = useMemo(() => {
   return sales.filter(s => {
-    const key = (search || "").toLowerCase();
-    const salesKey = (salesFilter || "").toLowerCase();
-
     const match =
-      (s.customerName || "").toLowerCase().includes(key) ||
-      (s.customerPhone || "").includes(key) ||
-      s.invoiceNumber?.toString().includes(key);
+      (s.customerName || "").toLowerCase().includes(searchKey) ||
+      (s.customerPhone || "").includes(searchKey) ||
+      s.invoiceNumber?.toString().includes(searchKey);
 
     const matchSales =
       !salesKey ||
@@ -138,19 +170,18 @@ useEffect(() => {
       : null;
 
     let ok = true;
-    if (fromDate && date) ok = date >= new Date(fromDate);
-    if (toDate && date) {
-      const end = new Date(toDate);
-      end.setHours(23, 59, 59);
-      ok = ok && date <= end;
+
+    if (date) {
+      if (fromDate && date < new Date(fromDate)) ok = false;
+      if (toDate && date > new Date(toDate)) ok = false;
     }
 
     return match && matchSales && ok;
   });
-}, [sales, search, salesFilter, fromDate, toDate]);
-
+}, [sales, searchKey, salesKey, fromDate, toDate]);
+  const isLoadingTable = sales.length === 0;
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
   // 💰 totals
   const totals = useMemo(() => {
@@ -160,40 +191,98 @@ useEffect(() => {
       instapay = 0;
 
     filtered.forEach(i => {
-      const t = +i.total || 0;
-      total += t;
-      if (i.paymentMethod === "Cash") cash += t;
-      if (i.paymentMethod === "Visa") visa += t;
-      if (i.paymentMethod === "Instapay") instapay += t;
-    });
+      if (i.status === "cancelled") return;
+      let net = i.total || 0;
+
+      const totalQty =
+        i.totalQty || i.items?.reduce((s, it) => s + it.qty, 0);
+
+      const refundedQty = i.refundedQty || 0;
+
+      // 👇 لو الفاتورة متردة بالكامل
+      if (refundedQty >= totalQty) {
+        net = 0;
+      }
+
+      // 👇 حماية
+      if (net < 0) net = 0;
+
+      total += net;
+      const method = (i.paymentMethod || "").toLowerCase();
+
+      if (method === "cash") cash += net;
+      if (method === "visa") visa += net;
+      if (method === "instapay") instapay += net;
+          });
 
     return { total, cash, visa, instapay };
   }, [filtered]);
 
   // 🧠 helpers
-  const isReady = item =>
-    READY_TYPES.includes((item.category || "").toLowerCase());
+ 
 
   // 🔴 CANCEL
-  const handleCancel = async inv => {
-    for (const item of inv.items) {
-      await updateDoc(
-        doc(db, "inventory", `${inv.branchId}_${item.id}`),
-        { quantity: increment(item.qty) }
-      );
-    }
+  const handleCancel = async (inv) => {
+  if (inv.status === "cancelled" || cancelling) return;
 
-    await setDoc(
-      doc(db, "stats", "dashboard"),
-      {
-        totalSales: increment(-inv.total),
-        invoices: increment(-1)
-      },
-      { merge: true }
+  setCancelling(true);
+
+  try {
+    const batch = writeBatch(db);
+
+    const returnsSnap = await getDocs(
+      query(
+        collection(db, "returns"),
+        where("invoiceId", "==", inv.id)
+      )
     );
 
-    await deleteDoc(doc(db, "sales", inv.id));
-  };
+    const refundedMap = {};
+    returnsSnap.docs.forEach(d => {
+      const data = d.data();
+      refundedMap[data.productId] =
+        (refundedMap[data.productId] || 0) + (data.quantity || 0);
+    });
+
+    for (const item of inv.items) {
+      const alreadyRefunded = refundedMap[item.id] || 0;
+      const remaining = item.qty - alreadyRefunded;
+
+      if (remaining <= 0) continue;
+
+      const invRef = doc(db, "inventory", `${inv.branchId}_${item.id}`);
+
+      batch.update(invRef, {
+        quantity: increment(remaining)
+      });
+    }
+
+    const saleRef = doc(db, "sales", inv.id);
+
+    batch.update(saleRef, {
+      status: "cancelled",
+      cancelledAt: serverTimestamp()
+    });
+    // optimistic update
+setSales(prev =>
+  prev.map(s =>
+    s.id === inv.id
+      ? { ...s, status: "cancelled" }
+      : s
+  )
+);
+
+
+    await batch.commit();
+    toast.success("Invoice cancelled"); 
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Error cancelling invoice");
+  } finally {
+    setCancelling(false);
+  }
+};
 // 🎬 Execute Action
   const confirmAction = async () => {
     if (!selectedInvoice) return;
@@ -205,6 +294,7 @@ useEffect(() => {
   };
   const handlePrint = () => {
   const content = document.getElementById("invoice-print");
+  if (!content) return;
 
   const win = window.open("", "", "width=800,height=600");
 
@@ -256,7 +346,7 @@ const total =
   selectedInvoice.totalQty ||
   selectedInvoice.items.reduce((s, i) => s + i.qty, 0);
 if (refunded >= total) {
-  alert(t("invoices.closed"));
+  toast.error(t("invoices.closed"));
   return;
 }
   
@@ -264,7 +354,7 @@ if (refunded >= total) {
   const validItems = (refundItems || []).filter(i => i.qty > 0);
 
  if (validItems.length === 0) {
-  alert(t("invoices.selectQty"));
+ toast.error(t("invoices.selectQty"));
   setLoading(false);
   return;
 }
@@ -279,31 +369,36 @@ if (refunded >= total) {
   const remaining = original.qty - alreadyRefunded;
 
   if (remaining <= 0) {
-    alert(`المنتج ${item.name} مترد بالكامل ❌`);
+   toast.error(`المنتج ${item.name} مترد بالكامل ❌`);
     setLoading(false);
     return;
   }
 
   if (item.qty > remaining) {
-  alert(`المتاح ترجع ${remaining} بس من ${item.name} ❌`);
+  toast.error(`المتاح ترجع ${remaining} بس من ${item.name} ❌`);
   setLoading(false);
   return;
 }
 }
 
-
+const batch = writeBatch(db); 
   try {
     for (const item of validItems) {
 
-      if (isReady(item)) {
-  // يرجع للمخزن
-  await updateDoc(
-    doc(db, "inventory", `${selectedInvoice.branchId}_${item.id}`),
-    { quantity: increment(item.qty) }
+      if (item.type && item.type !== "oil") {
+  const invRef = doc(
+    db,
+    "inventory",
+    `${selectedInvoice.branchId}_${item.id}`
   );
+
+  batch.update(invRef, {
+    quantity: increment(item.qty)
+  });
 } else {
-  // يتحط في returned_items
-  await addDoc(collection(db, "returned_items"), {
+  const returnedRef = doc(collection(db, "returned_items"));
+
+  batch.set(returnedRef, {
     productId: item.id,
     name: item.name,
     quantity: item.qty,
@@ -313,51 +408,69 @@ if (refunded >= total) {
   });
 }
 
-      await addDoc(collection(db, "returns"), {
-      invoiceId: selectedInvoice.id,
-      productId: item.id,
-      productName: item.name,
-      quantity: item.qty,
-      price: item.price,
-      type: "refund",
-      branchId: selectedInvoice.branchId,
+const returnRef = doc(collection(db, "returns"));
 
-      // 🔥 الجديد
-      refundDate: serverTimestamp(),
-      originalSaleDate: selectedInvoice.createdAt,
+batch.set(returnRef, {
+  invoiceId: selectedInvoice.id,
+  productId: item.id,
+  productName: item.name,
+  productType: item.type,
+  size: item.size || "",
+  unit: item.size?.includes("ml") ? "ml" : "",
+  quantity: item.qty,
+  price: item.price,
+  type: "refund",
+  branchId: selectedInvoice.branchId,
+  container: item.containerType?.toUpperCase() || "",
+  refundDate: serverTimestamp(),
+  originalSaleDate: selectedInvoice.createdAt,
+  createdAt: serverTimestamp()
+});
+}
 
-      createdAt: serverTimestamp()
-    });
-    }
-    const totalRefundedNow = validItems.reduce(
-      (sum, i) => sum + i.qty,
-      0
-    );
 
-    
-    await updateDoc(doc(db, "sales", selectedInvoice.id), {
+const totalRefundedNow = validItems.reduce((s, i) => s + i.qty, 0);
+
+const saleRef = doc(db, "sales", selectedInvoice.id);
+
+batch.update(saleRef, {
   hasRefund: true,
   refundedQty: increment(totalRefundedNow),
   lastRefundDate: serverTimestamp()
 });
-    
 
-    
-    
-    
+setSales(prev =>
+  prev.map(s =>
+    s.id === selectedInvoice.id
+      ? {
+          ...s,
+          refundedQty: (s.refundedQty || 0) + totalRefundedNow,
+          hasRefund: true
+        }
+      : s
+  )
+);
+// 🔥 مرة واحدة بس
+await batch.commit();
+toast.success("Refund done successfully");
 
-    
+  // UI
+  setShowRefundPopup(false);
+  setRefundItems([]);
+  setSelectedInvoice(null);
 
-    setShowRefundPopup(false);
-    setRefundItems([]);
-    setSelectedInvoice(prev => ({ ...prev }));
-    setLoading(false); // 👈 هنا
-  } catch (err) {
+} catch (err) {
   console.error(err);
-  alert(t("common.error"));
-  setLoading(false); // 👈 مهم
+  toast.error(t("common.error"));
+} finally {
+  setLoading(false);
 }
+
+    
+
+
 };
+
 
 
 
@@ -397,12 +510,8 @@ if (refunded >= total) {
       cursor: "pointer",
       fontWeight: "500"
     }}
-    onMouseEnter={e => {
-  e.currentTarget.style.background = theme.colors.secondary;
-}}
-onMouseLeave={e => {
-  e.currentTarget.style.background = theme.colors.card;
-}}
+    onMouseEnter={e => handleRowHover(e, false)}
+onMouseLeave={handleRowLeave}
   >
     {t("common.back")}
   </button>
@@ -464,10 +573,10 @@ onMouseLeave={e => {
 
       {/* 💰 CARDS */}
       <div style={{ display: "flex", gap: 10 }}>
-        <Card title={t("total")} value={totals.total} />
-        <Card title={t("cash")} value={totals.cash} />
-        <Card title={t("visa")} value={totals.visa} />
-        <Card title={t("instapay")} value={totals.instapay} />
+        <Card title={t("total")} value={totals.total} type="total" />
+        <Card title={t("cash")} value={totals.cash} type="cash" />
+        <Card title={t("visa")} value={totals.visa} type="visa" />
+        <Card title={t("instapay")} value={totals.instapay} type="instapay" />
       </div>
 
       <div style={{ display: "flex", gap: 20, marginTop: 20 }}>
@@ -502,54 +611,101 @@ onMouseLeave={e => {
 </tr>
             </thead>
             <tbody>
-              {paginated.map(s => {
+              {isLoadingTable
+    ? Array.from({ length: 5 }).map((_, i) => (
+        <tr key={i}>
+          <td colSpan="6" style={{ padding: "12px" }}>
+            <div
+              style={{
+                height: "20px",
+                borderRadius: "6px",
+                background: "#eee",
+                animation: "pulse 1.5s infinite"
+              }}
+            />
+          </td>
+        </tr>
+      ))
+      
+    : paginated.length === 0 ? (
+  <tr>
+    <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+      <div style={{ color: "#999" }}>
+        📭 مفيش فواتير بالفلتر ده
+      </div>
+    </td>
+  </tr>
+) : (
+  paginated.map(s => {
                 const totalQty =
   s.totalQty ||
   s.items?.reduce((sum, i) => sum + i.qty, 0);
 
 const refundedQty = s.refundedQty || 0;
+ const statusStyle =
+  s.status === "cancelled"
+    ? { bg: "#e5e7eb", color: "#374151" }
+    : refundedQty >= totalQty
+    ? { bg: "#fee2e2", color: "#dc2626" }
+    : refundedQty > 0
+    ? { bg: "#fef9c3", color: "#ca8a04" }
+    : { bg: "#dcfce7", color: "#16a34a" };
 return (          
   <tr
-    key={s.id}
-    onClick={() => setSelectedInvoice(s)}
-    style={{
-      cursor: "pointer",
-      background:
-        selectedInvoice?.id === s.id
-          ? theme.colors.secondary
-          : theme.colors.card,
-      transition: "0.2s",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
-    }}
-    onMouseEnter={e => {
-      if (selectedInvoice?.id !== s.id)
-        e.currentTarget.style.background = theme.colors.cardSoft;
-    }}
-    onMouseLeave={e => {
-      if (selectedInvoice?.id !== s.id)
-        e.currentTarget.style.background = theme.colors.card;
-    }}
-  >
+  key={s.id}
+  onClick={() => setSelectedInvoice(s)}
+  style={{
+    cursor: "pointer",
+    background:
+      selectedInvoice?.id === s.id
+        ? theme.colors.secondary
+        : theme.colors.card,
+    transition: "all 0.2s ease",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+    borderRadius: "12px",
+    overflow: "hidden",
+    opacity: s.status === "cancelled" ? 0.5 : 1,
+  }}
+  onMouseEnter={e => handleRowHover(e, false)}
+onMouseLeave={handleRowLeave}
+>
     {/* Invoice */}
-    <td style={{ padding: "12px" }}>
-      {s.invoiceNumber}
-    </td>
+    <td style={{ padding: "14px 12px", fontWeight: "600" }}>
+  {s.invoiceNumber}
+</td>
 
     {/* Customer */}
-    <td style={{ padding: "12px" }}>
+    <td style={{
+  padding: "14px 12px",
+  fontSize: "14px"
+}}>
       {s.customerName || "-"}
     </td>
 
     {/* Date */}
-    <td style={{ padding: "12px" }}>
+    <td style={{
+  padding: "14px 12px",
+  fontSize: "14px"
+}}>
       {s.createdAt?.seconds
         ? new Date(s.createdAt.seconds * 1000).toLocaleDateString()
         : "-"}
     </td>
 
     {/* Payment */}
-    <td style={{ padding: "12px" }}>
-      {t(s.paymentMethod.toLowerCase())}  
+    <td style={{
+  padding: "14px 12px",
+  fontSize: "14px"
+}}>
+      <span style={{
+  padding: "4px 10px",
+  borderRadius: "999px",
+  background: "#f1f5f9",
+  fontSize: "12px",
+  fontWeight: "500"
+}}>
+  {t((s.paymentMethod || "").toLowerCase())}
+</span>
     </td>
 
     {/* Total */}
@@ -558,23 +714,24 @@ return (
     </td>
         
     {/* Status */}
-    <td style={{ padding: "12px" }}>
+    <td style={{
+  padding: "14px 12px",
+  fontSize: "14px"
+}}>
       <span
         style={{
-          background:
-            refundedQty >= totalQty
-              ? theme.colors.warning
-              : refundedQty > 0
-              ? "#facc15"
-              : theme.colors.success,
-          color: "#fff",
-          padding: "4px 8px",
-          borderRadius: "8px",
-          fontSize: "12px"
+          background: statusStyle.bg,
+          color: statusStyle.color,
+          padding: "5px 10px",
+          borderRadius: "999px",
+          fontSize: "12px",
+          fontWeight: "600"
         }}
       >
         {
-  refundedQty >= totalQty
+  s.status === "cancelled"
+    ? t("invoices.cancelled")
+    : refundedQty >= totalQty
     ? t("invoices.refunded")
     : refundedQty > 0
     ? t("invoices.partialRefunded")
@@ -586,7 +743,9 @@ return (
     
   </tr>
 );
-})}
+}))
+}
+
  
             </tbody>
           </table>
@@ -634,7 +793,9 @@ return (
         {/* SIDE PANEL */}
         <div style={{
   flex: 2,
-  position: "relative",
+  position: "sticky",
+  top: "20px",
+  height: "fit-content",
   background: theme.colors.card,
   padding: "20px",
   borderRadius: "16px",
@@ -652,50 +813,55 @@ return (
             <div style={{
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center"
+  alignItems: "center",
+  marginBottom: "10px"
 }}>
+  <div>
+    <h3 style={{ margin: 0 }}>
+      {selectedInvoice.invoiceNumber}
+    </h3>
 
-  <h3 style={{ margin: 0 }}>
-    {selectedInvoice.invoiceNumber}
-  </h3>
-  
+    <div style={{
+      fontSize: "12px",
+      color: theme.colors.textSecondary,
+      marginTop: "4px"
+    }}>
+      {new Date(selectedInvoice.createdAt?.seconds * 1000).toLocaleString()}
+    </div>
+  </div>
 
   {/* Actions */}
-            <div style={{ marginTop: "15px" }}>
-  <div style={{ position: "relative", display: "inline-block" }}>
+  <button
+    onClick={() => setDropdownOpen(prev => !prev)}
+    style={{
+      padding: "6px 12px",
+      borderRadius: "8px",
+      border: "none",
+      background: theme.colors.primary,
+      color: "#fff",
+      cursor: "pointer",
+      fontSize: "12px"
+    }}
+  >
+    {t("common.actions")} ⋮
+  </button>
+</div>
 
-    {/* Button */}
-    <button
-      onClick={() => setDropdownOpen(prev => !prev)}
-       style={{
-    padding: "8px 14px",
-    borderRadius: "10px",
-    border: "none",
-    background: theme.colors.primary,
-    color: "#fff",
-    fontWeight: "600",
-    cursor: "pointer",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-  }}
-    >
-      {t("common.actions")} ⌄
-    </button>
-
-    {/* Dropdown */}
-    {dropdownOpen && (
-      <div style={{
-        position: "absolute",
-        top: "110%",
-        right: 0,
-        background: theme.colors.card,
-        border: `1px solid ${theme.colors.border}`,
-        borderRadius: "12px",
-        padding: "6px 0",
-        boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
-        overflow: "hidden",
-        zIndex: 1000,
-        minWidth: "150px"
-      }}>
+  {/* Dropdown */}
+  {dropdownOpen && (
+    <div style={{
+      position: "absolute",
+      top: "40px",
+      right: "10px",
+      background: theme.colors.card,
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: "12px",
+      padding: "6px 0",
+      boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
+      overflow: "hidden",
+      zIndex: 1000,
+      minWidth: "150px"
+    }}>
         {[
   { key: "refund", label: "Refund", color: theme.colors.warning },
   { key: "cancel", label: "Cancel", color: theme.colors.danger }
@@ -703,6 +869,8 @@ return (
   <div
     key={a.key}
     onClick={() => {
+  if (selectedInvoice.status === "cancelled" || cancelling) return;
+  if (cancelling) return;
   if (a.key === "refund") {
     setRefundItems([]);
     setShowRefundPopup(true);
@@ -727,20 +895,33 @@ return (
 ))}
       </div>
     )}
-  </div>
-</div>
   
-</div>
 
 
-            <div style={{ color: theme.colors.textSecondary, fontSize: "13px" }}>
-                {new Date(selectedInvoice.createdAt?.seconds * 1000).toLocaleString()}
-            </div>
+            
             <div style={{
-  marginTop: "10px",
-  fontSize: "13px",
-  color: theme.colors.textSecondary
+  marginTop: "12px",
+  padding: "12px",
+  borderRadius: "10px",
+  background: theme.colors.cardSoft
 }}>
+
+  {/* Customer */}
+  <div style={{ marginBottom: "8px" }}>
+    <div style={{ fontWeight: "600" }}>
+      {selectedInvoice.customerName || "-"}
+    </div>
+    <div style={{
+      fontSize: "12px",
+      color: theme.colors.textSecondary
+    }}>
+      {selectedInvoice.customerPhone || ""}
+    </div>
+  </div>
+
+  
+
+</div>
 
   {/* 🔵 Sales Info */}
   <div style={{
@@ -784,65 +965,58 @@ return (
 
   {/* 💳 Payment */}
   <div>
-    {t("payment.method")}: {t(selectedInvoice.paymentMethod?.toLowerCase())}
+    {t("payment.method")}: {t((selectedInvoice.paymentMethod || "").toLowerCase())}
   </div>
 
-</div>
+
             
             {(() => {
   const refunded = selectedInvoice.refundedQty || 0;
   const total = selectedInvoice.totalQty || selectedInvoice.items.reduce((s,i)=>s+i.qty,0);
 
   return (
-    <div
-      style={{
-        display: "inline-block",
-        padding: "4px 10px",
-        borderRadius: "8px",
-        background:
-          refunded >= total
-            ? theme.colors.warning
-            : refunded > 0
-            ? "#facc15"
-            : theme.colors.success,
-        color: "#fff",
-        fontSize: "12px",
-        marginTop: "10px"
-      }}
-    >
+    <div style={{
+      marginTop: "10px",
+      padding: "6px 12px",
+      borderRadius: "999px",
+      fontSize: "12px",
+      fontWeight: "600",
+      display: "inline-block",
+      background:
+        refunded >= total
+          ? "#fee2e2"
+          : refunded > 0
+          ? "#fef9c3"
+          : "#dcfce7",
+      color:
+        refunded >= total
+          ? "#dc2626"
+          : refunded > 0
+          ? "#ca8a04"
+          : "#16a34a"
+    }}>
       {
         refunded >= total
-        ? t("invoices.refunded")
-        : refunded > 0
-        ? t("invoices.partialRefunded")
-        : t("invoices.completed")
+          ? t("invoices.refunded")
+          : refunded > 0
+          ? t("invoices.partialRefunded")
+          : t("invoices.completed")
       }
     </div>
-  );
-})()}
+      );
+    })()}
             <div style={{
-                fontSize: "26px",
-                fontWeight: "bold",
-                color: theme.colors.success,
-                marginTop: "10px"
+              fontSize: "28px",
+              fontWeight: "800",
+              color: theme.colors.success,
+              marginTop: "15px",
+              background: "#ecfdf5",
+              padding: "10px",
+              borderRadius: "10px",
+              textAlign: "center"
             }}>
-                {selectedInvoice.total} EGP
+              {selectedInvoice.total} EGP
             </div>
-            <div style={{
-            marginTop: "6px",
-            color: theme.colors.text
-            }}>
-            {selectedInvoice.customerName || "-"}
-            <div style={{
-            fontSize: "13px",
-            color: theme.colors.textSecondary
-            }}>
-            {selectedInvoice.customerPhone || ""}
-            </div>
-            </div>
-            
-
-            
 
             {/* 🧾 Items Table */}
         <div style={{
@@ -862,21 +1036,39 @@ return (
             color: theme.colors.textSecondary,
             marginBottom: "8px"
         }}>
+          
             <span style={{ flex: 2 }}>{t("products.title")}</span>
             <span style={{ flex: 1, textAlign: "center" }}>{t("common.qty")}</span>
             <span style={{ flex: 1, textAlign: "right" }}>{t("common.price")}</span>
         </div>
+        
 
         {/* 🔹 Items */}
         {selectedInvoice.items.map((item, i) => (
             <div key={item.id} style={{
             display: "flex",
             justifyContent: "space-between",
-            marginBottom: "8px",
+            marginBottom: "10px",
+padding: "6px 0",
+borderBottom: "1px dashed #eee",
             fontSize: "14px"
             }}>
             <div style={{ flex: 2 }}>
   {item.name}
+
+  <div style={{
+    fontSize: "12px",
+    color: theme.colors.textSecondary,
+    marginTop: "2px"
+  }}>
+    {[
+      item.containerType,
+      item.size
+    ]
+      .filter(Boolean)
+      .join(" • ")
+    }
+  </div>
 
   {/* 🛢 الزيت */}
   {item.oilQty > 0 && (
@@ -885,7 +1077,7 @@ return (
       color: theme.colors.textSecondary,
       marginTop: "2px"
     }}>
-      {t("products.oil")}: {item.oilQty} ml × {item.qty}
+      {t("products.oil")}: {item.oilQty} ml
     </div>
   )}
 </div>
@@ -955,14 +1147,8 @@ return (
                 boxShadow: "0 10px 20px rgba(37,99,235,0.3)",
                 transition: "0.2s"
             }}
-            onMouseEnter={e=>{
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.background = theme.colors.primaryHover;
-            }}
-            onMouseLeave={e=>{
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.background = theme.colors.primary;
-            }}
+            onMouseEnter={e => handleRowHover(e, false)}
+onMouseLeave={handleRowLeave}
             >
             🖨 {t("invoices.print")}
             </button>
@@ -986,7 +1172,8 @@ return (
       background: "#fff",
       padding: "20px",
       borderRadius: "12px",
-      width: "400px"
+      width: "100%",
+
       }}>
 
       <h3>{t("invoices.refundItems")}</h3>
@@ -1039,9 +1226,12 @@ return (
         <button
           onClick={handlePartialRefund}
          disabled={loading || !hasValidRefund}
-          
+          style={{
+            opacity: loading ? 0.6 : 1,
+            cursor: loading ? "not-allowed" : "pointer"
+          }}
         >
-        {loading ? t("common.processing") : t("invoices.confirmRefund")}
+        {loading ? "⏳ Processing..." : t("invoices.confirmRefund")}
       </button>
 
       <button
@@ -1063,7 +1253,17 @@ return (
         createPortal(
         <div style={modalStyle}>
           <div style={modalBox}>
-            <p>{t("common.confirmAction")}</p>
+            <div style={{ marginBottom: "15px" }}>
+  <h3 style={{ margin: 0 }}>{t("common.confirmAction")}</h3>
+
+  <p style={{
+    fontSize: "13px",
+    color: theme.colors.textSecondary,
+    marginTop: "6px"
+  }}>
+    {t("invoices.cancelWarning")}
+  </p>
+</div>
             <button
   onClick={() => setShowConfirm(false)}
   style={{
@@ -1097,33 +1297,98 @@ return (
   );
 }
 
-const Card = ({ title, value }) => (
+const Card = ({ title, value, type }) => {
+  const styles = {
+    total: {
+      bg: "#16a34a",       // أخضر غامق
+      color: "#ffffff",    // أبيض
+      border: "#16a34a"
+    },
+    cash: {
+      bg: "#ecfdf5",       // أخضر فاتح
+      color: "#16a34a",
+      border: "#bbf7d0"
+    },
+    visa: {
+      bg: "#fef3c7",
+      color: "#b45309"
+    },
+    instapay: {
+      bg: "#f3e8ff",
+      color: "#7c3aed"
+    }
+  };
+
+  const s = styles[type] || {};
+  const icons = {
+  total: <DollarSign size={20} color="#fff" strokeWidth={2.5} />,
+  cash: <Banknote size={18} />,
+  visa: <CreditCard size={18} />,
+  instapay: <Smartphone size={18} />
+};
+  return (
   <div
     style={{
-  background: theme.colors.card,
-  boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-  border: `1px solid ${theme.colors.border}`,
-  padding: 15,
-  borderRadius: 12,
-  flex: 1
+      background: s.bg || theme.colors.card,
+      border: `1px solid ${s.border || theme.colors.border}`,
+      padding: 15,
+      borderRadius: 12,
+      flex: 1,
+      cursor: "pointer",
+      transition: "0.2s",
+      boxShadow:
+        type === "total"
+          ? "0 10px 30px rgba(22,163,74,0.3)"
+          : "0 8px 20px rgba(0,0,0,0.05)"
+    }}
+    onMouseEnter={e => {
+  e.currentTarget.style.transform = "scale(1.02)";
+}}
+onMouseLeave={e => {
+  e.currentTarget.style.transform = "scale(1)";
 }}
   >
-    <div style={{
-  fontSize: "12px",
-  color: theme.colors.textSecondary
-}}>
-  {title}
-</div>
+        {/* 🔥 Top Row */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <span style={{
+            fontSize: "12px",
+            color: type === "total" ? "#d1fae5" : theme.colors.textSecondary
+          }}>
+            {title}
+          </span>
 
-<div style={{
-  fontSize: "20px",
-  fontWeight: "700",
-  marginTop: "5px"
-}}>
-  {value} EGP
-</div>
-  </div>
-);
+          <div style={{
+            width: 34,
+            height: 34,
+            borderRadius: "10px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background:
+              type === "total"
+                ? "rgba(255,255,255,0.2)"
+                : "rgba(0,0,0,0.05)"
+          }}>
+            {icons[type]}
+          </div>
+        </div>
+
+        {/* 💰 Value */}
+        <div style={{
+          fontSize: type === "total" ? "26px" : "20px",
+          fontWeight: "700",
+          marginTop: "8px",
+          color: s.color || theme.colors.text
+        }}>
+          {value} EGP
+        </div>
+      </div>
+  );
+};
 
 const modalStyle = {
   position: "fixed",
@@ -1142,12 +1407,11 @@ const modalBox = {
   background: theme.colors.card,
   padding: 20,
   borderRadius: 12,
-  width: "90vw",        // 👈 بدل 300px
-  maxWidth: "900px",    // 👈 مهم
-  height: "80vh",       // 👈 عشان السكرول
-  overflow: "auto",     // 👈 مهم جدًا
+
+  width: "100%",
+  maxWidth: "380px",   // 👈 صغير وبروفشنال
+
   textAlign: "center",
   boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-  position: "relative",
-  zIndex: 1000
+  position: "relative"
 };

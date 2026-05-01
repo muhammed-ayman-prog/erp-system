@@ -27,7 +27,7 @@ export default function ProtectedRoute({ permissions = [] }) {
 
   // ❌ مفيش صلاحية
   if (!hasAccess) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;
