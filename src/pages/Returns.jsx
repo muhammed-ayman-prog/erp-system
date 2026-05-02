@@ -120,12 +120,26 @@ export default function Returns() {
                  <td style={{ padding: "12px" }}>
                   <div style={{ fontWeight: "500" }}>
                     {r.productName}
+                    <span style={{
+                    fontSize: "11px",
+                    padding: "3px 8px",
+                    borderRadius: "10px",
+                    marginLeft: "6px",
+                    background: r.status === "sold" ? "#dcfce7" : "#fef3c7",
+                    color: r.status === "sold" ? "#166534" : "#92400e"
+                  }}>
+                    {r.status === "sold" ? "✅ Sold" : "🔄 Returned"}
+                  </span>
                   </div>
 
                   <div style={{ fontSize: "12px", opacity: 0.6 }}>
                   {[
                     r.container,
-                    r.size ? `${r.size}${r.unit || ""}` : null
+                    r.size?.includes("ml")
+                      ? r.size
+                      : r.size
+                      ? `${r.size}${r.unit || ""}`
+                      : null
                   ]
                     .filter(Boolean)
                     .join(" • ")

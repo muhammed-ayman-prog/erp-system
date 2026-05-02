@@ -100,8 +100,6 @@ export default function Cart({
           {/* 📦 تفاصيل */}
           <div style={{ fontSize: "12px", color: theme.colors.textSecondary }}>
             {item.containerName || item.containerType}
-            {item.oilQty > 0 && ` • ${item.oilQty} ml`}
-            {item.sizeLabel && ` • ${item.sizeLabel}`}
           </div>
 
           {/* 🔢 Controls */}
@@ -304,7 +302,10 @@ export default function Cart({
 </div>
         
         <button
-          onClick={() => setCart([])}
+          onClick={() => {
+            setCart([]);
+            localStorage.removeItem("cart");
+          }}
           disabled={cart.length === 0}
           style={{
             opacity: cart.length === 0 ? 0.5 : 1,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../../../firebase";
 import {
   runTransaction,
@@ -17,7 +17,25 @@ import {
 import { processCheckout } from "../services/checkoutService";
 import { showToast } from "../../../utils/toast";
 export function useSales(productsWithStock, discount, pricing) {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+  return JSON.parse(localStorage.getItem("cart") || "[]");
+});
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
+useEffect(() => {
+  const returned = JSON.parse(localStorage.getItem("returnedCart") || "[]");
+
+  if (returned.length > 0) {
+    setCart(prev => {
+      const updated = [...prev, ...returned];
+      localStorage.setItem("cart", JSON.stringify(updated));
+      return updated;
+    });
+
+    localStorage.removeItem("returnedCart");
+  }
+}, []);
 
   const addToCart = (product) => {
   const originalProduct = productsWithStock.find(p => p.id === product.id);
@@ -118,6 +136,20 @@ const subtotal = cart.reduce((sum, item) => {
 
 const total = Math.max(0, subtotal - discount);
 const getPrice = (product, size, containerType) => {
+  if (containerType === "oil") {
+  const category = product.category?.toLowerCase();
+  const qty = product.oilQty || 0;
+  
+  if (category.includes("french")) {
+    return qty * 15;
+  }
+
+  if (category.includes("oriental")) {
+    return qty * 25;
+  }
+
+  return 0;
+}
      const cat = product.category?.toLowerCase() || "";
     containerType = containerType?.toLowerCase().trim();
   const normalize = (s) =>
@@ -280,6 +312,7 @@ if (!customerName?.trim()) {
 
     showToast(setToastText, setShowToast, `Invoice: ${invoiceNumber} ✅`);
     setCart([]);
+    localStorage.removeItem("cart");
     setContainerType("bottle");
     setSelectedSize(null);
     setSelectedProduct(null);
@@ -309,7 +342,7 @@ const handleCancelInvoice = async ({
 
     // 🧴 رجوع الكونتينر
     await addDoc(collection(db, "stock"), {
-      productId: item.size,
+      productId: item.size || item.id,
       quantity: item.qty,
       type: "purchase",
       branchId: sale.branchId,
@@ -317,7 +350,7 @@ const handleCancelInvoice = async ({
     });
 
     await setDoc(
-      doc(db, "inventory", `${sale.branchId}_${item.size}`),
+      doc(db, "inventory", `${sale.branchId}_${item.size || item.id}`),
       {
         quantity: increment(item.qty)
       },
@@ -372,6 +405,7 @@ const handleCancelInvoice = async ({
     return;
   }
 };
+console.log("🔥 NEW REFUND LOGIC WORKING");
 const handleRefundItem = async ({
   sale,
   item,
@@ -384,31 +418,68 @@ const handleRefundItem = async ({
 }
   try {
     const cat = item.category?.toLowerCase() || "";
-    const isComposed =
-  cat === "french" ||
-  cat.includes("oriental") ||
-  cat.includes("musk");
+    const isOilOnly =
+  (item.containerType || "").toLowerCase().trim() === "oil";
+
+    const type = (item.containerType || "").toLowerCase().trim();
+
+const isOil = type === "oil";
+
+const isComposed =
+  !isOil &&
+  (
+    cat === "french" ||
+    cat.includes("oriental") ||
+    cat.includes("musk")
+  );
 
     // 🔴 CASE 1: French / Oriental → Returned Items
-    if (isComposed) {
-      await addDoc(collection(db, "stock"), {
+    if (isComposed && type !== "oil") {
+
+         await addDoc(collection(db, "stock"), {
         productId: item.id,
         quantity: item.qty,
         type: "refund",
         branchId: sale.branchId,
         createdAt: serverTimestamp()
       });
-      await addDoc(collection(db, "returned_items"), {
-      productId: item.id,
-      price: item.price,
-      branchId: sale.branchId,
-      size: item.size,
-      containerType: item.containerType,
-      containerName: item.containerName,
-      status: "available",
-      type: "perfume",
-      createdAt: serverTimestamp()
-    });
+      // 🔥 1) اعمل returnRef الأول
+      const returnRef = doc(collection(db, "returns"));
+
+      // 🔥 2) خزّن returned item ومعاه returnId
+      const returnedRef = await addDoc(collection(db, "returned_items"), {
+        productId: item.id,
+        price: item.price,
+        branchId: sale.branchId,
+        size: item.size,
+        containerType: item.containerType,
+        containerName: item.containerName,
+        status: "available",
+        type: "perfume",
+
+        returnId: returnRef.id, // 🔥 أهم سطر
+
+        createdAt: serverTimestamp()
+      });
+
+      // 🔥 3) خزّن return مربوط بالreturned item
+      await setDoc(returnRef, {
+        invoiceId: sale.id,
+        productId: item.id,
+        productName: item.name,
+        quantity: item.qty,
+        type: "refund",
+        status: "returned",
+
+        returnedItemId: returnedRef.id,
+        returnId: returnRef.id,
+
+        container: item.containerName || "",
+        size: item.size || "",
+        productType: item.category || "unknown",
+
+        createdAt: serverTimestamp()
+      });
     }
 
     // 🟢 CASE 2: Ready Products
@@ -416,7 +487,9 @@ else {
   // 1. رجوع في stock (log)
   await addDoc(collection(db, "stock"), {
     productId: item.id,
-    quantity: item.qty,
+    quantity: item.containerType === "oil"
+      ? item.oilQty * item.qty
+      : item.qty,
     type: "refund",
     branchId: sale.branchId,
     createdAt: serverTimestamp()
@@ -426,7 +499,11 @@ else {
   const ref = doc(db, "inventory", `${sale.branchId}_${item.id}`);
 
 await setDoc(ref, {
-  quantity: increment(item.qty)
+  quantity: increment(
+  item.containerType === "oil"
+    ? item.oilQty * item.qty
+    : item.qty
+)
 }, { merge: true });
 }
 
@@ -452,7 +529,11 @@ await setDoc(ref, {
     await updateDoc(doc(db, "sales", sale.id), {
       items: updatedItems,
       total: newTotal,
-      refunds: increment(item.qty)
+      refunds: increment(
+        item.containerType === "oil"
+          ? item.oilQty * item.qty
+          : item.qty
+      )
     });
 
     showToast(setToastText, setShowToast,"تم Refund المنتج ✅");return;

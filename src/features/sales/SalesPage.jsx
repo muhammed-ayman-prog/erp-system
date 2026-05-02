@@ -583,10 +583,10 @@ if (name) {
     ) {
       addToCart({
   ...p,
-  size: "Standard",
-  containerType: "Ready",
-  containerName: "Ready"
-});
+  size: selectedSize?.name,
+  containerType: containerType,
+  containerName: selectedSize?.name, // 🔥 أهم سطر
+})
       return;
     }
 

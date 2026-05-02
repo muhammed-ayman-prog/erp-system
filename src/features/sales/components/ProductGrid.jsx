@@ -12,7 +12,6 @@ export default function ProductGrid({
   setPopupStep,
   setShowPopup
 }) {
-  console.log(productsWithStock.map(p => p.category)); // 👈 حطه هنا
   return (
     <div className="products-grid">
           {productsWithStock

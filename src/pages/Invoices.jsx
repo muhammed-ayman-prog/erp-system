@@ -342,9 +342,17 @@ const handlePartialRefund = async () => {
   if (!selectedInvoice) return;
 
 const refunded = selectedInvoice.refundedQty || 0;
+
 const total =
   selectedInvoice.totalQty ||
-  selectedInvoice.items.reduce((s, i) => s + i.qty, 0);
+  selectedInvoice.items.reduce(
+    (s, i) =>
+      s +
+      ((i.containerType || "").toLowerCase() === "oil"
+        ? i.oilQty * i.qty
+        : i.qty),
+    0
+  );
 if (refunded >= total) {
   toast.error(t("invoices.closed"));
   return;
@@ -358,34 +366,21 @@ if (refunded >= total) {
   setLoading(false);
   return;
 }
-  for (const item of validItems) {
-  const original = selectedInvoice.items.find(i => i.id === item.id);
-  if (!original) continue;
-
-  const alreadyRefunded = previousReturns
-    .filter(r => r.productId === item.id)
-    .reduce((sum, r) => sum + r.quantity, 0);
-
-  const remaining = original.qty - alreadyRefunded;
-
-  if (remaining <= 0) {
-   toast.error(`المنتج ${item.name} مترد بالكامل ❌`);
-    setLoading(false);
-    return;
-  }
-
-  if (item.qty > remaining) {
-  toast.error(`المتاح ترجع ${remaining} بس من ${item.name} ❌`);
-  setLoading(false);
-  return;
-}
-}
+  
 
 const batch = writeBatch(db); 
   try {
     for (const item of validItems) {
 
-      if (item.type && item.type !== "oil") {
+  // 🔥 لازم يتعرفوا هنا فوق
+  const returnRef = doc(collection(db, "returns"));
+  let returnedRef = null;
+
+  const isOil =
+  (item.containerType || "").toLowerCase().trim() === "oil";
+
+if (isOil) {
+  // ✅ رجّع في inventory
   const invRef = doc(
     db,
     "inventory",
@@ -395,41 +390,73 @@ const batch = writeBatch(db);
   batch.update(invRef, {
     quantity: increment(item.qty)
   });
+
 } else {
-  const returnedRef = doc(collection(db, "returned_items"));
+  // ✅ رجّع في returned_items
+  returnedRef = doc(collection(db, "returned_items"));
 
   batch.set(returnedRef, {
     productId: item.id,
     name: item.name,
     quantity: item.qty,
     branchId: selectedInvoice.branchId,
-    reason: "refund",
+
+    price: item.price || 0,
+    invoiceId: selectedInvoice.id,
+
+    containerName:
+      item.containerName ||
+      item.sizeLabel ||
+      `${item.containerType} ${item.size || ""}`.trim(),
+
+    containerType: item.containerType || "",
+    size: item.size || "",
+
+    status: "available",
+
+    returnId: returnRef.id,
     createdAt: serverTimestamp()
   });
 }
 
-const returnRef = doc(collection(db, "returns"));
+  // 🔥 ده لازم يكون جوه اللوب وتحت الكل
+  batch.set(returnRef, {
+    invoiceId: selectedInvoice.id,
+    productId: item.id,
+    productName: item.name,
+    productType: item.type || "unknown",
+    category: item.category || "",
+    size: item.size || "",
+    unit: item.size?.includes("ml") ? "ml" : "",
+    quantity: item.qty,
+    price: item.price,
 
-batch.set(returnRef, {
-  invoiceId: selectedInvoice.id,
-  productId: item.id,
-  productName: item.name,
-  productType: item.type,
-  size: item.size || "",
-  unit: item.size?.includes("ml") ? "ml" : "",
-  quantity: item.qty,
-  price: item.price,
-  type: "refund",
-  branchId: selectedInvoice.branchId,
-  container: item.containerType?.toUpperCase() || "",
-  refundDate: serverTimestamp(),
-  originalSaleDate: selectedInvoice.createdAt,
-  createdAt: serverTimestamp()
-});
+    type: "refund",
+    status: "returned",
+
+    branchId: selectedInvoice.branchId,
+    originalOilQty: item.oilQty || 0,
+    container: item.containerType?.toUpperCase() || "",
+
+    returnedItemId: returnedRef ? returnedRef.id : null, // 🔥 مهم
+
+    returnId: returnRef.id,
+
+    refundDate: serverTimestamp(),
+    originalSaleDate: selectedInvoice.createdAt,
+    createdAt: serverTimestamp()
+  });
 }
 
 
-const totalRefundedNow = validItems.reduce((s, i) => s + i.qty, 0);
+const totalRefundedNow = validItems.reduce(
+  (s, i) =>
+    s +
+    ((i.containerType || "").toLowerCase() === "oil"
+      ? i.qty
+      : i.qty),
+  0
+);
 
 const saleRef = doc(db, "sales", selectedInvoice.id);
 
@@ -474,7 +501,27 @@ toast.success("Refund done successfully");
 
 
 
- 
+ const refundedAmount = (previousReturns || []).reduce((sum, r) => {
+  const isOil =
+    (r.container || "").toLowerCase() === "oil" ||
+    r.unit === "ml";
+
+  if (isOil) {
+    const totalMl =
+      r.originalOilQty ||
+      parseInt(r.size) ||
+      1;
+
+    const pricePerMl =
+      totalMl > 0 ? (r.price || 0) / totalMl : 0;
+
+    return sum + pricePerMl * r.quantity;
+  }
+
+  return sum + (r.price || 0) * (r.quantity || 0);
+}, 0);
+
+const netTotal = (selectedInvoice?.total || 0) - refundedAmount;
   return (
     <div style={{ padding: 20 }}>
  <div
@@ -637,9 +684,16 @@ onMouseLeave={handleRowLeave}
   </tr>
 ) : (
   paginated.map(s => {
-                const totalQty =
+const totalQty =
   s.totalQty ||
-  s.items?.reduce((sum, i) => sum + i.qty, 0);
+  s.items?.reduce(
+    (sum, i) =>
+      sum +
+      ((i.containerType || "").toLowerCase() === "oil"
+        ? i.oilQty * i.qty
+        : i.qty),
+    0
+  );
 
 const refundedQty = s.refundedQty || 0;
  const statusStyle =
@@ -650,7 +704,10 @@ const refundedQty = s.refundedQty || 0;
     : refundedQty > 0
     ? { bg: "#fef9c3", color: "#ca8a04" }
     : { bg: "#dcfce7", color: "#16a34a" };
-return (          
+
+
+return ( 
+           
   <tr
   key={s.id}
   onClick={() => setSelectedInvoice(s)}
@@ -808,6 +865,8 @@ onMouseLeave={handleRowLeave}
         {!selectedInvoice && <p>{t("invoices.select")}</p>}
         
         {selectedInvoice && (
+
+          
           
             <div id="invoice-print">
             <div style={{
@@ -966,15 +1025,32 @@ onMouseLeave={handleRowLeave}
   {/* 💳 Payment */}
   <div>
     {t("payment.method")}: {t((selectedInvoice.paymentMethod || "").toLowerCase())}
+  
   </div>
+  
+  
 
 
             
-            {(() => {
-  const refunded = selectedInvoice.refundedQty || 0;
-  const total = selectedInvoice.totalQty || selectedInvoice.items.reduce((s,i)=>s+i.qty,0);
+            
 
-  return (
+
+{(() => {
+  const refunded = selectedInvoice.refundedQty || 0;
+
+  const total =
+    selectedInvoice.totalQty ||
+    selectedInvoice.items.reduce(
+      (s, i) =>
+        s +
+        ((i.containerType || "").toLowerCase() === "oil"
+          ? i.oilQty * i.qty
+          : i.qty),
+      0
+    );
+
+    
+    return (
     <div style={{
       marginTop: "10px",
       padding: "6px 12px",
@@ -1015,7 +1091,7 @@ onMouseLeave={handleRowLeave}
               borderRadius: "10px",
               textAlign: "center"
             }}>
-              {selectedInvoice.total} EGP
+              {netTotal} EGP
             </div>
 
             {/* 🧾 Items Table */}
@@ -1091,6 +1167,48 @@ borderBottom: "1px dashed #eee",
             </span>
             </div>
         ))}
+        {previousReturns.length > 0 && (
+  <div style={{
+    marginTop: "15px",
+    padding: "10px",
+    background: "#fef9c3",
+    borderRadius: "10px"
+  }}>
+    <div style={{ fontWeight: "600", marginBottom: "6px" }}>
+      🔁 Returned Items
+    </div>
+
+    {previousReturns.map((r, i) => (
+  <div key={i} style={{ fontSize: "13px" }}>
+    - {r.productName}
+    {" • "}
+    {r.unit === "ml" ? `${r.quantity} ml` : `${r.quantity}`}
+    {" • "}
+    {(() => {
+      const isOil =
+        (r.container || "").toLowerCase() === "oil" ||
+        r.unit === "ml";
+
+      if (isOil) {
+        const totalMl =
+          r.originalOilQty ||
+          parseInt(r.size) ||
+          1;
+
+        const pricePerMl =
+          totalMl > 0 ? (r.price || 0) / totalMl : 0;
+
+        const totalPrice = pricePerMl * r.quantity;
+
+        return `${totalPrice} EGP`;
+      }
+
+      return `${(r.price || 0) * (r.quantity || 0)} EGP`;
+    })()}
+  </div>
+))}
+  </div>
+)}
 
         </div>
         {/* 💰 Totals */}
@@ -1106,7 +1224,7 @@ borderBottom: "1px dashed #eee",
     fontSize: "14px"
   }}>
     <span>{t("cart.subtotal")}</span>
-    <span>{selectedInvoice.total} EGP</span>
+    <span>{netTotal} EGP</span>
   </div>
 
   <div style={{
@@ -1126,7 +1244,7 @@ borderBottom: "1px dashed #eee",
     fontSize: "15px"
   }}>
     <span>{t("cart.total")}</span>
-    <span>{selectedInvoice.total} EGP</span>
+    <span>{netTotal} EGP</span>
   </div>
 
 </div>
@@ -1183,7 +1301,12 @@ onMouseLeave={handleRowLeave}
     .filter(r => r.productId === item.id)
     .reduce((sum, r) => sum + r.quantity, 0);
 
-  const remaining = item.qty - alreadyRefunded;
+  const isOil =
+  (item.containerType || "").toLowerCase().trim() === "oil";
+
+const remaining = isOil
+  ? (item.oilQty * item.qty) - alreadyRefunded
+  : item.qty - alreadyRefunded;
 
   return (
     <div key={item.id} style={{ marginBottom: "10px" }}>
@@ -1191,7 +1314,7 @@ onMouseLeave={handleRowLeave}
         {item.name}
 
         <span style={{ fontSize: "12px", marginLeft: "6px" }}>
-          ({alreadyRefunded} / {t("common.qty")})
+          ({alreadyRefunded} / {remaining + alreadyRefunded} ml)
         </span>
 
         {remaining === 0 && (
@@ -1326,6 +1449,7 @@ const Card = ({ title, value, type }) => {
   visa: <CreditCard size={18} />,
   instapay: <Smartphone size={18} />
 };
+
   return (
   <div
     style={{

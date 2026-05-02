@@ -28,9 +28,20 @@ export default function ProductPopup({
   if (!showPopup) return null;
 const selectedValue = selectedSize?.size || selectedSize?.name;
 const isMobile = window.innerWidth < 768;
-const price = selectedSize
-  ? getPrice(selectedProduct, selectedSize, containerType)
-  : 0;
+const price =
+  containerType === "oil"
+    ? getPrice(
+        { ...selectedProduct, oilQty },
+        null,
+        containerType
+      )
+    : selectedSize
+    ? getPrice(selectedProduct, selectedSize, containerType)
+    : 0;
+    const isValid =
+  containerType === "oil"
+    ? oilQty && oilQty > 0 && price > 0
+    : selectedSize && price > 0;
   return createPortal(
   <div
       onClick={() => setShowPopup(false)}
@@ -140,6 +151,7 @@ const price = selectedSize
     gap: "10px"
   }}
 >
+  
 
 {/* ❌ نخفيهم في حالة Musk */}
 {!isMusk && (
@@ -198,11 +210,27 @@ const price = selectedSize
 >
   Samples
 </button>
+<button
+  onClick={() => {
+    setContainerType("oil");
+    setSelectedSize(null);
+  }}
+  style={{
+    ...btnStyle,
+    background: containerType === "oil"
+      ? theme.colors.primary
+      : theme.colors.secondary,
+    color: containerType === "oil" ? "#fff" : theme.colors.text,
+  }}
+>
+   Pure Oil
+</button>
 </div>
 
     <hr />
     
-
+    {containerType !== "oil" && (
+  <>
     <p>Available Options:</p>
 
     <div style={{
@@ -303,7 +331,9 @@ const price = selectedSize
       );
     })
   }
-</div>        
+</div>    
+ </>
+)}    
       <p style={{ marginTop: "10px", fontWeight: "bold" }}>
   Price: {price} EGP
 </p>
@@ -352,60 +382,66 @@ const price = selectedSize
           >
             {t("Close")}
           </button>
-
+            
           <button
             onClick={() => {
-            const needsOil =
-  selectedProduct.category === "French" ||
-  selectedProduct.category?.toLowerCase().includes("oriental") ||
-  isMusk;
+              const needsOil =
+                selectedProduct.category === "French" ||
+                selectedProduct.category?.toLowerCase().includes("oriental") ||
+                isMusk;
 
-if (needsOil && (!oilQty || oilQty <= 0)) {
-  alert("⚠️ لازم تدخل كمية الزيت");
-  return;
-}
+              if (needsOil && (!oilQty || oilQty <= 0)) {
+                alert("⚠️ لازم تدخل كمية الزيت");
+                return;
+              }
 
-if (!price || price <= 0) {
-  alert("❌ مفيش سعر متحدد للمنتج ده");
-  return;
-}
+              if (!price || price <= 0) {
+                alert("❌ مفيش سعر متحدد للمنتج ده");
+                return;
+              }
 
-const name = addToCart({
-  ...selectedProduct,
-  size: selectedSize?.size || selectedSize?.name,
-  containerType,
-  containerName: selectedSize?.name?.trim() || containerType,
-  price: price,
-  qty: 1,
-  oilQty: oilQty || 0
-});
+              const name = addToCart({
+                ...selectedProduct,
+category:
+  containerType === "oil"
+    ? "pure_oil"
+    : selectedProduct.category,
+                size: selectedSize?.size || selectedSize?.name,
+                containerType,
+                containerName:
+                  containerType === "oil"
+                    ? `Pure Oil ${oilQty}ml`
+                    : selectedSize?.name?.trim() || containerType,
+                price: price,
+                qty: 1,
+                oilQty: oilQty || 0
+              });
 
-if (name) {
-  setToastText(`${name} added 🔥`);
-  setShowToast(true);
+              if (name) {
+                setToastText(`${name} added 🔥`);
+                setShowToast(true);
 
-  // 👇 دول أهم حاجة
-  setShowPopup(false);
-  setSelectedSize(null);
-  setPopupStep(null);
-  setOilQty(0);
-}
+                setShowPopup(false);
+                setSelectedSize(null);
+                setPopupStep(null);
+                setOilQty(0);
+              }
+            }}
 
+            disabled={!isValid}
 
-          }}
-            disabled={!selectedSize || !price}
             style={{
               flex: 1,
               padding: "14px",
-              background: selectedSize
+              background: isValid
                 ? theme.colors.primary
                 : theme.colors.secondary,
               borderRadius: "12px",
               border: "none",
-              color: selectedSize ? "#fff" : theme.colors.text,
+              color: isValid ? "#fff" : theme.colors.text,
               fontWeight: "bold",
-              cursor: selectedSize ? "pointer" : "not-allowed",
-              opacity: selectedSize ? 1 : 0.5
+              cursor: isValid ? "pointer" : "not-allowed",
+              opacity: isValid ? 1 : 0.5
             }}
           >
             {t("Add To Cart")}
