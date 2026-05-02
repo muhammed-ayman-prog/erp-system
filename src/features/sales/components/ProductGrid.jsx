@@ -25,11 +25,12 @@ export default function ProductGrid({
             }
 
             if (tab === "oriental") {
-              if (subTab) {
-                return cat.includes("oriental") && cat.includes(subTab.toLowerCase());
-              }
-              return cat.includes("oriental");
+            if (subTab) {
+              const parts = cat.split("-"); // زي: oriental-a
+              return parts[0] === "oriental" && parts[1] === subTab.toLowerCase();
             }
+            return cat.includes("oriental");
+          }
 
             if (tab === "body") {
               if (subTab) {
@@ -63,7 +64,7 @@ export default function ProductGrid({
     opacity: p.quantity === 0 ? 0.5 : 1,
   }}
   onClick={() => {
-    if (p.quantity === 0) return;
+    if (p.quantity <= 0) return;
     onSelectProduct(p);
   }}
 >

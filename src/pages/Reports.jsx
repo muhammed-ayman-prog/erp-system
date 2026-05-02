@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, BarChart, Bar,
@@ -118,6 +118,60 @@ export default function Reports() {
       { logo }
     );
   };
+  // 🔥 RESET SYSTEM
+const clearCollection = async (name) => {
+  const snapshot = await getDocs(collection(db, name));
+  const deletions = snapshot.docs.map(d =>
+    deleteDoc(doc(db, name, d.id))
+  );
+  await Promise.all(deletions);
+};
+
+const resetInventory = async () => {
+  const snapshot = await getDocs(collection(db, "inventory"));
+
+  const updates = snapshot.docs.map(d =>
+    updateDoc(doc(db, "inventory", d.id), {
+      quantity: 0 // ⚠️ لو اسم الفيلد مختلف عدله
+    })
+  );
+
+  await Promise.all(updates);
+};
+
+const handleResetSystem = async () => {
+  const confirm = window.confirm("⚠️ متأكد إنك عايز تصفر السيستم؟");
+
+  if (!confirm) return;
+
+  try {
+    // 1. تصفير inventory
+    await resetInventory();
+
+    // 2. مسح الداتا
+    const collectionsToClear = [
+      "sales",
+      "purchases",
+      "returns",
+      "returned_items",
+      "expenses",
+      "logs",
+      "stock",
+      "stats",
+      "customers"
+    ];
+
+    for (const name of collectionsToClear) {
+      await clearCollection(name);
+    }
+
+    alert("✅ تم تصفير السيستم بنجاح");
+    window.location.reload(); // ريفريش
+  } catch (err) {
+    console.error(err);
+    alert("❌ حصل خطأ");
+  }
+};
 
   // 🔥 DRILL
   const handleDrill = (type, value) => {
@@ -162,13 +216,22 @@ export default function Reports() {
         </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-          <button style={btn} onClick={handleExcel}>
-            <Download size={14}/> Excel
-          </button>
-          <button style={btn} onClick={handlePDF}>
-            <Download size={14}/> PDF
-          </button>
-        </div>
+  <button style={btn} onClick={handleExcel}>
+    <Download size={14}/> Excel
+  </button>
+
+  <button style={btn} onClick={handlePDF}>
+    <Download size={14}/> PDF
+  </button>
+
+  {/* 🔥 RESET BUTTON */}
+  <button
+    style={{ ...btn, background: "#fee2e2", border: "1px solid #ef4444" }}
+    onClick={handleResetSystem}
+  >
+    🧨 Reset
+  </button>
+</div>
       </motion.div>
 
       {/* STATS */}
