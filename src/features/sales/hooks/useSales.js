@@ -144,9 +144,12 @@ const getPrice = (product, size, containerType) => {
     return qty * 15;
   }
 
-  if (category.includes("oriental")) {
-    return qty * 25;
-  }
+  if (
+  category.includes("oriental") ||
+  category.includes("musk")
+) {
+  return qty * 25;
+}
 
   return 0;
 }
@@ -294,6 +297,14 @@ if (!customerName?.trim()) {
   showToast(setToastText, setShowToast,"ادخل اسم العميل ❗");
   return;
 }
+if (!salesName?.trim()) {
+  showToast(
+    setToastText,
+    setShowToast,
+    "ادخل اسم البائع ❗"
+  );
+  return;
+}
   setLoadingCheckout(true);
 
   try {
@@ -405,7 +416,6 @@ const handleCancelInvoice = async ({
     return;
   }
 };
-console.log("🔥 NEW REFUND LOGIC WORKING");
 const handleRefundItem = async ({
   sale,
   item,

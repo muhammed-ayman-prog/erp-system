@@ -335,24 +335,27 @@ const cleanSize = selectedSize?.name
         total={total}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
-        handleCheckout={(salesName) =>
+        handleCheckout={(params) =>
           handleCheckout({
+            ...params,
+
             customerName,
             customerPhone,
+
             paymentMethod,
             selectedBranch,
 
-            // 👇 الجديد
-            salesName,
             user,
 
             setToastText,
             setShowToast,
             setLoadingCheckout,
+
             setContainerType,
             setSelectedSize,
             setSelectedProduct,
             setOilQty,
+
             setDiscount,
             setPaymentMethod,
             setCustomerName,
@@ -583,9 +586,12 @@ if (name) {
     ) {
       addToCart({
   ...p,
-  size: selectedSize?.name,
+  size: selectedSize?.name || "",
   containerType: containerType,
-  containerName: selectedSize?.name, // 🔥 أهم سطر
+  containerName: selectedSize?.name,
+
+  // 🔥 أهم سطر
+  containerId: selectedSize?.id
 })
       return;
     }

@@ -20,9 +20,10 @@ import {
   Receipt,
   Trash2,// 👈 NEW ICON
   RefreshCw,
-  FileText
+  FileText,
+  Repeat 
 } from "lucide-react";
-
+import Notifications from "../components/Notifications";
 
 export default function Layout() {
   const t = useTranslate();
@@ -139,12 +140,19 @@ export default function Layout() {
         icon: <Boxes size={collapsed ? 24 : 18} />,
         permission: "view_inventory"
       },
+      
       {
         name: t("purchases"),
         path: "/purchases",
         icon: <PackagePlus size={collapsed ? 24 : 18} />,
         permission: "view_purchases"
-      }
+      },
+      {
+        name: t("operations.title"),
+        path: "/operations",
+        icon: <Repeat size={collapsed ? 24 : 18} />,
+        permission: "view_operations"
+      },
     ]
   },
   {
@@ -218,7 +226,8 @@ export default function Layout() {
           padding: "16px",
           transition: "all 0.3s ease",
           height: "100vh",
-          overflowY: "auto",   // 🔥 دي أهم سطر هنا
+          overflowY: "auto",
+          overflowX: "visible",   // 🔥 دي أهم سطر هنا
           boxShadow: isMobile ? "2px 0 20px rgba(0,0,0,0.2)" : "none"
         }}
         
@@ -365,9 +374,8 @@ export default function Layout() {
   padding: isMobile ? "10px" : "20px", // 👈 الحل
   width: "100%",
   maxWidth: "100%",
-  overflowX: "hidden",
+  overflow: "visible",
   position: "relative", 
-  zIndex: 1 
 }}>
         <Topbar
           collapsed={collapsed}

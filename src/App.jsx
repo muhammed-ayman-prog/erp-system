@@ -62,7 +62,7 @@ function App() {
               </Route>
 
               {/* Expenses */}
-              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+              <Route element={<ProtectedRoute permissions={["view_expenses"]} />}>
                 <Route path="/expenses" element={<Expenses />} />
               </Route>
 
@@ -134,7 +134,19 @@ function App() {
         />
         </Routes>
       </Router>
-      <Toaster position="top-right" />
+      <Toaster
+  position="top-right"
+  containerStyle={{
+    zIndex: 9999999,
+    top: 20,
+    right: 20
+  }}
+  toastOptions={{
+    style: {
+      zIndex: 9999999
+    }
+  }}
+/>
     </>
   );
 }

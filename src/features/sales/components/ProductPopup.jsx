@@ -399,23 +399,105 @@ const price =
                 alert("❌ مفيش سعر متحدد للمنتج ده");
                 return;
               }
+              console.log(selectedSize);
 
-              const name = addToCart({
-                ...selectedProduct,
-category:
+const oilCostPerML = selectedProduct.cost || 0;
+
+const oilCost = oilQty * oilCostPerML;
+
+const containerCost =
   containerType === "oil"
-    ? "pure_oil"
-    : selectedProduct.category,
-                size: selectedSize?.size || selectedSize?.name,
+    ? 0
+    : selectedSize?.cost || 0;
+
+const overheadCost = 0;
+
+const unitCost =
+  oilCost +
+  containerCost +
+  overheadCost;
+
+const profit =
+  price - unitCost;
+
+const margin =
+  price > 0
+    ? Number(((profit / price) * 100).toFixed(2))
+    : 0;
+
+
+              
+              const item = {
+                id: selectedProduct.id,
+                name: selectedProduct.name,
+                category: selectedProduct.category || "",
+                subCategory: selectedProduct.subCategory || "",
+                type: selectedProduct.type || "",
+
+                stockQuantity: selectedProduct.quantity || 0,
+
+                // 🔥 ERP Metadata
+                itemType: "BLENDED_ITEM",
+
+                saleMode:
+                  containerType === "oil"
+                    ? "PURE_OIL"
+                    : containerType === "bottle"
+                    ? "BOTTLE"
+                    : containerType === "box"
+                    ? "BOX"
+                    : containerType === "sample"
+                    ? "SAMPLE"
+                    : "UNKNOWN",
+
+                // 🛢 Oil
+                oilId: selectedProduct.id,
+                oilName: selectedProduct.name,
+                oilCategory: selectedProduct.category || "",
+
+                oilQtyML: oilQty || 0,
+
+                // 🧴 Container
+                size: selectedSize?.size || selectedSize?.name || "",
+
                 containerType,
+
                 containerName:
                   containerType === "oil"
                     ? `Pure Oil ${oilQty}ml`
                     : selectedSize?.name?.trim() || containerType,
-                price: price,
+
+                containerId:
+                  containerType === "oil"
+                    ? null
+                    : selectedSize?.id || null,
+
+                // 💰 Pricing
+                unitPrice: price || 0,
+                price: price || 0,
+                oilCostPerML,
+
+                oilCost,
+
+                containerCost,
+
+                overheadCost,
+
+                unitCost,
+
+                profit,
+
+                margin,
                 qty: 1,
+
+                // 🟡 Backward Compatibility
                 oilQty: oilQty || 0
-              });
+              };
+
+              console.log("NEW CART ITEM:", item);
+
+              const name = addToCart(item);
+              
 
               if (name) {
                 setToastText(`${name} added 🔥`);

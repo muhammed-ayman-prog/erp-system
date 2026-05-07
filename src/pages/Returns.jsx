@@ -133,7 +133,8 @@ export default function Returns() {
                   </div>
 
                   <div style={{ fontSize: "12px", opacity: 0.6 }}>
-                  {[
+                  {r.containerName ||
+                  [
                     r.container,
                     r.size?.includes("ml")
                       ? r.size

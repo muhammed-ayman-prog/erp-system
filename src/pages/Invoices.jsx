@@ -60,8 +60,19 @@ export default function Invoices() {
   () => refundItems.some(i => i.qty > 0),
   [refundItems]
 );
+  const getKey = (item) =>
+  `${item.productId || item.id}_${
+    (item.containerType || item.container || "")
+      .toLowerCase()
+      .trim()
+  }_${item.size}`;
   const refundMap = useMemo(() =>
-  Object.fromEntries(refundItems.map(i => [i.id, i.qty])),
+  Object.fromEntries(
+    refundItems.map(i => [
+      getKey(i),
+      i.qty
+    ])
+  ),
 [refundItems]);
   const [loading, setLoading] = useState(false);
   const [previousReturns, setPreviousReturns] = useState([]);
@@ -86,6 +97,7 @@ const handleRowLeave = (e) => {
         data = data.filter(s => s.branchId === selectedBranch);
       }
       setSales(data);
+      setLoadingSales(false);
     });
     return () => unsub();
   }, [selectedBranch]);
@@ -108,21 +120,27 @@ const handleRowLeave = (e) => {
   fetchBranch();
 }, [selectedInvoice]);
 useEffect(() => {
-  const fetchReturns = async () => {
-    if (!selectedInvoice) return;
+  if (!selectedInvoice?.id) {
+    setPreviousReturns([]);
+    return;
+  }
 
-    const snap = await getDocs(
-      query(
-        collection(db, "returns"),
-        where("invoiceId", "==", selectedInvoice.id)
-      )
+  const q = query(
+    collection(db, "returns"),
+    where("invoiceId", "==", selectedInvoice.id)
+  );
+
+  const unsub = onSnapshot(q, (snap) => {
+    setPreviousReturns(
+      snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }))
     );
+  });
 
-    setPreviousReturns(snap.docs.map(d => d.data()));
-  };
-
-  fetchReturns();
-}, [selectedInvoice]);
+  return () => unsub();
+}, [selectedInvoice?.id]);
 useEffect(() => {
   if (showRefundPopup || showConfirm) {
     document.body.style.overflow = "hidden";
@@ -135,6 +153,7 @@ useEffect(() => {
 }, [search, salesFilter, fromDate, toDate]);
 useEffect(() => {
   const style = document.createElement("style");
+
   style.innerHTML = `
     @keyframes pulse {
       0% { opacity: 0.5 }
@@ -142,7 +161,12 @@ useEffect(() => {
       100% { opacity: 0.5 }
     }
   `;
+
   document.head.appendChild(style);
+
+  return () => {
+    document.head.removeChild(style);
+  };
 }, []);
 useEffect(() => {
   const t = setTimeout(() => {
@@ -179,7 +203,7 @@ useEffect(() => {
     return match && matchSales && ok;
   });
 }, [sales, searchKey, salesKey, fromDate, toDate]);
-  const isLoadingTable = sales.length === 0;
+  const [loadingSales, setLoadingSales] = useState(true);
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
@@ -195,7 +219,15 @@ useEffect(() => {
       let net = i.total || 0;
 
       const totalQty =
-        i.totalQty || i.items?.reduce((s, it) => s + it.qty, 0);
+  i.totalQty ||
+  i.items?.reduce(
+    (s, it) =>
+      s +
+      ((it.containerType || "").toLowerCase() === "oil"
+        ? it.oilQty * it.qty
+        : it.qty),
+    0
+  );
 
       const refundedQty = i.refundedQty || 0;
 
@@ -224,6 +256,21 @@ useEffect(() => {
   // 🔴 CANCEL
   const handleCancel = async (inv) => {
   if (inv.status === "cancelled" || cancelling) return;
+  const totalQty =
+    inv.totalQty ||
+    inv.items?.reduce(
+      (s, i) =>
+        s +
+        ((i.containerType || "").toLowerCase() === "oil"
+          ? i.oilQty * i.qty
+          : i.qty),
+      0
+    );
+
+  if ((inv.refundedQty || 0) >= totalQty) {
+    toast.error("Invoice already refunded");
+    return;
+  }
 
   setCancelling(true);
 
@@ -237,24 +284,60 @@ useEffect(() => {
       )
     );
 
-    const refundedMap = {};
-    returnsSnap.docs.forEach(d => {
-      const data = d.data();
-      refundedMap[data.productId] =
-        (refundedMap[data.productId] || 0) + (data.quantity || 0);
-    });
+    const getKey = (i) =>
+  `${i.productId || i.id}_${
+    (i.container || i.containerType || "")
+      .toLowerCase()
+      .trim()
+  }_${i.size}`;
+
+const refundedMap = {};
+
+returnsSnap.docs.forEach(d => {
+  const data = d.data();
+  const key = getKey(data);
+
+  refundedMap[key] =
+    (refundedMap[key] || 0) + (data.quantity || 0);
+});
 
     for (const item of inv.items) {
-      const alreadyRefunded = refundedMap[item.id] || 0;
-      const remaining = item.qty - alreadyRefunded;
+      const key = getKey(item);
+const alreadyRefunded = refundedMap[key] || 0;
 
-      if (remaining <= 0) continue;
+const isOil =
+  (item.containerType || "").toLowerCase().trim() === "oil";
 
-      const invRef = doc(db, "inventory", `${inv.branchId}_${item.id}`);
+const total =
+  isOil ? item.oilQty * item.qty : item.qty;
 
-      batch.update(invRef, {
-        quantity: increment(remaining)
-      });
+const remaining = total - alreadyRefunded;
+
+if (remaining <= 0) continue;
+ 
+  
+if (isOil) {
+  const invQuery = query(
+  collection(db, "inventory"),
+  where("branchId", "==", inv.branchId),
+  where("productId", "==", item.id),
+  where("containerType", "==", item.containerType)
+);
+
+const invSnap = await getDocs(invQuery);
+
+if (invSnap.empty) {
+  toast.error("Inventory item not found");
+  setCancelling(false)
+  return;
+}
+
+const invRef = invSnap.docs[0].ref;
+
+batch.update(invRef, {
+  quantity: increment(item.oilQty * item.qty)
+});
+}
     }
 
     const saleRef = doc(db, "sales", inv.id);
@@ -297,7 +380,7 @@ setSales(prev =>
   if (!content) return;
 
   const win = window.open("", "", "width=800,height=600");
-
+  if (!win) return;
   win.document.write(`
     <html>
       <head>
@@ -319,19 +402,22 @@ setSales(prev =>
   win.focus();
   win.print();
 };
+
+
 const handleRefundQty = (item, qty) => {
   const q = Math.max(0, Number(qty) || 0);
+  const key = getKey(item);
 
   setRefundItems(prev => {
     if (q === 0) {
-      return prev.filter(p => p.id !== item.id);
+      return prev.filter(p => getKey(p) !== key);
     }
 
-    const exists = prev.find(p => p.id === item.id);
+    const exists = prev.find(p => getKey(p) === key);
 
     if (exists) {
       return prev.map(p =>
-        p.id === item.id ? { ...p, qty: q } : p
+        getKey(p) === key ? { ...p, qty: q } : p
       );
     }
 
@@ -339,7 +425,12 @@ const handleRefundQty = (item, qty) => {
   });
 };
 const handlePartialRefund = async () => {
-  if (!selectedInvoice) return;
+  if (loading) return;
+  if (selectedInvoice.status === "cancelled") {
+  toast.error("❌ الفاتورة ملغية");
+  return;
+}
+  if (!selectedInvoice || !selectedInvoice.items) return;
 
 const refunded = selectedInvoice.refundedQty || 0;
 
@@ -358,7 +449,35 @@ if (refunded >= total) {
   return;
 }
   
-  setLoading(true); // 👈 هنا
+  try {
+
+  setLoading(true);
+
+  const freshSaleSnap = await getDoc(
+  doc(db, "sales", selectedInvoice.id)
+);
+
+if (!freshSaleSnap.exists()) {
+  toast.error("Invoice not found");
+  setLoading(false);
+  return;
+}
+
+const freshInvoice = freshSaleSnap.data();
+const freshReturnsSnap = await getDocs(
+  query(
+    collection(db, "returns"),
+    where("invoiceId", "==", selectedInvoice.id)
+  )
+);
+
+const freshReturns = freshReturnsSnap.docs.map(d => d.data());
+
+if (freshInvoice.status === "cancelled") {
+  toast.error("Invoice already cancelled");
+  setLoading(false);
+  return;
+}
   const validItems = (refundItems || []).filter(i => i.qty > 0);
 
  if (validItems.length === 0) {
@@ -369,54 +488,102 @@ if (refunded >= total) {
   
 
 const batch = writeBatch(db); 
-  try {
+for (const item of validItems) {
+  const sourceItem = selectedInvoice.items.find(
+  i => getKey(i) === getKey(item)
+);
+  const alreadyRefunded = freshReturns
+  .filter(r => getKey(r) === getKey(item))
+  .reduce((sum, r) => sum + r.quantity, 0);
+
+  const maxAllowed =
+  ((sourceItem?.containerType || "").toLowerCase() === "oil"
+    ? (sourceItem?.oilQty || 0) * (sourceItem?.qty || 0)
+    : sourceItem?.qty || 0) - alreadyRefunded;
+
+  const requestedQty = item.qty;
+  
+
+if (requestedQty > maxAllowed) {
+    toast.error("❌ الكمية أكبر من المتاح");
+    setLoading(false);
+    return;
+  }
+}  
+
     for (const item of validItems) {
 
+  const originalItem = selectedInvoice.items.find(
+    i => getKey(i) === getKey(item)
+  );
   // 🔥 لازم يتعرفوا هنا فوق
   const returnRef = doc(collection(db, "returns"));
+  let returnedRefs = [];
   let returnedRef = null;
+  
 
   const isOil =
   (item.containerType || "").toLowerCase().trim() === "oil";
 
 if (isOil) {
-  // ✅ رجّع في inventory
-  const invRef = doc(
-    db,
-    "inventory",
-    `${selectedInvoice.branchId}_${item.id}`
-  );
+  const invQuery = query(
+  collection(db, "inventory"),
+  where("branchId", "==", selectedInvoice.branchId),
+  where("productId", "==", item.id),
+  where("containerType", "==", item.containerType)
+);
 
-  batch.update(invRef, {
-    quantity: increment(item.qty)
-  });
+const invSnap = await getDocs(invQuery);
+
+if (invSnap.empty) {
+  toast.error("Inventory item not found");
+  setLoading(false);
+  return;
+}
+
+const invRef = invSnap.docs[0].ref;
+
+batch.update(invRef, {
+  quantity: increment(item.oilQty * item.qty)
+});
 
 } else {
-  // ✅ رجّع في returned_items
-  returnedRef = doc(collection(db, "returned_items"));
 
-  batch.set(returnedRef, {
-    productId: item.id,
-    name: item.name,
-    quantity: item.qty,
-    branchId: selectedInvoice.branchId,
+  // ✅ كل قطعة تبقى document مستقل
+  for (let i = 0; i < item.qty; i++) {
 
-    price: item.price || 0,
-    invoiceId: selectedInvoice.id,
+    returnedRef = doc(collection(db, "returned_items"));
+    returnedRefs.push(returnedRef.id);
 
-    containerName:
-      item.containerName ||
-      item.sizeLabel ||
-      `${item.containerType} ${item.size || ""}`.trim(),
+    batch.set(returnedRef, {
 
-    containerType: item.containerType || "",
-    size: item.size || "",
+      productId: item.id,
+      name: item.name,
 
-    status: "available",
+      quantity: 1,
 
-    returnId: returnRef.id,
-    createdAt: serverTimestamp()
-  });
+      branchId: selectedInvoice.branchId,
+
+      price: item.price || 0,
+
+      invoiceId: selectedInvoice.id,
+
+      containerName:
+        item.containerName ||
+        item.sizeLabel ||
+        `${item.containerType} ${item.size || ""}`.trim(),
+
+      containerType: item.containerType || "",
+
+      size: item.size || "",
+
+      status: "available",
+
+      returnId: returnRef.id,
+
+      createdAt: serverTimestamp()
+    });
+  }
 }
 
   // 🔥 ده لازم يكون جوه اللوب وتحت الكل
@@ -427,7 +594,7 @@ if (isOil) {
     productType: item.type || "unknown",
     category: item.category || "",
     size: item.size || "",
-    unit: item.size?.includes("ml") ? "ml" : "",
+    unit: (item.size || "").includes("ml") ? "ml" : "",
     quantity: item.qty,
     price: item.price,
 
@@ -436,9 +603,19 @@ if (isOil) {
 
     branchId: selectedInvoice.branchId,
     originalOilQty: item.oilQty || 0,
+    originalQty: originalItem?.qty || 1, 
     container: item.containerType?.toUpperCase() || "",
+    containerName:
+  item.containerName ||
+  item.sizeLabel ||
+  [
+    item.containerType,
+    item.size
+  ]
+    .filter(Boolean)
+    .join(" • "),
 
-    returnedItemId: returnedRef ? returnedRef.id : null, // 🔥 مهم
+    returnedItemIds: returnedRefs, // 🔥 مهم
 
     returnId: returnRef.id,
 
@@ -449,14 +626,16 @@ if (isOil) {
 }
 
 
-const totalRefundedNow = validItems.reduce(
-  (s, i) =>
-    s +
-    ((i.containerType || "").toLowerCase() === "oil"
-      ? i.qty
-      : i.qty),
-  0
-);
+const totalRefundedNow = validItems.reduce((s, i) => {
+  const isOil =
+    (i.containerType || "").toLowerCase() === "oil";
+
+  return s + (
+    isOil
+      ? i.oilQty * i.qty
+      : i.qty
+  );
+}, 0);
 
 const saleRef = doc(db, "sales", selectedInvoice.id);
 
@@ -485,6 +664,7 @@ toast.success("Refund done successfully");
   setShowRefundPopup(false);
   setRefundItems([]);
   setSelectedInvoice(null);
+  setPreviousReturns([]);
 
 } catch (err) {
   console.error(err);
@@ -502,15 +682,14 @@ toast.success("Refund done successfully");
 
 
  const refundedAmount = (previousReturns || []).reduce((sum, r) => {
-  const isOil =
-    (r.container || "").toLowerCase() === "oil" ||
-    r.unit === "ml";
+  const isPureOil =
+  (r.container || r.containerType || "")
+    .toLowerCase() === "oil";
 
-  if (isOil) {
+  if (isPureOil) {
     const totalMl =
-      r.originalOilQty ||
-      parseInt(r.size) ||
-      1;
+      (r.originalOilQty || parseInt(r.size) || 1) *
+      (r.originalQty || 1);
 
     const pricePerMl =
       totalMl > 0 ? (r.price || 0) / totalMl : 0;
@@ -521,7 +700,11 @@ toast.success("Refund done successfully");
   return sum + (r.price || 0) * (r.quantity || 0);
 }, 0);
 
-const netTotal = (selectedInvoice?.total || 0) - refundedAmount;
+  const netTotal = Math.max(
+    0,
+    (selectedInvoice?.total || 0) - refundedAmount
+  );
+  const liveReturns = previousReturns || [];
   return (
     <div style={{ padding: 20 }}>
  <div
@@ -580,7 +763,9 @@ onMouseLeave={handleRowLeave}
     borderRadius: "10px",
     border: `1px solid ${theme.colors.border}`,
     outline: "none",
-    fontSize: "14px"
+    fontSize: "14px",
+    transition: "0.2s",
+    background: theme.colors.card,
   }}
 />
 <input
@@ -593,7 +778,9 @@ onMouseLeave={handleRowLeave}
     borderRadius: "10px",
     border: `1px solid ${theme.colors.border}`,
     marginTop: "8px",
-    fontSize: "14px"
+    fontSize: "14px",
+    transition: "0.2s",
+    background: theme.colors.card,
   }}
 />
 
@@ -603,7 +790,9 @@ onMouseLeave={handleRowLeave}
             style={{
             padding: "10px",
             borderRadius: "10px",
-            border: `1px solid ${theme.colors.border}`
+            border: `1px solid ${theme.colors.border}`,
+            transition: "0.2s",
+            background: theme.colors.card,
             }}
         />
           
@@ -613,7 +802,9 @@ onMouseLeave={handleRowLeave}
             style={{
             padding: "10px",
             borderRadius: "10px",
-            border: `1px solid ${theme.colors.border}`
+            border: `1px solid ${theme.colors.border}`,
+            transition: "0.2s",
+            background: theme.colors.card,
             }}
         />
         </div>
@@ -626,12 +817,20 @@ onMouseLeave={handleRowLeave}
         <Card title={t("instapay")} value={totals.instapay} type="instapay" />
       </div>
 
-      <div style={{ display: "flex", gap: 20, marginTop: 20 }}>
+      <div style={{
+        display: "flex",
+        gap: 20,
+        marginTop: 20,
+        alignItems: "flex-start",
+        flexWrap: "wrap"
+      }}>
         {/* TABLE */}
         <div style={{
   flex: 3,
   maxHeight: "500px",
-  overflowY: "auto"
+  overflowY: "auto",
+  scrollbarWidth: "thin",
+  paddingRight: "4px",
 }}>
           <table style={{
             width: "100%",
@@ -658,7 +857,7 @@ onMouseLeave={handleRowLeave}
 </tr>
             </thead>
             <tbody>
-              {isLoadingTable
+              {loadingSales
     ? Array.from({ length: 5 }).map((_, i) => (
         <tr key={i}>
           <td colSpan="6" style={{ padding: "12px" }}>
@@ -666,7 +865,7 @@ onMouseLeave={handleRowLeave}
               style={{
                 height: "20px",
                 borderRadius: "6px",
-                background: "#eee",
+                background: "#f1f5f9",
                 animation: "pulse 1.5s infinite"
               }}
             />
@@ -710,13 +909,20 @@ return (
            
   <tr
   key={s.id}
-  onClick={() => setSelectedInvoice(s)}
+  onClick={() => {
+  setSelectedInvoice(s);
+  setDropdownOpen(false);
+}}
   style={{
     cursor: "pointer",
     background:
       selectedInvoice?.id === s.id
         ? theme.colors.secondary
         : theme.colors.card,
+    border:
+    selectedInvoice?.id === s.id
+      ? `2px solid ${theme.colors.primary}`
+      : "2px solid transparent",
     transition: "all 0.2s ease",
     boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
     borderRadius: "12px",
@@ -899,7 +1105,8 @@ onMouseLeave={handleRowLeave}
       background: theme.colors.primary,
       color: "#fff",
       cursor: "pointer",
-      fontSize: "12px"
+      fontSize: "12px",
+      transition: "0.2s",
     }}
   >
     {t("common.actions")} ⋮
@@ -908,25 +1115,45 @@ onMouseLeave={handleRowLeave}
 
   {/* Dropdown */}
   {dropdownOpen && (
-    <div style={{
-      position: "absolute",
-      top: "40px",
-      right: "10px",
-      background: theme.colors.card,
-      border: `1px solid ${theme.colors.border}`,
-      borderRadius: "12px",
-      padding: "6px 0",
-      boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
-      overflow: "hidden",
-      zIndex: 1000,
-      minWidth: "150px"
-    }}>
+    <div
+  style={{
+    position: "absolute",
+    top: "40px",
+    right: "10px",
+    background: theme.colors.card,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: "12px",
+    padding: "6px 0",
+    boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
+    overflow: "hidden",
+    zIndex: 1000,
+    minWidth: "150px"
+  }}
+>
+    
         {[
-  { key: "refund", label: "Refund", color: theme.colors.warning },
-  { key: "cancel", label: "Cancel", color: theme.colors.danger }
+  ...(selectedInvoice?.status !== "cancelled"
+    ? [{
+        key: "refund",
+        label: "Refund",
+        color: theme.colors.warning
+      }]
+    : []),
+
+  {
+    key: "cancel",
+    label: "Cancel",
+    color: theme.colors.danger
+  }
 ].map(a => (
   <div
-    key={a.key}
+  key={a.key}
+  onMouseEnter={e => {
+    e.currentTarget.style.background = "#f8fafc";
+  }}
+  onMouseLeave={e => {
+    e.currentTarget.style.background = "transparent";
+  }}
     onClick={() => {
   if (selectedInvoice.status === "cancelled" || cancelling) return;
   if (cancelling) return;
@@ -1121,7 +1348,7 @@ onMouseLeave={handleRowLeave}
 
         {/* 🔹 Items */}
         {selectedInvoice.items.map((item, i) => (
-            <div key={item.id} style={{
+            <div key={`${item.id}_${item.containerType}_${item.size}`} style={{
             display: "flex",
             justifyContent: "space-between",
             marginBottom: "10px",
@@ -1137,13 +1364,15 @@ borderBottom: "1px dashed #eee",
     color: theme.colors.textSecondary,
     marginTop: "2px"
   }}>
-    {[
-      item.containerType,
-      item.size
-    ]
-      .filter(Boolean)
-      .join(" • ")
-    }
+    {item.containerName ||
+ item.sizeLabel ||
+ [
+   item.containerType,
+   item.size
+ ]
+   .filter(Boolean)
+   .join(" • ")
+}
   </div>
 
   {/* 🛢 الزيت */}
@@ -1172,40 +1401,64 @@ borderBottom: "1px dashed #eee",
     marginTop: "15px",
     padding: "10px",
     background: "#fef9c3",
+    border: "1px solid #fde68a",
     borderRadius: "10px"
   }}>
-    <div style={{ fontWeight: "600", marginBottom: "6px" }}>
-      🔁 Returned Items
-    </div>
+    <div style={{
+  fontWeight: "700",
+  marginBottom: "8px",
+  fontSize: "13px",
+  color: "#92400e"
+}}>
+  🔁 Returned Items
+</div>
 
     {previousReturns.map((r, i) => (
-  <div key={i} style={{ fontSize: "13px" }}>
-    - {r.productName}
+  <div
+  key={i}
+  style={{
+    fontSize: "13px",
+    lineHeight: "1.8"
+  }}
+>
+  {r.productName}
+
+{r.containerName && (
+  <>
     {" • "}
-    {r.unit === "ml" ? `${r.quantity} ml` : `${r.quantity}`}
-    {" • "}
-    {(() => {
-      const isOil =
-        (r.container || "").toLowerCase() === "oil" ||
-        r.unit === "ml";
+    {r.containerName}
+  </>
+)}
 
-      if (isOil) {
-        const totalMl =
-          r.originalOilQty ||
-          parseInt(r.size) ||
-          1;
+{" • "}
 
-        const pricePerMl =
-          totalMl > 0 ? (r.price || 0) / totalMl : 0;
+{r.unit === "ml"
+  ? `${r.quantity} ml`
+  : r.quantity}
 
-        const totalPrice = pricePerMl * r.quantity;
+{" • "}
 
-        return `${totalPrice} EGP`;
-      }
+  {(() => {
+  const isPureOil =
+  (r.container || r.containerType || "")
+    .toLowerCase() === "oil";
 
-      return `${(r.price || 0) * (r.quantity || 0)} EGP`;
-    })()}
-  </div>
+  if (isPureOil) {
+    const totalMl =
+      (r.originalOilQty || parseInt(r.size) || 1) *
+      (r.originalQty || 1);
+
+    const pricePerMl =
+      totalMl > 0 ? (r.price || 0) / totalMl : 0;
+
+    const totalPrice = pricePerMl * r.quantity;
+
+    return `${totalPrice} EGP`;
+  }
+
+  return `${(r.price || 0) * (r.quantity || 0)} EGP`;
+})()}
+</div>
 ))}
   </div>
 )}
@@ -1284,22 +1537,29 @@ onMouseLeave={handleRowLeave}
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      zIndex: 1000
+      zIndex: 10000
       }}>
       <div style={{
       background: "#fff",
       padding: "20px",
       borderRadius: "12px",
       width: "100%",
+      maxWidth: "500px",
+      maxHeight: "80vh",
+      overflowY: "auto",
+      paddingRight: "6px",
+      scrollbarWidth: "thin",
 
       }}>
 
       <h3>{t("invoices.refundItems")}</h3>
 
       {selectedInvoice?.items.map((item, i) => {
-  const alreadyRefunded = previousReturns
-    .filter(r => r.productId === item.id)
-    .reduce((sum, r) => sum + r.quantity, 0);
+  
+
+const alreadyRefunded = liveReturns
+  .filter(r => getKey(r) === getKey(item))
+  .reduce((sum, r) => sum + r.quantity, 0);
 
   const isOil =
   (item.containerType || "").toLowerCase().trim() === "oil";
@@ -1309,12 +1569,33 @@ const remaining = isOil
   : item.qty - alreadyRefunded;
 
   return (
-    <div key={item.id} style={{ marginBottom: "10px" }}>
+    <div key={`${item.id}_${item.containerType}_${item.size}`} style={{ marginBottom: "10px" }}>
       <div>
-        {item.name}
+        <>
+  {item.name}
+
+  <div style={{
+    fontSize: "12px",
+    opacity: 0.7,
+    marginTop: "2px"
+  }}>
+    {item.containerName ||
+      item.sizeLabel ||
+      [
+        item.containerType,
+        item.size
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    }
+  </div>
+</>
 
         <span style={{ fontSize: "12px", marginLeft: "6px" }}>
-          ({alreadyRefunded} / {remaining + alreadyRefunded} ml)
+          {isOil
+            ? `${remaining} / ${remaining + alreadyRefunded} ml available`
+            : `${remaining} / ${remaining + alreadyRefunded} available`
+          }
         </span>
 
         {remaining === 0 && (
@@ -1326,32 +1607,82 @@ const remaining = isOil
 
       <input
         type="number"
+        style={{
+  width: "100%",
+  padding: "8px 10px",
+  borderRadius: "8px",
+  border: `1px solid ${theme.colors.border}`,
+  marginTop: "4px",
+  outline: "none",
+  fontSize: "14px",
+  transition: "0.2s",
+}}
         min="0"
         max={remaining}
-        onBlur={(e) => {
-        let value = Number(e.target.value) || 0;
+        onFocus={(e) => {
+  e.target.style.borderColor = theme.colors.primary;
+  e.target.style.boxShadow = `0 0 0 3px ${theme.colors.secondary}`;
+}}
 
-        if (value > remaining) value = remaining;
+onBlur={(e) => {
+  e.target.style.borderColor = theme.colors.border;
+  e.target.style.boxShadow = "none";
 
-        handleRefundQty(item, value);
-      }}
+  let value = Number(e.target.value) || 0;
+
+  const maxQty = remaining;
+
+  if (value > maxQty) {
+  toast.error(`Max allowed is ${maxQty}`);
+  value = maxQty;
+}
+  handleRefundQty(item, value);
+}}
         disabled={remaining === 0}
-        placeholder="Qty"
-        value={refundMap[item.id] || ""}
+        placeholder={
+          isOil
+            ? "ml"
+            : "Qty"
+        }
+        value={refundMap[getKey(item)] || ""}
         onChange={(e) =>
           handleRefundQty(item, e.target.value)
         }
       />
+      <div style={{
+  fontSize: "11px",
+  color: "#888",
+  marginTop: "4px"
+}}>
+  {isOil
+  ? `Max: ${remaining} ml`
+  : `Max: ${remaining}`}
+</div>
     </div>
   );
 })}
 
         <button
           onClick={handlePartialRefund}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
          disabled={loading || !hasValidRefund}
           style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "10px",
+            border: "none",
+            background: theme.colors.primary,
+            color: "#fff",
+            fontWeight: "600",
+            cursor: loading ? "not-allowed" : "pointer",
             opacity: loading ? 0.6 : 1,
-            cursor: loading ? "not-allowed" : "pointer"
+            marginTop: "12px"
           }}
         >
         {loading ? "⏳ Processing..." : t("invoices.confirmRefund")}
@@ -1362,9 +1693,28 @@ const remaining = isOil
     setShowRefundPopup(false);
     setRefundItems([]);
   }}
+
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-1px)";
+  }}
+
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0)";
+  }}
+
+  style={{
+    width: "100%",
+    padding: "10px",
+    borderRadius: "10px",
+    border: `1px solid ${theme.colors.border}`,
+    background: theme.colors.card,
+    marginTop: "8px",
+    cursor: "pointer",
+    transition: "0.2s"
+  }}
 >
-        {t("common.cancel")}
-      </button>
+  {t("common.cancel")}
+</button>
 
     </div>
   </div>,

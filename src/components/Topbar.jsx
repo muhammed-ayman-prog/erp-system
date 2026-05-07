@@ -1,4 +1,3 @@
-import Notifications from "./Notifications";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
@@ -15,6 +14,7 @@ const branchMap = {
   "El Obour": "elObour",
   "El Rehab": "elRehab"
 };
+import Notifications from "../components/Notifications";
 export default function Topbar({
   setCollapsed,
   collapsed,
@@ -170,8 +170,9 @@ export default function Topbar({
         display: "flex",
         alignItems: "center",
         gap: "10px",
-        flexWrap: "wrap", // 🔥 مهم
-        width: isMobile ? "100%" : "auto"
+        flexWrap: "nowrap", // 🔥 مهم
+        width: isMobile ? "100%" : "auto",
+        position: "relative",
       }}
     >
         
@@ -321,7 +322,7 @@ onMouseLeave={(e) =>
                 boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
                 width: "160px",
                 padding: "10px",
-                zIndex: 999
+                zIndex: 99999
               }}
             >
               <div

@@ -27,6 +27,7 @@ export const translations = {
       cancel: "Cancel",
       confirmAction: "Are you sure?",
       price: "Price",
+      close: "Close"
       
     },
     
@@ -48,6 +49,31 @@ export const translations = {
       logs: "Logs",
       operations: "Operations",
       management: "Management"
+    },
+    operations: {
+      title: "Operations",
+      transfer: "Transfer",
+      adjust: "Adjust Inventory",
+      fromBranch: "From Branch",
+      toBranch: "To Branch",
+      selectProduct: "Select Product",
+      available: "Available",
+      quantity: "Quantity",
+      reason: "Reason (optional)",
+      type: "Type",
+      increase: "Increase",
+      decrease: "Decrease",
+      activityLog: "Activity Log",
+      noResults: "No results found",
+      exceedStock: "Exceeds available quantity",
+      loadingTransfer: "Transferring...",
+      loadingAdjust: "Adjusting...",
+      transferSuccess: "Transfer completed successfully 🔥",
+      sameBranch: "Cannot transfer to the same branch ❌",
+      notEnoughStock: "Not enough stock ❌",
+      "product": "Product",
+      "undo": "Undo",
+      "undoSuccess": "Undo successful"
     },
     system: {
     name: "A Perfume Story",
@@ -209,7 +235,23 @@ export const translations = {
       title: "Settings",
       language: "Language",
       systemName: "ERP System"
-    }
+    },
+    stockEntry: {
+  title: "Stock Entry",
+  subtitle: "Add products to inventory",
+  addButton: "Add to Inventory",
+  addItem: "Add Item",
+  searchProduct: "Search product...",
+  quantity: "Quantity",
+  items: "Items",
+  totalQty: "Total Quantity",
+  history: "History",
+  noData: "No entries yet",
+  duplicateWarning: "Duplicate products detected, continue?",
+  invalidQty: "Quantity must be greater than 0",
+  selectBranch: "Please select a branch",
+  addItemsFirst: "Add items first"
+}
     
   },
 
@@ -242,6 +284,7 @@ export const translations = {
       confirmAction: "هل أنت متأكد؟",
       price: "السعر",
       loading: "جاري التحميل...",
+      close: "إغلاق"
       
     },
 
@@ -278,6 +321,31 @@ export const translations = {
       logs: "السجلات",
       operations: "العمليات",
       management: "الإدارة"
+    },
+    operations: {
+      title: "العمليات",
+      transfer: "تحويل",
+      adjust: "تعديل المخزون",
+      fromBranch: "من فرع",
+      toBranch: "إلى فرع",
+      selectProduct: "اختار منتج",
+      available: "المتاح",
+      quantity: "الكمية",
+      reason: "السبب (اختياري)",
+      type: "النوع",
+      increase: "زيادة",
+      decrease: "نقص",
+      activityLog: "سجل العمليات",
+      noResults: "لا توجد نتائج",
+      exceedStock: "الكمية أكبر من المتاح",
+      loadingTransfer: "جارى التحويل...",
+      loadingAdjust: "جارى التعديل...",
+      transferSuccess: "تم التحويل بنجاح 🔥",
+      sameBranch: "مينفعش تحول لنفس الفرع ❌",
+      notEnoughStock: "المخزون مش كفاية ❌",
+      "product": "المنتج",
+      "undo": "تراجع",
+      "undoSuccess": "تم التراجع بنجاح"
     },
 
     cart: {
@@ -405,7 +473,7 @@ export const translations = {
     },
 
     users: {
-      title: "المستخدمين",
+      title: "المستخدم",
       addUser: "إضافة مستخدم",
       role: "الصلاحية",
       admin: "مدير",
@@ -421,7 +489,7 @@ export const translations = {
       elRehab: "الرحاب",
       title: "الفروع",
       all: "كل الفروع",
-      title: "الفرع",
+      single: "الفرع",
       select: "اختار فرع الأول"
     },
 
@@ -429,6 +497,22 @@ export const translations = {
       title: "الإعدادات",
       language: "اللغة",
       systemName: "نظام الإدارة"
-    }
+    },
+    stockEntry: {
+  title: "إضافة للمخزون",
+  subtitle: "إضافة منتجات إلى المخزن",
+  addButton: "إضافة للمخزن",
+  addItem: "إضافة صنف",
+  searchProduct: "ابحث عن منتج...",
+  quantity: "الكمية",
+  items: "عدد الأصناف",
+  totalQty: "إجمالي الكمية",
+  history: "السجل",
+  noData: "لا توجد عمليات",
+  duplicateWarning: "في منتجات متكررة، متأكد؟",
+  invalidQty: "الكمية لازم تكون أكبر من 0",
+  selectBranch: "اختار فرع",
+  addItemsFirst: "ضيف منتجات الأول"
+}
   }
 };

@@ -14,8 +14,10 @@ import {
 
 import { exportToExcel, exportToPDF } from "../utils/exportReports";
 import logo from "../assets/logo.png";
-
+import { useAuth } from "../store/useAuth";
 export default function Reports() {
+  const { user } = useAuth();
+  const [resetting, setResetting] = useState(false);
   const [drillData, setDrillData] = useState([]);
   const [drillTitle, setDrillTitle] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -140,15 +142,17 @@ const resetInventory = async () => {
 };
 
 const handleResetSystem = async () => {
-  const confirm = window.confirm("⚠️ متأكد إنك عايز تصفر السيستم؟");
+  if (!user || !user.permissions?.includes("*")) {
+    alert("❌ غير مسموح");
+    return;
+  }
 
-  if (!confirm) return;
+  const confirmText = prompt("اكتب RESET للتأكيد");
+  if (!confirmText || confirmText !== "RESET") return;
+
+  setResetting(true); // 🔥 start loading
 
   try {
-    // 1. تصفير inventory
-    await resetInventory();
-
-    // 2. مسح الداتا
     const collectionsToClear = [
       "sales",
       "purchases",
@@ -158,18 +162,27 @@ const handleResetSystem = async () => {
       "logs",
       "stock",
       "stats",
-      "customers"
+      "customers",
+      "transfers",
+      "adjustments"
     ];
 
-    for (const name of collectionsToClear) {
-      await clearCollection(name);
-    }
+    // 🔥 امسح كل الكولكشنز
+    await Promise.all(
+      collectionsToClear.map(name => clearCollection(name))
+    );
+
+    // 🔥 بعدين صفر inventory
+    await resetInventory();
 
     alert("✅ تم تصفير السيستم بنجاح");
-    window.location.reload(); // ريفريش
+    window.location.reload();
+
   } catch (err) {
     console.error(err);
     alert("❌ حصل خطأ");
+  } finally {
+    setResetting(false); // 🔥 stop loading حتى لو حصل error
   }
 };
 
@@ -226,11 +239,17 @@ const handleResetSystem = async () => {
 
   {/* 🔥 RESET BUTTON */}
   <button
-    style={{ ...btn, background: "#fee2e2", border: "1px solid #ef4444" }}
-    onClick={handleResetSystem}
-  >
-    🧨 Reset
-  </button>
+  disabled={resetting}
+  style={{
+    ...btn,
+    background: "#fee2e2",
+    border: "1px solid #ef4444",
+    opacity: resetting ? 0.6 : 1
+  }}
+  onClick={handleResetSystem}
+>
+  {resetting ? "⏳ جاري التصفير..." : "🧨 Reset"}
+</button>
 </div>
       </motion.div>
 

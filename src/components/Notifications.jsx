@@ -1,75 +1,150 @@
 import { useEffect, useState, useRef } from "react";
 import { db } from "../firebase";
 import { collection, onSnapshot, getDocs } from "firebase/firestore";
+import { useApp } from "../store/useApp";
 
 export default function Notifications() {
+  const { selectedBranch } = useApp();
   const [notifications, setNotifications] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
   const [hiddenIds, setHiddenIds] = useState([]); // 🧠 حل Clear All
   const dropdownRef = useRef(null);
   const prevCount = useRef(0);
-
+  
   // 🔊 صوت
   const playSound = () => {
     const audio = new Audio("/notification.mp3");
     audio.play().catch(() => {});
   };
 
+  const branchesRef = useRef({});
+
+  const productsRef = useRef({});
   // 🔔 Real-time
   useEffect(() => {
+    let isMounted = true;
     const unsubscribe = onSnapshot(collection(db, "stock"), (snapshot) => {
       const processData = async () => {
-        const stockMap = {};
 
-        snapshot.forEach(doc => {
-          const data = doc.data();
+        const latestStock = {};
+snapshot.forEach(doc => {
+  const data = doc.data();
 
-          if (data.type === "sale") {
-            stockMap[data.productId] =
-              (stockMap[data.productId] || 0) - data.quantity;
-          } else {
-            stockMap[data.productId] =
-              (stockMap[data.productId] || 0) + data.quantity;
+  const key = JSON.stringify({
+  productId: data.productId,
+  branchId: data.branchId
+});
+  const existing = latestStock[key];
+
+  const currentTime =
+    data.createdAt?.seconds || 0;
+
+  const existingTime =
+    existing?.createdAt?.seconds || 0;
+
+  if (
+      !existing ||
+      currentTime > existingTime ||
+      data.after !== existing?.after // 🔥 أهم سطر
+    ) {
+    latestStock[key] = data;
+      }
+    });
+
+        if (Object.keys(productsRef.current).length === 0) {
+          const snap = await getDocs(collection(db, "products"));
+          snap.forEach(doc => {
+            productsRef.current[doc.id] = doc.data();
+          });
+        }
+
+        // 🔥 تحميل الفروع
+        if (Object.keys(branchesRef.current).length === 0) {
+          const snap = await getDocs(collection(db, "branches"));
+          snap.forEach(doc => {
+            branchesRef.current[doc.id] = doc.data();
+          });
+        }
+        const stockByProduct = {};
+
+        Object.values(latestStock).forEach(data => {
+          if (!stockByProduct[data.productId]) {
+            stockByProduct[data.productId] = [];
           }
+          stockByProduct[data.productId].push(data);
         });
 
-        const productsSnap = await getDocs(collection(db, "products"));
+        let alerts = Object.entries(productsRef.current).map(([productId, p]) => {
 
-        let alerts = productsSnap.docs.map(doc => {
-          const p = doc.data();
-          const qty = stockMap[doc.id] || 0;
+          // 🔥 دور على كل الفروع لهذا المنتج
+          const relatedStock = stockByProduct[productId] || [];
 
-          return {
-            id: doc.id,
-            name: p.name,
-            quantity: qty,
-            category: p.category,
-            subCategory: p.subCategory,
-            read: false
-          };
-        });
+          
+          if (relatedStock.length === 0) return [];
+          
+          // 🔥 لكل فرع
+          return relatedStock.map((data) => {
+            const branchId = data.branchId;
+            const qty = Number(data.after || data.quantity || 0);
+
+            const category = p.category?.trim().toLowerCase() || "";
+            const sub = p.subCategory?.trim().toLowerCase() || "";
+
+            let priority = null;
+
+            if (qty === 0) {
+              priority = "high";
+            } else if (
+              category.includes("french") ||
+              category.includes("oriental") ||
+              category.includes("musk")
+            ) {
+              if (qty < 20) priority = "high";
+              else if (qty < 35) priority = "medium";
+              else if (qty < 50) priority = "low";
+            } else if (sub.includes("bottle")) {
+              if (qty < 10) priority = "high";
+              else if (qty < 20) priority = "medium";
+              else if (qty < 30) priority = "low";
+            } else if (sub.includes("box")) {
+              if (qty < 5) priority = "high";
+              else if (qty < 8) priority = "medium";
+              else if (qty < 10) priority = "low";
+            } else if (sub.includes("sample")) {
+              if (qty < 5) priority = "high";
+              else if (qty < 8) priority = "medium";
+              else if (qty < 10) priority = "low";
+            }
+
+            return {
+              id: `${productId}_${branchId}`,
+              productId,
+              branchId,
+              name: p.name,
+              quantity: qty,
+              priority,
+              read: false
+            };
+          });
+        }).flat();
+        alerts = alerts.filter(Boolean);
+        if (selectedBranch && selectedBranch !== "all") {
+  alerts = alerts.filter(a => a.branchId === selectedBranch);
+}
+        
 
         // ⚠️ فلترة
-        alerts = alerts.filter(p => {
-          if (p.quantity === 0) return true;
+        
+        alerts = alerts.filter(p => p.priority !== null);
+        const priorityOrder = {
+          high: 1,
+          medium: 2,
+          low: 3
+        };
 
-          if (
-            p.category === "French" ||
-            p.category?.includes("Oriental")
-          ) {
-            return p.quantity <= 80;
-          }
-
-          if (
-            p.subCategory?.toLowerCase().trim() === "bottle" ||
-            p.subCategory?.toLowerCase().trim() === "box"
-          ) {
-            return p.quantity <= 20;
-          }
-
-          return false;
+        alerts.sort((a, b) => {
+          return priorityOrder[a.priority] - priorityOrder[b.priority];
         });
-
         // 🧹 اخفاء اللي اتعمله Clear
         alerts = alerts.filter(n => !hiddenIds.includes(n.id));
 
@@ -79,15 +154,24 @@ export default function Notifications() {
         }
 
         prevCount.current = alerts.length;
-
+        if (
+          Object.keys(productsRef.current).length === 0 ||
+          Object.keys(branchesRef.current).length === 0
+        ) {
+          return;
+        }
+        if (!isMounted) return;
         setNotifications(alerts);
       };
 
       processData();
     });
 
-    return () => unsubscribe();
-  }, [hiddenIds]);
+    return () => {
+  isMounted = false;
+  unsubscribe();
+};
+  }, [selectedBranch, hiddenIds]);
 
   // ❌ قفل لما تدوس برا
   useEffect(() => {
@@ -98,7 +182,9 @@ export default function Notifications() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+return () =>
+  document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // ✔️ mark as read
@@ -110,16 +196,19 @@ export default function Notifications() {
 
   // 🧹 Clear All (FIXED)
   const clearAll = () => {
-    setHiddenIds(notifications.map(n => n.id));
-    setNotifications([]);
-  };
+  setHiddenIds(prev => [...new Set([...prev, ...notifications.map(n => n.id)])]);
+  setNotifications([]);
+};
 
   return (
     <div style={{ position: "relative" }} ref={dropdownRef}>
 
       {/* 🔔 Bell */}
       <div
-  onClick={() => setShowNotif(prev => !prev)}
+  onClick={(e) => {
+  e.stopPropagation();
+  setShowNotif(prev => !prev);
+}}
   style={{
     width: "34px",
     height: "34px",
@@ -143,7 +232,7 @@ export default function Notifications() {
 </div>
 
       {/* 🔴 Badge */}
-      {notifications.filter(n => !n.read).length > 0 && (
+      {notifications.filter(n => !n.read && n.priority === "high").length > 0 && (
         <span
           style={{
             position: "absolute",
@@ -162,7 +251,7 @@ export default function Notifications() {
             fontWeight: "600"
           }}
         >
-          {notifications.filter(n => !n.read).length}
+          {notifications.filter(n => !n.read && n.priority === "high").length}
         </span>
       )}
 
@@ -172,7 +261,7 @@ export default function Notifications() {
           style={{
   position: "absolute",
   right: 0,
-  top: "40px",
+  top: "45px",
   background: "#fff",
   borderRadius: "12px",
   boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
@@ -181,12 +270,11 @@ export default function Notifications() {
   overflowY: "auto",
   padding: "8px",
   border: "1px solid #eee",
-  zIndex: 999,
+  zIndex: 99999,
 
   // 🔥 animation
-  opacity: 0,
-  transform: "translateY(-10px)",
-  animation: "fadeIn 0.5s forwards"
+
+  
 }}
         >
           {/* 🧹 Clear */}
@@ -236,30 +324,41 @@ export default function Notifications() {
                 borderBottom: "1px solid #eee",
                 borderRadius: "8px",
                 marginBottom: "5px",
-                background: n.read ? "#fff" : "#eef2ff",
+                background:
+                  n.read
+                    ? "#fff"
+                    : n.priority === "high"
+                    ? "#fee2e2"
+                    : n.priority === "medium"
+                    ? "#ffedd5"
+                    : "#fef9c3",
                 cursor: "pointer"
               }}
-              onMouseEnter={(e) =>
-  (e.currentTarget.style.background = "#e0e7ff")
-}
-onMouseLeave={(e) =>
-  (e.currentTarget.style.background =
-    n.read ? "#fff" : "#eef2ff")
-}
+              onMouseEnter={(e) => {
+  e.currentTarget.style.opacity = "0.85";
+}}
+onMouseLeave={(e) => {
+  e.currentTarget.style.opacity = "1";
+}}
             >
               <strong style={{ fontSize: "13px" }}>
-  {n.name}
+  {n.name} ({branchesRef.current[n.branchId]?.name || "Unknown"})
 </strong>
 
               <div
                 style={{
                   fontSize: "12px",
-                  color: n.quantity === 0 ? "#ef4444" : "#f59e0b"
+                  color:
+                    n.priority === "high"
+                      ? "#b91c1c"
+                      : n.priority === "medium"
+                      ? "#c2410c"
+                      : "#a16207",
                 }}
               >
                 {n.quantity === 0
-  ? "Out of stock"
-  : "Low stock"}
+                  ? "Out of stock"
+                  : `Low stock (${n.quantity})`}
               </div>
             </div>
           ))}

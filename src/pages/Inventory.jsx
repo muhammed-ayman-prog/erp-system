@@ -24,7 +24,8 @@ export default function Inventory() {
   const [returnedItems, setReturnedItems] = useState([]);
   const [returnedSearch, setReturnedSearch] = useState("");
   const [sortType, setSortType] = useState("newest");
-
+  const [transfers, setTransfers] = useState([]);
+  const [adjustments, setAdjustments] = useState([]);
   
   const handleAddReturnedToCart = (item) => {
   if (!item.productId) {
@@ -34,7 +35,14 @@ export default function Inventory() {
 
   // 👇 نحفظه مؤقت (هنسحبه في sales page)
   const existing = JSON.parse(localStorage.getItem("returnedCart") || "[]");
-console.log("ITEM FROM FIRESTORE:", item);
+  const exists = existing.find(
+  i => i.returnedItemId === item.id
+);
+
+if (exists) {
+  alert("العنصر موجود بالفعل");
+  return;
+}
   existing.push({
     id: item.productId,
     name: item.name,
@@ -168,6 +176,20 @@ setProducts(finalProducts);
   };
 
 }, [selectedBranch, user, productsList.length]);
+useEffect(() => {
+  const fetchTransfers = async () => {
+    const snap = await getDocs(collection(db, "transfers"));
+    setTransfers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
+
+  const fetchAdjustments = async () => {
+    const snap = await getDocs(collection(db, "adjustments"));
+    setAdjustments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
+
+  fetchTransfers();
+  fetchAdjustments();
+}, []);
 useEffect(() => {
   getDocs(collection(db, "products")).then((snap) => {
     const data = snap.docs.map(doc => ({
@@ -446,10 +468,70 @@ const date = new Date(
 
     stat.closing = stat.opening + stat.inQty - stat.outQty;
   });
+    // 🔄 TRANSFERS
+  transfers.forEach(t => {
+    if (!t.productId) return;
 
+    if (!map[t.productId]) {
+      map[t.productId] = { opening: 0, inQty: 0, outQty: 0, closing: 0 };
+    }
+
+    const stat = map[t.productId];
+
+    const date = t.createdAt?.toDate
+      ? t.createdAt.toDate()
+      : new Date(t.createdAt);
+
+    const currentBranch = selectedBranch;
+
+    if (!currentBranch) return;
+
+    // قبل الشهر
+    if (date < start) {
+      if (t.toBranch === currentBranch) stat.opening += t.qty;
+      if (t.fromBranch === currentBranch) stat.opening -= t.qty;
+    }
+
+    // خلال الشهر
+    if (date >= start && date < end) {
+      if (t.toBranch === currentBranch) stat.inQty += t.qty;
+      if (t.fromBranch === currentBranch) stat.outQty += t.qty;
+    }
+
+    stat.closing = stat.opening + stat.inQty - stat.outQty;
+  });
+
+  // ⚖️ ADJUSTMENTS
+  adjustments.forEach(a => {
+    if (!a.productId) return;
+
+    if (!map[a.productId]) {
+      map[a.productId] = { opening: 0, inQty: 0, outQty: 0, closing: 0 };
+    }
+
+    const stat = map[a.productId];
+
+    const date = a.createdAt?.toDate
+      ? a.createdAt.toDate()
+      : new Date(a.createdAt);
+
+    const type = a.adjustType || a.type;
+
+    if (date < start) {
+      if (type === "increase") stat.opening += a.qty;
+      else stat.opening -= a.qty;
+    }
+
+    if (date >= start && date < end) {
+      if (type === "increase") stat.inQty += a.qty;
+      else stat.outQty += a.qty;
+    }
+
+    stat.closing = stat.opening + stat.inQty - stat.outQty;
+  });
   return map;
 
-}, [stockData, selectedMonth]);
+}, [stockData, transfers, adjustments, selectedMonth, selectedBranch]);
 
 
 const filteredReturned = useMemo(() => {

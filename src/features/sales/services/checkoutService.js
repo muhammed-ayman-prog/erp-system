@@ -35,7 +35,20 @@ export const processCheckout = async ({
       const reads = [];
 
       // 🟡 نجمع كل القراءات الأول
+      // ✅ تأكد إن الكارت مش فاضي
+      if (!cart.length) {
+        throw new Error("❌ الكارت فاضي");
+      }
+
       for (const item of cart) {
+        // ✅ تأكد إن الكونتينر موجود
+        console.log("ITEM DEBUG:", item);
+      if (!item.containerId && item.containerType !== "oil") {
+        throw new Error("❌ لازم تختار كونتينر");
+      }
+      if (item.containerType !== "oil" && (!item.oilQty || item.oilQty <= 0)) {
+        throw new Error("❌ لازم تدخل كمية الزيت");
+      }
 
         // 🔁 Returned Item → skip inventory checks
         if (item.isReturned) {
@@ -92,11 +105,12 @@ const current = snap.data()?.quantity || 0;
 
         } else {
 
-          const containerRef = doc(
-            db,
-            "inventory",
-            `${branchToUse}_${item.containerType}_${item.size}`
-            );
+
+const containerRef = doc(
+  db,
+  "inventory",
+  `${branchToUse}_${item.containerId}`
+);
 const containerDoc = await transaction.get(containerRef);
 
 if (!containerDoc.exists()) {
@@ -113,9 +127,14 @@ if (containerStock < item.qty) {
           let oilRef = null;
 let neededOil = 0;
 
-if (item.oilQty > 0 && item.containerType !== "oil") {
+if (item.containerType !== "oil" && item.oilQty > 0) {
 
-  oilRef = doc(db, "inventory", `${branchToUse}_${item.id}`);
+
+oilRef = doc(
+  db,
+  "inventory",
+  `${branchToUse}_${item.id}`
+);
 
   const oilDoc = await transaction.get(oilRef);
 
@@ -125,7 +144,6 @@ if (item.oilQty > 0 && item.containerType !== "oil") {
 
   const oilStock = oilDoc.data()?.quantity || 0;
   neededOil = item.oilQty * item.qty;
-
   if (oilStock < neededOil) {
     throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
   }
@@ -202,8 +220,11 @@ await Promise.all(
       addDoc(collection(db, "stock"), {
         productId: item.containerType === "oil"
   ? item.id
-  : item.size || item.id || "unknown",
-        quantity: item.qty,
+  : item.containerId || item.id,
+        quantity:
+  item.containerType === "oil"
+    ? item.oilQty * item.qty
+    : item.qty,
         type: item.isReturned ? "resell" : "sale",
         price: item.price || 0,
         total: (item.price || 0) * item.qty,
@@ -213,12 +234,10 @@ await Promise.all(
       })
     );
 
-    if (item.oilQty > 0 && item.containerType !== "oil") {
+    if (item.containerType !== "oil" && item.oilQty > 0) {
       arr.push(
         addDoc(collection(db, "stock"), {
-          productId: item.containerType === "oil"
-          ? item.id
-          : item.size || item.id || "unknown",
+          productId: item.id,
           quantity: item.oilQty * item.qty,
           type: item.isReturned ? "resell" : "sale",
           price: item.oilQty ? item.price / item.oilQty : 0,
@@ -258,36 +277,101 @@ await Promise.all(
 
     // 🟢 3) SAVE INVOICE
     const cleanedCart = cart.map(item => ({
-      ...item,
-      size: item.size || "",
-      containerName: item.containerName || "",
-      containerType: item.containerType ?? "unknown",
-    }));
-    const saleRef = 
-    await addDoc(collection(db, "sales"), {
-    invoiceNumber,
-    items: cleanedCart,
-    total: total,
-    paymentMethod: paymentMethod,
-    customerName: customerName,
-    customerPhone: customerPhone,
-    branchId: branchToUse,
-    createdAt: serverTimestamp(),
-    totalQty: cart.reduce(
-  (sum, i) =>
-    sum +
-    (i.containerType === "oil"
-      ? i.oilQty * i.qty
-      : i.qty),
-  0
-),
-    refundedQty: 0,
+  // 🧾 Basic
+  id: item.id,
+  name: item.name,
 
-    // 👇 دول المهمين
-    salesName: salesName || user?.name || "—",
-    enteredBy: user?.name || "—",
-    enteredById: user?.id || null
-  });
+  itemType: item.itemType || "UNKNOWN",
+
+  saleMode: item.saleMode || "UNKNOWN",
+
+  // 🛢 Oil
+  oilId: item.oilId || item.id,
+  oilName: item.oilName || item.name,
+  oilCategory: item.oilCategory || "",
+
+  oilQtyML: item.oilQtyML || 0,
+
+  // 🧴 Container
+  size: item.size || "",
+
+  containerName: item.containerName || "",
+  containerType: item.containerType ?? "unknown",
+  containerId: item.containerId ?? null,
+
+  // 📦 Qty
+  qty: item.qty || 1,
+
+  // 💰 Pricing
+  unitPrice: item.unitPrice || item.price || 0,
+  price: item.price || 0,
+
+  // 💸 Costing
+  oilCostPerML: item.oilCostPerML || 0,
+
+  oilCost: item.oilCost || 0,
+
+  containerCost: item.containerCost || 0,
+
+  overheadCost: item.overheadCost || 0,
+
+  unitCost: item.unitCost || 0,
+
+  profit: item.profit || 0,
+
+  margin: item.margin || 0,
+
+  // 🟡 Backward compatibility
+  oilQty: item.oilQty || 0
+}));
+    const totalProfit = cleanedCart.reduce(
+  (sum, item) => sum + (item.profit || 0),
+  0
+);
+
+const totalCost = cleanedCart.reduce(
+  (sum, item) => sum + (item.unitCost || 0),
+  0
+);
+
+const overallMargin =
+  total > 0
+    ? Number(((totalProfit / total) * 100).toFixed(2))
+    : 0;
+
+const saleRef = await addDoc(collection(db, "sales"), {
+  invoiceNumber,
+  items: cleanedCart,
+
+  total: total || 0,
+  totalCost,
+  totalProfit,
+  overallMargin,
+
+  paymentMethod: paymentMethod || "",
+  customerName: customerName || "",
+  customerPhone: customerPhone || "",
+
+  branchId: branchToUse,
+  createdAt: serverTimestamp(),
+
+  totalQty: cart.reduce(
+    (sum, i) =>
+      sum +
+      (i.containerType === "oil"
+        ? i.oilQty * i.qty
+        : i.qty),
+    0
+  ),
+
+  refundedQty: 0,
+
+  salesName: salesName || user?.name || "—",
+  enteredBy: user?.name || "—",
+  enteredById: user?.id || null
+});
+    
+    
     // 🔗 ربط العميل
 if (customerPhone) {
   const q = query(
