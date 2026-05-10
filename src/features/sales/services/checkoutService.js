@@ -217,7 +217,7 @@ await Promise.all(
     const arr = [];
 
     arr.push(
-      addDoc(collection(db, "stock"), {
+      addDoc(collection(db, "stock")  , {
         productId: item.containerType === "oil"
   ? item.id
   : item.containerId || item.id,
@@ -226,6 +226,31 @@ await Promise.all(
     ? item.oilQty * item.qty
     : item.qty,
         type: item.isReturned ? "resell" : "sale",
+        movementType: item.isReturned
+          ? "RETURN_RESALE"
+          : "SALE",
+
+        direction: "OUT",
+
+        productType:
+          item.containerType === "oil"
+            ? "RAW_OIL"
+            : "CONTAINER",
+
+        unit:
+          item.containerType === "oil"
+            ? "ML"
+            : "PCS",
+
+        unitCost:
+          item.containerType === "oil"
+            ? item.oilCostPerML || 0
+            : item.containerCost || 0,
+
+        totalCost:
+          item.containerType === "oil"
+            ? item.oilCost || 0
+            : item.containerCost || 0,
         price: item.price || 0,
         total: (item.price || 0) * item.qty,
         branchId: branchToUse,
@@ -240,6 +265,19 @@ await Promise.all(
           productId: item.id,
           quantity: item.oilQty * item.qty,
           type: item.isReturned ? "resell" : "sale",
+          movementType: item.isReturned
+            ? "RETURN_RESALE"
+            : "SALE",
+
+          direction: "OUT",
+
+          productType: "RAW_OIL",
+
+          unit: "ML",
+
+          unitCost: item.oilCostPerML || 0,
+
+          totalCost: item.oilCost || 0,
           price: item.oilQty ? item.price / item.oilQty : 0,
           total: (item.price || 0) * item.qty,
           branchId: branchToUse,

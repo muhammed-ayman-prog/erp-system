@@ -21,6 +21,7 @@ import Invoices from "./pages/Invoices";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Logs from "./pages/Logs";  
+import Pricing from "./pages/Pricing";
 import { Toaster } from "react-hot-toast";
 function App() {
   const { user, loading } = useAuth();
@@ -124,6 +125,10 @@ function App() {
               {/* Operations */}
               <Route element={<ProtectedRoute permissions={["view_operations"]} />}>
                 <Route path="/operations" element={<Operations />} />
+              </Route>
+              {/* Pricing */}
+              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+                <Route path="/pricing" element={<Pricing />} />
               </Route>
 
             </Route>

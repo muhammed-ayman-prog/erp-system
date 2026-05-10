@@ -137,26 +137,64 @@ const subtotal = cart.reduce((sum, item) => {
 const total = Math.max(0, subtotal - discount);
 const getPrice = (product, size, containerType) => {
   if (containerType === "oil") {
-  const category = product.category?.toLowerCase();
-  const qty = product.oilQty || 0;
-  
+
+  const category =
+    product.category?.toLowerCase() || "";
+
+  const qty =
+    product.oilQty || 0;
+
+  // 🔵 French Oil
   if (category.includes("french")) {
-    return qty * 15;
+
+    const found = pricing.find(
+      p => p.category === "french_oil"
+    );
+
+    return qty * (found?.price || 0);
   }
 
+  // 🔴 Oriental Oil
   if (
-  category.includes("oriental") ||
-  category.includes("musk")
-) {
-  return qty * 25;
-}
+    category.includes("oriental")
+  ) {
+
+    const grade =
+      category.includes("-a") ? "A"
+      : category.includes("-b") ? "B"
+      : category.includes("-c") ? "C"
+      : null;
+
+    if (!grade) return 0;
+
+    const found = pricing.find(
+      p =>
+        p.category === "oriental_oil" &&
+        p.grade === grade
+    );
+
+    return qty * (found?.price || 0);
+  }
+
+  // 🟢 Musk Oil
+  if (
+    category.includes("musk")
+  ) {
+
+    const found = pricing.find(
+      p =>
+        p.category === "oriental_oil" &&
+        p.grade === "A"
+    );
+
+    return qty * (found?.price || 0);
+  }
 
   return 0;
 }
      const cat = product.category?.toLowerCase() || "";
     containerType = containerType?.toLowerCase().trim();
-  const normalize = (s) =>
-    s?.toLowerCase().replace(/\s/g, "").trim();
+  
 
   const normalizeSize = (s) =>
     s?.toLowerCase().replace(/\s/g, "");
@@ -228,18 +266,26 @@ if (!grade) return 0; // A / B / C
 
     if (!base) return 0;
 
-    const extra = grade === "A" ? 1000 : 600;
+    const extraPricing = pricing.find(
+  p =>
+    p.category === "box_extra" &&
+    p.grade === grade
+);
 
-    return base.price + extra;
+return (
+  base.price +
+  (extraPricing?.price || 0)
+);
   }
 
   // 🔵 FRENCH
   if (cat.includes("french")) {
+    // 🔥 BOX → fixed product price
+if (containerType === "box") {
+  return product.price || 0;
+}
 
-  // 🔥 BOX → من الكونتينر
-  if (containerType === "box") {
-    return size?.price || 0;
-  }
+  
 
   // 🟡 Bottle / Sample → من pricing
   const found = pricing.find(p =>

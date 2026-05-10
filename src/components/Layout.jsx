@@ -21,7 +21,8 @@ import {
   Trash2,// 👈 NEW ICON
   RefreshCw,
   FileText,
-  Repeat 
+  Repeat,
+  DollarSign
 } from "lucide-react";
 import Notifications from "../components/Notifications";
 
@@ -153,11 +154,18 @@ export default function Layout() {
         icon: <Repeat size={collapsed ? 24 : 18} />,
         permission: "view_operations"
       },
+      
     ]
   },
   {
     section: t("navigation.management"),
     items: [
+      {
+        name: "Pricing",
+        path: "/pricing",
+        icon: <DollarSign size={collapsed ? 24 : 18} />,
+        permission: "view_inventory"
+      },
       {
         name: t("navigation.reports"),
         path: "/reports",
