@@ -385,6 +385,16 @@ const visibleProducts = productsWithStock
       .toLowerCase()
       .includes(search.trim().toLowerCase())
   );
+  const playCheckoutSound = () => {
+
+  const audio = new Audio(
+    "/sounds/success.mp3"
+  );
+
+  audio.volume = 0.7;
+
+  audio.play();
+};
   return (
   <>
   
@@ -453,7 +463,7 @@ const visibleProducts = productsWithStock
         handleCheckout={(params) =>
           handleCheckout({
             ...params,
-
+            playCheckoutSound,
             customerName,
             customerPhone,
 

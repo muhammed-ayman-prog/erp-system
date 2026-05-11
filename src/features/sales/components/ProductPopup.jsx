@@ -28,15 +28,38 @@ export default function ProductPopup({
   if (!showPopup) return null;
 const selectedValue = selectedSize?.size || selectedSize?.name;
 const isMobile = window.innerWidth < 768;
+const isFrenchBox =
+  selectedProduct?.category
+    ?.toLowerCase()
+    ?.includes("french") &&
+
+  containerType === "box";
+
 const price =
-  containerType === "oil"
+  isFrenchBox
+
+    ? (
+        selectedSize?.sellingPrice ??
+        selectedSize?.price ??
+        0
+      )
+
+    : containerType === "oil"
+
     ? getPrice(
         { ...selectedProduct, oilQty },
         null,
         containerType
       )
+
     : selectedSize
-    ? getPrice(selectedProduct, selectedSize, containerType)
+
+    ? getPrice(
+        selectedProduct,
+        selectedSize,
+        containerType
+      )
+
     : 0;
     const isValid =
   containerType === "oil"

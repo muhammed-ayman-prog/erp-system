@@ -1,7 +1,8 @@
   import {
   useEffect,
   useState,
-  useRef
+  useRef,
+  useMemo
 } from "react";
   import {
     collection,
@@ -162,9 +163,58 @@
       "🗑️",
 
     TOGGLE_USER_STATUS:
-      "🔒"
+      "🔒",
+    ADD_EXPENSE:
+      "💸",
+
+    UPDATE_EXPENSE:
+      "✏️",
+
+    DELETE_EXPENSE:
+      "🗑️",
+
+    ADD_LOAN:
+      "🧾",
+
+    ADD_BONUS:
+      "🎁",
+
+    
+      
 
   }; 
+  const actionLabels = {
+  CREATE_INVOICE: "إنشاء فاتورة",
+
+  CREATE_USER: "إنشاء مستخدم",
+
+  UPDATE_USER: "تعديل مستخدم",
+
+  DELETE_USER: "حذف مستخدم",
+
+  TOGGLE_USER_STATUS:
+    "تغيير حالة المستخدم",
+
+  ADD_EXPENSE:
+    "إضافة مصروف",
+
+  UPDATE_EXPENSE:
+    "تعديل مصروف",
+
+  DELETE_EXPENSE:
+    "حذف مصروف",
+
+  ADD_LOAN:
+    "إضافة سلفة",
+  UPDATE_LOAN:
+  "تعديل سلفة",
+
+  ADD_BONUS:
+    "إضافة حافز",
+
+  UPDATE_BONUS:
+  "تعديل حافز",
+};
   const severityColors = {
 
     success:
@@ -190,54 +240,68 @@
       "#dc2626"
 
   };
-  const filteredLogs =
-    logs.filter(log => {
+  const filteredLogs = useMemo(() => {
 
-      const matchesFilter =
-        filter === "all"
-          ? true
-          : log.action === filter;
-      const matchesModule =
+  return logs.filter(log => {
 
-    moduleFilter === "all"
-      ? true
-      : log.module === moduleFilter;
+    const matchesFilter =
+      filter === "all"
+        ? true
+        : log.action === filter;
 
-  const matchesStatus =
+    const matchesModule =
+      moduleFilter === "all"
+        ? true
+        : log.module === moduleFilter;
 
-    statusFilter === "all"
-      ? true
-      : log.status === statusFilter;
-      const searchText =
-        `
-          ${log.action}
-          ${log.byName}
-          ${log.module}
-          ${log.targetName}
-          ${log.targetId}
-          ${log.details?.invoiceNumber}
-          ${log.details?.customerName}
-        `
-        .toLowerCase();
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : log.status === statusFilter;
 
-      const matchesSearch =
-        searchText.includes(
-          search.toLowerCase()
-        );
+    const searchText =
+  `
+    ${log.action}
 
-      return (
+    ${actionLabels[log.action] || ""}
 
-    matchesFilter &&
+    ${log.byName}
+    ${log.module}
+    ${log.targetName}
+    ${log.targetId}
 
-    matchesModule &&
+    ${log.details?.invoiceNumber}
+    ${log.details?.customerName}
 
-    matchesStatus &&
+    ${log.details?.employee}
+    ${log.details?.category}
+    ${log.details?.note}
+    ${log.details?.amount}
+  `
+  .toLowerCase();
 
-    matchesSearch
+    const matchesSearch =
+      searchText.includes(
+        search.toLowerCase()
+      );
 
-  );
+    return (
+      matchesFilter &&
+      matchesModule &&
+      matchesStatus &&
+      matchesSearch
+    );
 
-    });
+  });
+
+}, [
+  logs,
+  filter,
+  moduleFilter,
+  statusFilter,
+  search
+]);
+    
   const totalLogs =
     filteredLogs.length;
 
@@ -255,13 +319,16 @@
     filteredLogs.filter(
       log => log.module === "Users"
     ).length;
-
+  const expenseLogs =
+  filteredLogs.filter(
+    log => log.module === "Expenses"
+  ).length;
   const exportCSV = () => {
 
     const rows = filteredLogs.map(log => ({
 
       Action:
-        log.action,
+      actionLabels[log.action] || log.action,
 
       User:
         log.byName,
@@ -287,6 +354,18 @@
 
       Total:
         log.details?.total || "",
+      
+      Category:
+        log.details?.category || "",
+
+      Employee:
+        log.details?.employee || "",
+
+      Amount:
+        log.details?.amount || "",
+
+      Note:
+        log.details?.note || "",
 
       Time:
         log.createdAt?.seconds
@@ -296,7 +375,10 @@
           : ""
 
     }));
-
+    if (rows.length === 0) {
+      alert("No logs to export");
+      return;
+    }
     const headers =
       Object.keys(rows[0] || {});
 
@@ -383,10 +465,20 @@
 
         }));
 
-      setLogs(prev => [
-        ...prev,
-        ...newLogs
-      ]);
+      setLogs(prev => {
+        const existingIds =
+          prev.map(l => l.id);
+
+        const uniqueNew =
+          newLogs.filter(
+            l => !existingIds.includes(l.id)
+          );
+
+        return [
+          ...prev,
+          ...uniqueNew
+        ];
+      });
 
       setLastDoc(
         snap.docs[
@@ -613,6 +705,48 @@
         User Logs
       </p>
     </div>
+    <div style={{
+
+  background:
+    "#fff",
+
+  padding:
+    "18px",
+
+  borderRadius:
+    "18px",
+
+  boxShadow:
+    "0 4px 12px rgba(0,0,0,0.04)",
+
+  border:
+    "1px solid #f1f5f9"
+
+}}>
+  <h3 style={{
+
+    fontSize:
+      "28px",
+
+    marginBottom:
+      "6px"
+
+  }}>
+    {expenseLogs}
+  </h3>
+
+  <p style={{
+
+    color:
+      "#64748b",
+
+    fontSize:
+      "14px"
+
+  }}>
+    Expenses Logs
+  </p>
+</div>
 
   </div>
   <div style={{
@@ -655,6 +789,32 @@
           <option value="CREATE_INVOICE">
             Create Invoice
           </option>
+          <option value="ADD_EXPENSE">
+            Add Expense
+          </option>
+
+          <option value="UPDATE_EXPENSE">
+            Update Expense
+          </option>
+
+          <option value="DELETE_EXPENSE">
+            Delete Expense
+          </option>
+
+          <option value="ADD_LOAN">
+            Add Loan
+          </option>
+
+          <option value="ADD_BONUS">
+            Add Bonus
+          </option>
+          <option value="UPDATE_LOAN">
+            Update Loan
+          </option>
+
+          <option value="UPDATE_BONUS">
+            Update Bonus
+          </option>
         </select>
         <select
 
@@ -677,6 +837,9 @@
 
     <option value="Sales">
       Sales
+    </option>
+    <option value="Expenses">
+      Expenses
     </option>
 
   </select>
@@ -805,6 +968,8 @@
 
         {/* Table */}
         <div style={{
+          maxHeight: "75vh",
+          overflowY: "auto",
           background: "#fff",
           borderRadius: "16px",
           overflowX: "auto",
@@ -1067,8 +1232,7 @@
 
     {" "}
 
-    {log.action
-    ?.replaceAll("_", " ")}
+    {actionLabels[log.action] || log.action}
 
   </span>
         </td>
@@ -1311,6 +1475,38 @@
               <b>Total:</b>
               {" "}
               {log.details.total}
+            </div>
+          )}
+          {log.details?.category && (
+            <div>
+              <b>Category:</b>{" "}
+              {log.details.category}
+            </div>
+          )}
+
+          {log.details?.employee && (
+            <div>
+              <b>Employee:</b>{" "}
+              {log.details.employee}
+            </div>
+          )}
+          <div>
+            <b>Action Type:</b>{" "}
+            {actionLabels[log.action] || log.action}
+          </div>
+          
+
+          {log.details?.amount && (
+            <div>
+              <b>Amount:</b>{" "}
+              {log.details.amount}
+            </div>
+          )}
+
+          {log.details?.note && (
+            <div>
+              <b>Note:</b>{" "}
+              {log.details.note}
             </div>
           )}
 

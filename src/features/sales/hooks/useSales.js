@@ -303,6 +303,7 @@ const handleCheckout = async (params) => {
   const {
     customerName,
     customerPhone,
+    playCheckoutSound,
     salesName,
     user,
     paymentMethod,
@@ -368,6 +369,7 @@ if (!salesName?.trim()) {
 });
 
     showToast(setToastText, setShowToast, `Invoice: ${invoiceNumber} ✅`);
+    playCheckoutSound?.();
     setCart([]);
     localStorage.removeItem("cart");
     setContainerType("bottle");
