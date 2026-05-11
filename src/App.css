@@ -188,6 +188,16 @@
 .dropdown-item:hover {
   background: #f1f5f9;
 }
-* {
-  transition: none !important;
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }

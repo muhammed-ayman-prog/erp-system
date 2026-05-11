@@ -1,269 +1,246 @@
-import {
-  runTransaction,
-  doc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  increment,
-  query,
-  where,
-  getDocs,
-  updateDoc
-} from "firebase/firestore";
-import { db } from "../../../firebase";
-const branchMap = {
-  y2aCRTss8tUiLw9g8WCw: "ABBAS1",
-  RFA1pToN9LPfFSnenbSY: "ABBAS2",
-  nCYR3hk9rVjhT8fcWbV5: "ABBAS3",
-  DUuSkP04TnYT2XhvqoVy: "CITY",
- QPGcEaPljiGIpQMz9GYy: "ELOBOUR",
-  VmNcbSmkrVo5Bjup8Zxx: "ELREHAB"
-};
-export const processCheckout = async ({
-  cart,
-  branchToUse,
-  total,
-  paymentMethod,
-  customerName,
-  customerPhone,
-  salesName, // 👈 ضيف دي
-  user       // 👈 ودي
-}) => {
+  import {
+    runTransaction,
+    doc,
+    addDoc,
+    collection,
+    serverTimestamp,
+    increment,
+    query,
+    where,
+    getDocs,
+    updateDoc
+  } from "firebase/firestore";
+  import { db } from "../../../firebase";
+  import logAction
+  from "../../../utils/logAction";
+  const branchMap = {
+    y2aCRTss8tUiLw9g8WCw: "ABBAS1",
+    RFA1pToN9LPfFSnenbSY: "ABBAS2",
+    nCYR3hk9rVjhT8fcWbV5: "ABBAS3",
+    DUuSkP04TnYT2XhvqoVy: "CITY",
+  QPGcEaPljiGIpQMz9GYy: "ELOBOUR",
+    VmNcbSmkrVo5Bjup8Zxx: "ELREHAB"
+  };
 
-    await runTransaction(db, async (transaction) => {
+  export const processCheckout = async ({
+    cart,
+    branchToUse,
+    total,
+    paymentMethod,
+    customerName,
+    customerPhone,
+    salesName, // 👈 ضيف دي
+    user       // 👈 ودي
+  }) => {
+    try {
 
-      const reads = [];
+      await runTransaction(db, async (transaction) => {
 
-      // 🟡 نجمع كل القراءات الأول
-      // ✅ تأكد إن الكارت مش فاضي
-      if (!cart.length) {
-        throw new Error("❌ الكارت فاضي");
-      }
+        const reads = [];
 
-      for (const item of cart) {
-        // ✅ تأكد إن الكونتينر موجود
-        console.log("ITEM DEBUG:", item);
-      if (!item.containerId && item.containerType !== "oil") {
-        throw new Error("❌ لازم تختار كونتينر");
-      }
-      if (item.containerType !== "oil" && (!item.oilQty || item.oilQty <= 0)) {
-        throw new Error("❌ لازم تدخل كمية الزيت");
-      }
-
-        // 🔁 Returned Item → skip inventory checks
-        if (item.isReturned) {
-          reads.push({ type: "returned", item });
-          continue;
-        }
-        const isOilOnly = item.containerType === "oil";
-        if (isOilOnly) {
-        const oilRef = doc(db, "inventory", `${branchToUse}_${item.id}`);
-        const oilDoc = await transaction.get(oilRef);
-
-        if (!oilDoc.exists()) {
-          throw new Error("❌ الزيت مش موجود");
+        // 🟡 نجمع كل القراءات الأول
+        // ✅ تأكد إن الكارت مش فاضي
+        if (!cart.length) {
+          throw new Error("❌ الكارت فاضي");
         }
 
-        const oilStock = oilDoc.data()?.quantity || 0;
-        const neededOil = item.oilQty * item.qty;
-
-        if (oilStock < neededOil) {
-          throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
-        }
-
-        reads.push({
-          type: "oil",
-          oilRef,
-          neededOil,
-          item
-        });
-
-        continue;
-      }
+        for (const item of cart) {
+          // ✅ تأكد إن الكونتينر موجود
+          
         const isReadyProduct =
           item.containerType === "Original" ||
-          item.containerType === "Ready";
+          item.containerType === "Ready" ||
+          item.containerType === "Cream" ||
+          item.containerType === "مخمرية";
 
-        if (isReadyProduct) {
+        if (
+          !item.containerId &&
+          item.containerType !== "oil" &&
+          !isReadyProduct
+        ) {
+          throw new Error("❌ لازم تختار كونتينر");
+        }
+        if (
+          item.containerType !== "oil" &&
+          !isReadyProduct &&
+          (!item.oilQty || item.oilQty <= 0)
+        ) {
+          throw new Error("❌ لازم تدخل كمية الزيت");
+        }
 
-          const ref = doc(db, "inventory", `${branchToUse}_${item.id}`);
-const snap = await transaction.get(ref);
+          // 🔁 Returned Item → skip inventory checks
+          if (item.isReturned) {
+            reads.push({ type: "returned", item });
+            continue;
+          }
+          const isOilOnly = item.containerType === "oil";
+          if (isOilOnly) {
+          const oilRef = doc(db, "inventory", `${branchToUse}_${item.id}`);
+          const oilDoc = await transaction.get(oilRef);
 
-if (!snap.exists()) {
-  throw new Error("❌ المنتج مش موجود في المخزن");
-}
-
-const current = snap.data()?.quantity || 0;
-
-
-
-          if (current < item.qty) {
-            throw new Error(`❌ المنتج ${item.name} مش متوفر`);
+          if (!oilDoc.exists()) {
+            throw new Error("❌ الزيت مش موجود");
           }
 
-          reads.push({ type: "ready", ref, item });
+          const oilStock = oilDoc.data()?.quantity || 0;
+          const neededOil = item.oilQty * item.qty;
 
-        } else {
-
-
-const containerRef = doc(
-  db,
-  "inventory",
-  `${branchToUse}_${item.containerId}`
-);
-const containerDoc = await transaction.get(containerRef);
-
-if (!containerDoc.exists()) {
-  throw new Error("❌ الكونتينر مش موجود");
-}
-
-const containerStock = containerDoc.data()?.quantity || 0;
-
-if (containerStock < item.qty) {
-  throw new Error(`❌ الكونتينر مش كفاية لـ ${item.name}`);
-}
-
-
-          let oilRef = null;
-let neededOil = 0;
-
-if (item.containerType !== "oil" && item.oilQty > 0) {
-
-
-oilRef = doc(
-  db,
-  "inventory",
-  `${branchToUse}_${item.id}`
-);
-
-  const oilDoc = await transaction.get(oilRef);
-
-  if (!oilDoc.exists()) {
-    throw new Error("❌ الزيت مش موجود");
-  }
-
-  const oilStock = oilDoc.data()?.quantity || 0;
-  neededOil = item.oilQty * item.qty;
-  if (oilStock < neededOil) {
-    throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
-  }
-}
+          if (oilStock < neededOil) {
+            throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
+          }
 
           reads.push({
-            type: "mix",
-            containerRef,
+            type: "oil",
             oilRef,
             neededOil,
             item
           });
-        }
-      }
-
-      // 🔵 بعد ما خلصنا كل الـ reads → نعمل writes
-      for (const r of reads) {
-        if (r.type === "oil") {
-          transaction.set(r.oilRef, {
-            quantity: increment(-r.neededOil)
-          }, { merge: true });
 
           continue;
         }
+          
 
-        // 🔁 Returned Item
-        if (r.item.isReturned) {
-          console.log("RETURN ITEM:", r.item); // 👈 ضيف دي
-          const returnedRef = doc(db, "returned_items", r.item.returnedItemId);
+          if (isReadyProduct) {
 
-          transaction.update(returnedRef, {
-            status: "sold",
-            soldAt: serverTimestamp()
-          });
+            const ref = doc(db, "inventory", `${branchToUse}_${item.id}`);
+  const snap = await transaction.get(ref);
 
-          // 🔥 تحديث returns
-          if (r.item.returnId) {
-          const returnRef = doc(db, "returns", r.item.returnId);
+  if (!snap.exists()) {
+    throw new Error("❌ المنتج مش موجود في المخزن");
+  }
 
-          transaction.update(returnRef, {
-            status: "sold"
-          });
+  const current = snap.data()?.quantity || 0;
+
+
+
+            if (current < item.qty) {
+              throw new Error(`❌ المنتج ${item.name} مش متوفر`);
+            }
+
+            reads.push({ type: "ready", ref, item });
+
+          } else {
+
+
+  const containerRef = doc(
+    db,
+    "inventory",
+    `${branchToUse}_${item.containerId}`
+  );
+  const containerDoc = await transaction.get(containerRef);
+
+  if (!containerDoc.exists()) {
+    throw new Error("❌ الكونتينر مش موجود");
+  }
+
+  const containerStock = containerDoc.data()?.quantity || 0;
+
+  if (containerStock < item.qty) {
+    throw new Error(`❌ الكونتينر مش كفاية لـ ${item.name}`);
+  }
+
+
+            let oilRef = null;
+  let neededOil = 0;
+
+  if (item.containerType !== "oil" && item.oilQty > 0) {
+
+
+  oilRef = doc(
+    db,
+    "inventory",
+    `${branchToUse}_${item.id}`
+  );
+
+    const oilDoc = await transaction.get(oilRef);
+
+    if (!oilDoc.exists()) {
+      throw new Error("❌ الزيت مش موجود");
+    }
+
+    const oilStock = oilDoc.data()?.quantity || 0;
+    neededOil = item.oilQty * item.qty;
+    if (oilStock < neededOil) {
+      throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
+    }
+  }
+
+            reads.push({
+              type: "mix",
+              containerRef,
+              oilRef,
+              neededOil,
+              item
+            });
+          }
         }
 
-          continue;
-        }
-
-        // 🟢 Normal Flow
-        if (r.type === "ready") {
-          transaction.set(r.ref, {
-            quantity: increment(-r.item.qty)
-          }, { merge: true });
-
-        } else {
-
-          transaction.set(r.containerRef, {
-            quantity: increment(-r.item.qty)
-          }, { merge: true });
-
-          if (r.oilRef) {
+        // 🔵 بعد ما خلصنا كل الـ reads → نعمل writes
+        for (const r of reads) {
+          if (r.type === "oil") {
             transaction.set(r.oilRef, {
               quantity: increment(-r.neededOil)
             }, { merge: true });
+
+            continue;
+          }
+
+          // 🔁 Returned Item
+          if (r.item.isReturned) {
+            console.log("RETURN ITEM:", r.item); // 👈 ضيف دي
+            const returnedRef = doc(db, "returned_items", r.item.returnedItemId);
+
+            transaction.update(returnedRef, {
+              status: "sold",
+              soldAt: serverTimestamp()
+            });
+
+            // 🔥 تحديث returns
+            if (r.item.returnId) {
+            const returnRef = doc(db, "returns", r.item.returnId);
+
+            transaction.update(returnRef, {
+              status: "sold"
+            });
+          }
+
+            continue;
+          }
+
+          // 🟢 Normal Flow
+          if (r.type === "ready") {
+            transaction.set(r.ref, {
+              quantity: increment(-r.item.qty)
+            }, { merge: true });
+
+          } else {
+
+            transaction.set(r.containerRef, {
+              quantity: increment(-r.item.qty)
+            }, { merge: true });
+
+            if (r.oilRef) {
+              transaction.set(r.oilRef, {
+                quantity: increment(-r.neededOil)
+              }, { merge: true });
+            }
           }
         }
-      }
-    });
-    // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
-await Promise.all(
-  cart.flatMap(item => {
-    const arr = [];
+      });
+      // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
+  await Promise.all(
+    cart.flatMap(item => {
+      const arr = [];
 
-    arr.push(
-      addDoc(collection(db, "stock")  , {
-        productId: item.containerType === "oil"
-  ? item.id
-  : item.containerId || item.id,
-        quantity:
-  item.containerType === "oil"
-    ? item.oilQty * item.qty
-    : item.qty,
-        type: item.isReturned ? "resell" : "sale",
-        movementType: item.isReturned
-          ? "RETURN_RESALE"
-          : "SALE",
-
-        direction: "OUT",
-
-        productType:
-          item.containerType === "oil"
-            ? "RAW_OIL"
-            : "CONTAINER",
-
-        unit:
-          item.containerType === "oil"
-            ? "ML"
-            : "PCS",
-
-        unitCost:
-          item.containerType === "oil"
-            ? item.oilCostPerML || 0
-            : item.containerCost || 0,
-
-        totalCost:
-          item.containerType === "oil"
-            ? item.oilCost || 0
-            : item.containerCost || 0,
-        price: item.price || 0,
-        total: (item.price || 0) * item.qty,
-        branchId: branchToUse,
-        branchName: branchMap[branchToUse] || "Unknown",
-        createdAt: serverTimestamp()
-      })
-    );
-
-    if (item.containerType !== "oil" && item.oilQty > 0) {
       arr.push(
-        addDoc(collection(db, "stock"), {
-          productId: item.id,
-          quantity: item.oilQty * item.qty,
+        addDoc(collection(db, "stock")  , {
+          productId: item.containerType === "oil"
+    ? item.id
+    : item.containerId || item.id,
+          quantity:
+    item.containerType === "oil"
+      ? item.oilQty * item.qty
+      : item.qty,
           type: item.isReturned ? "resell" : "sale",
           movementType: item.isReturned
             ? "RETURN_RESALE"
@@ -271,185 +248,400 @@ await Promise.all(
 
           direction: "OUT",
 
-          productType: "RAW_OIL",
+          productType:
+            item.containerType === "oil"
+              ? "RAW_OIL"
+              : "CONTAINER",
 
-          unit: "ML",
+          unit:
+            item.containerType === "oil"
+              ? "ML"
+              : "PCS",
 
-          unitCost: item.oilCostPerML || 0,
+          unitCost:
+            item.containerType === "oil"
+              ? item.oilCostPerML || 0
+              : item.containerCost || 0,
 
-          totalCost: item.oilCost || 0,
-          price: item.oilQty ? item.price / item.oilQty : 0,
+          totalCost:
+            item.containerType === "oil"
+              ? item.oilCost || 0
+              : item.containerCost || 0,
+          price: item.price || 0,
           total: (item.price || 0) * item.qty,
           branchId: branchToUse,
           branchName: branchMap[branchToUse] || "Unknown",
           createdAt: serverTimestamp()
         })
       );
-    }
 
-    return arr;
-  })
-);
+      if (item.containerType !== "oil" && item.oilQty > 0) {
+        arr.push(
+          addDoc(collection(db, "stock"), {
+            productId: item.id,
+            quantity: item.oilQty * item.qty,
+            type: item.isReturned ? "resell" : "sale",
+            movementType: item.isReturned
+              ? "RETURN_RESALE"
+              : "SALE",
 
-    // 🟢 2) INVOICE NUMBER
-    let invoiceNumber = "";
+            direction: "OUT",
 
-    await runTransaction(db, async (transaction) => {
-      const counterRef = doc(db, "counters", branchToUse);
-      const snap = await transaction.get(counterRef);
+            productType: "RAW_OIL",
 
-      if (!snap.exists()) {
-        throw new Error("Counter not found");
+            unit: "ML",
+
+            unitCost: item.oilCostPerML || 0,
+
+            totalCost: item.oilCost || 0,
+            price: item.oilQty ? item.price / item.oilQty : 0,
+            total: (item.price || 0) * item.qty,
+            branchId: branchToUse,
+            branchName: branchMap[branchToUse] || "Unknown",
+            createdAt: serverTimestamp()
+          })
+        );
       }
 
-      const newNumber = snap.data().lastNumber + 1;
+      return arr;
+    })
+  );
 
-      transaction.update(counterRef, {
-        lastNumber: newNumber
+      // 🟢 2) INVOICE NUMBER
+      let invoiceNumber = "";
+
+      await runTransaction(db, async (transaction) => {
+        const counterRef = doc(db, "counters", branchToUse);
+        const snap = await transaction.get(counterRef);
+
+        if (!snap.exists()) {
+          throw new Error("Counter not found");
+        }
+
+        const newNumber = snap.data().lastNumber + 1;
+
+        transaction.update(counterRef, {
+          lastNumber: newNumber
+        });
+
+        const branchPrefix = branchMap[branchToUse] || "BRCH";
+
+        invoiceNumber = `${branchPrefix}-${String(newNumber).padStart(4, "0")}`;
       });
 
-      const branchPrefix = branchMap[branchToUse] || "BRCH";
+      // 🟢 3) SAVE INVOICE
+      const cleanedCart = cart.map(item => ({
+    // 🧾 Basic
+    id: item.id,
+    name: item.name,
 
-      invoiceNumber = `${branchPrefix}-${String(newNumber).padStart(4, "0")}`;
-    });
+    itemType: item.itemType || "UNKNOWN",
 
-    // 🟢 3) SAVE INVOICE
-    const cleanedCart = cart.map(item => ({
-  // 🧾 Basic
-  id: item.id,
-  name: item.name,
+    saleMode: item.saleMode || "UNKNOWN",
 
-  itemType: item.itemType || "UNKNOWN",
+    // 🛢 Oil
+    oilId: item.oilId || item.id,
+    oilName: item.oilName || item.name,
+    oilCategory: item.oilCategory || "",
 
-  saleMode: item.saleMode || "UNKNOWN",
+    oilQtyML: item.oilQtyML || 0,
 
-  // 🛢 Oil
-  oilId: item.oilId || item.id,
-  oilName: item.oilName || item.name,
-  oilCategory: item.oilCategory || "",
+    // 🧴 Container
+    size: item.size || "",
 
-  oilQtyML: item.oilQtyML || 0,
+    containerName: item.containerName || "",
+    containerType: item.containerType ?? "unknown",
+    containerId: item.containerId ?? null,
 
-  // 🧴 Container
-  size: item.size || "",
+    // 📦 Qty
+    qty: item.qty || 1,
 
-  containerName: item.containerName || "",
-  containerType: item.containerType ?? "unknown",
-  containerId: item.containerId ?? null,
+    // 💰 Pricing
+    unitPrice: item.unitPrice || item.price || 0,
+    price: item.price || 0,
 
-  // 📦 Qty
-  qty: item.qty || 1,
+    // 💸 Costing
+    oilCostPerML: item.oilCostPerML || 0,
 
-  // 💰 Pricing
-  unitPrice: item.unitPrice || item.price || 0,
-  price: item.price || 0,
+    oilCost: item.oilCost || 0,
 
-  // 💸 Costing
-  oilCostPerML: item.oilCostPerML || 0,
+    containerCost: item.containerCost || 0,
 
-  oilCost: item.oilCost || 0,
+    overheadCost: item.overheadCost || 0,
 
-  containerCost: item.containerCost || 0,
+    unitCost: item.unitCost || 0,
 
-  overheadCost: item.overheadCost || 0,
+    profit: item.profit || 0,
 
-  unitCost: item.unitCost || 0,
+    margin: item.margin || 0,
 
-  profit: item.profit || 0,
-
-  margin: item.margin || 0,
-
-  // 🟡 Backward compatibility
-  oilQty: item.oilQty || 0
-}));
-    const totalProfit = cleanedCart.reduce(
-  (sum, item) => sum + (item.profit || 0),
-  0
-);
-
-const totalCost = cleanedCart.reduce(
-  (sum, item) => sum + (item.unitCost || 0),
-  0
-);
-
-const overallMargin =
-  total > 0
-    ? Number(((totalProfit / total) * 100).toFixed(2))
-    : 0;
-
-const saleRef = await addDoc(collection(db, "sales"), {
-  invoiceNumber,
-  items: cleanedCart,
-
-  total: total || 0,
-  totalCost,
-  totalProfit,
-  overallMargin,
-
-  paymentMethod: paymentMethod || "",
-  customerName: customerName || "",
-  customerPhone: customerPhone || "",
-
-  branchId: branchToUse,
-  createdAt: serverTimestamp(),
-
-  totalQty: cart.reduce(
-    (sum, i) =>
-      sum +
-      (i.containerType === "oil"
-        ? i.oilQty * i.qty
-        : i.qty),
+    // 🟡 Backward compatibility
+    oilQty: item.oilQty || 0
+  }));
+      const totalProfit = cleanedCart.reduce(
+    (sum, item) => sum + (item.profit || 0),
     0
-  ),
-
-  refundedQty: 0,
-
-  salesName: salesName || user?.name || "—",
-  enteredBy: user?.name || "—",
-  enteredById: user?.id || null
-});
-    
-    
-    // 🔗 ربط العميل
-if (customerPhone) {
-  const q = query(
-    collection(db, "customers"),
-    where("phone", "==", customerPhone.trim())
   );
 
-  const snapshot = await getDocs(q);
+  const totalCost = cleanedCart.reduce(
+    (sum, item) => sum + (item.unitCost || 0),
+    0
+  );
 
-  let customerId = "";
+  const overallMargin =
+    total > 0
+      ? Number(((totalProfit / total) * 100).toFixed(2))
+      : 0;
 
-  if (snapshot.empty) {
-    // 🆕 create
-    const newCustomer = await addDoc(collection(db, "customers"), {
-      name: customerName,
-      phone: customerPhone,
-      lastPurchase: serverTimestamp()
-    });
+  const saleRef = await addDoc(collection(db, "sales"), {
+    invoiceNumber,
+    items: cleanedCart,
 
-    customerId = newCustomer.id;
+    total: total || 0,
+    totalCost,
+    totalProfit,
+    overallMargin,
 
-  } else {
-    // 🔄 update
-    const docRef = snapshot.docs[0].ref;
-    customerId = docRef.id;
+    paymentMethod: paymentMethod || "",
+    customerName: customerName || "",
+    customerPhone: customerPhone || "",
 
-    await updateDoc(docRef, {
-      name: customerName,
-      lastPurchase: serverTimestamp()
-    });
+    branchId: branchToUse,
+    branchName:
+      branchMap[branchToUse] || "Unknown",
+    createdAt: serverTimestamp(),
+
+    totalQty: cart.reduce(
+      (sum, i) =>
+        sum +
+        (i.containerType === "oil"
+          ? i.oilQty * i.qty
+          : i.qty),
+      0
+    ),
+
+    refundedQty: 0,
+
+    salesName: salesName || user?.name || "—",
+    enteredBy: user?.name || "—",
+    enteredById:
+      user?.uid || null
+  });
+  await logAction({
+
+    action:
+      "CREATE_INVOICE",
+
+    module:
+      "Sales",
+
+    severity:
+      "success",
+
+    status:
+      "success",
+
+    by:
+      user?.uid || "",
+
+    byName:
+      user?.name || "",
+
+    userId:
+      user?.uid || "",
+
+    branchId:
+      branchToUse,
+
+    targetId:
+      saleRef.id,
+
+    targetName:
+      invoiceNumber,
+
+    details: {
+
+      invoiceNumber,
+
+      branchName:
+      branchMap[branchToUse] || "Unknown",
+
+      salesName:
+      salesName || user?.name || "—",
+
+      
+
+      paymentCategory:
+      paymentMethod,  
+
+      customerName,
+
+      customerPhone,
+
+      paymentMethod,
+
+      total,
+
+      totalProfit,
+
+      totalCost,
+
+      overallMargin,
+
+      totalItems:
+        cleanedCart.length,
+
+      totalQty:
+    cleanedCart.reduce(
+      (sum, item) =>
+        sum +
+        (
+          item.containerType === "oil"
+            ? (item.oilQty || 0) * (item.qty || 0)
+            : (item.qty || 0)
+        ),
+      0
+    ),
+
+      topItems:
+    cleanedCart
+      .slice(0, 5)
+      .map(item => ({
+
+        name:
+          item.name,
+
+        qty:
+          item.qty
+
+      }))
+
+    }
+
+  });    
+      
+      // 🔗 ربط العميل
+  if (customerPhone) {
+    const q = query(
+      collection(db, "customers"),
+      where("phone", "==", customerPhone.trim())
+    );
+
+    const snapshot = await getDocs(q);
+
+    let customerId = "";
+
+    if (snapshot.empty) {
+      // 🆕 create
+      const newCustomer = await addDoc(collection(db, "customers"), {
+        name: customerName,
+
+        phone: customerPhone,
+
+        lastPurchase: serverTimestamp(),
+
+        totalSpent: total || 0,
+
+        ordersCount: 1
+      });
+
+      customerId = newCustomer.id;
+
+    } else {
+      // 🔄 update
+      const docRef = snapshot.docs[0].ref;
+      customerId = docRef.id;
+
+      await updateDoc(docRef, {
+        name: customerName,
+
+        lastPurchase: serverTimestamp(),
+
+        totalSpent: increment(total || 0),
+
+        ordersCount: increment(1)
+      });
+    }
+
+    // 🔗 اربط الفاتورة بالعميل
+    await updateDoc(
+      doc(db, "sales", saleRef.id),
+      {
+        customerId
+      }
+    );
   }
 
-  // 🔗 اربط الفاتورة بالعميل
-  await updateDoc(
-    doc(db, "sales", saleRef.id),
-    {
-      customerId
-    }
-  );
-}
+  return invoiceNumber;
 
-return invoiceNumber;
-};
+    } catch (err) {
+
+      console.error(
+        "Checkout Error:",
+        err
+      );
+
+      await logAction({
+
+        action:
+          "CREATE_INVOICE",
+
+        module:
+          "Sales",
+
+        severity:
+          "danger",
+
+        status:
+          "error",
+
+        by:
+          user?.uid || "",
+
+        byName:
+          user?.name || "",
+
+        userId:
+          user?.uid || "",
+
+        branchId:
+          branchToUse,
+        
+        details: {
+
+          customerName,
+
+          customerPhone,
+
+          paymentMethod,
+
+          total,
+
+          cartSize:
+            cart.length,
+
+          topItems:
+            cart
+              .slice(0, 5)
+              .map(item => ({
+
+                name:
+                  item.name,
+
+                qty:
+                  item.qty
+
+              })),
+
+          error:
+            err.message
+
+        }
+
+      });
+
+      throw err;
+
+    }
+
+  };

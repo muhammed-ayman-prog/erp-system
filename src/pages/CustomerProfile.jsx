@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   collection,
-  getDocs,
   query,
   where,
   doc,
-  getDoc
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -15,7 +14,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from "recharts";
 import { useTranslate } from "../useTranslate";
 export default function CustomerProfile() {
@@ -30,34 +30,51 @@ export default function CustomerProfile() {
   const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const customerRef = doc(db, "customers", id);
-        const customerSnap = await getDoc(customerRef);
 
-        if (customerSnap.exists()) {
-          const customerData = customerSnap.data();
-          setCustomer(customerData);
+  const customerRef = doc(db, "customers", id);
 
-          const q = query(
-  collection(db, "sales"),
-  where("customerId", "==", id)
-);
+  const unsubCustomer = onSnapshot(
+    customerRef,
+    (customerSnap) => {
 
-          const salesSnap = await getDocs(q);
-          const salesData = salesSnap.docs.map(doc => doc.data());
+      if (customerSnap.exists()) {
 
-          setSales(salesData);
-        }
-      } catch (err) {
-        console.error(err);
+        setCustomer(customerSnap.data());
+
+      } else {
+
+        setCustomer(null);
+
       }
+    }
+  );
+
+  const q = query(
+    collection(db, "sales"),
+    where("customerId", "==", id)
+  );
+
+  const unsubSales = onSnapshot(
+    q,
+    (salesSnap) => {
+
+      const salesData = salesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setSales(salesData);
 
       setLoading(false);
-    };
+    }
+  );
 
-    fetchData();
-  }, [id]);
+  return () => {
+    unsubCustomer();
+    unsubSales();
+  };
+
+}, [id]);
   const filteredSales = sales.filter(s => {
   const date = new Date(s.createdAt.seconds * 1000);
 
@@ -69,7 +86,12 @@ export default function CustomerProfile() {
   const totalSpent = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
   
   if (loading)
-    return <p style={{ padding: "20px" }}>{t("common.loading")}</p>;
+    return <div className="card" style={{
+  padding: "30px",
+  textAlign: "center"
+}}>
+  <p>{t("common.loading")}...</p>
+</div>
 
   if (!customer)
     return <p style={{ padding: "20px" }}>{t("common.notFound")}</p>;
@@ -94,11 +116,32 @@ const topProducts = Object.entries(productStats)
 }));
 const avgSpend = totalSpent / (filteredSales.length || 1);
 
-let customerType = "Normal";
 
-if (totalSpent > 1000) customerType = "VIP 💎";
-else if (filteredSales.length >= 5) customerType = "Loyal 🔁";
-else if (filteredSales.length === 1) customerType = "New 🆕";
+
+let customerType = "New 🆕";
+
+if (
+  totalSpent >= 50000 &&
+  filteredSales.length >= 25
+) {
+
+  customerType = "Elite 👑";
+
+} else if (
+  totalSpent >= 15000 &&
+  filteredSales.length >= 10
+) {
+
+  customerType = "VIP 💎";
+
+} else if (
+  filteredSales.length >= 5 ||
+  totalSpent >= 6000
+) {
+
+  customerType = "Loyal 🔁";
+
+}
 
 const lastVisitDays = customer.lastPurchase
   ? (Date.now() - customer.lastPurchase.seconds * 1000) / (1000 * 60 * 60 * 24)
@@ -209,6 +252,8 @@ const lastVisitDays = customer.lastPurchase
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
+          padding: "8px 0",
           marginBottom: "6px"
         }}
       >
@@ -222,13 +267,25 @@ const lastVisitDays = customer.lastPurchase
   <h3 style={{ marginBottom: "10px" }}>{t("reports.spendingTrend")} 📊</h3>
 
   <ResponsiveContainer width="100%" height={200}>
-    <LineChart data={chartData}>
-      <XAxis dataKey="date" />
-      <YAxis />
-      <Tooltip />
-      <Line type="monotone" dataKey="total" strokeWidth={2} />
-    </LineChart>
-  </ResponsiveContainer>
+  <LineChart data={chartData}>
+
+    <CartesianGrid strokeDasharray="3 3" />
+
+    <XAxis dataKey="date" />
+
+    <YAxis />
+
+    <Tooltip />
+
+    <Line
+      type="monotone"
+      dataKey="total"
+      strokeWidth={2}
+      dot={true}
+    />
+
+  </LineChart>
+</ResponsiveContainer>
 </div>
       {/* 🧾 Purchases */}
       <div className="card">
@@ -246,39 +303,108 @@ const lastVisitDays = customer.lastPurchase
             {t("customer.noPurchases")}
           </p>
         ) : (
-          <div>
-            {[...filteredSales]
-  .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
-  .map((s, i) => (
+  <div>
+  {[...filteredSales]
+    .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
+    .map((s, i) => (
   <div
   key={i}
   className="card"
   style={{
     marginBottom: "10px",
     cursor: "pointer",
-    transition: "0.2s"
+    transition: "0.2s",
+    border: "1px solid var(--border)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
   }}
   onClick={() => setOpenIndex(openIndex === i ? null : i)}
+
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow =
+      "0 10px 20px rgba(0,0,0,0.06)";
+  }}
+
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.boxShadow =
+      "0 1px 3px rgba(0,0,0,0.05)";
+  }}
 >
     {/* 🔝 Header */}
     <div style={{
-      display: "flex",
-      justifyContent: "space-between",
-      marginBottom: "10px"
-    }}>
-      <b style={{ color: "var(--text-primary)" }}>
-        {s.total} EGP
-      </b>
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  marginBottom: "10px",
+  gap: "10px"
+}}>
 
-      <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>
-        {new Date(s.createdAt.seconds * 1000).toLocaleString()}
-      </span>
+  <div>
+    <div style={{
+      fontWeight: "700",
+      fontSize: "15px",
+      color: "var(--text-primary)"
+    }}>
+      {s.invoiceNumber || "NO-INVOICE"}
     </div>
+
+    <div style={{
+      fontSize: "12px",
+      color: "#64748b",
+      marginTop: "3px"
+    }}>
+      🏢 {s.branchName || "Unknown Branch"}
+    </div>
+
+    <div style={{
+      fontSize: "12px",
+      color: "#64748b",
+      marginTop: "3px"
+    }}>
+      👨‍💼 {s.salesName || "Unknown"}
+    </div>
+  </div>
+
+  <div style={{ textAlign: "right" }}>
+    <b style={{
+      color: "var(--text-primary)",
+      fontSize: "16px"
+    }}>
+      {s.total} EGP
+    </b>
+
+    <div style={{
+      color: "var(--text-muted)",
+      fontSize: "12px",
+      marginTop: "4px"
+    }}>
+      {new Date(
+        s.createdAt.seconds * 1000
+      ).toLocaleString()}
+    </div>
+  </div>
+
+</div>
 
     {/* 📦 Items */}
     <div style={{ fontSize: "12px", color: "#64748b" }}>
   {s.paymentMethod}
 </div>
+{s.refundedQty > 0 && (
+  <span style={{
+    display: "inline-block",
+    marginTop: "8px",
+    padding: "4px 10px",
+    borderRadius: "999px",
+    fontSize: "11px",
+    background: "#fee2e2",
+    color: "#b91c1c",
+    fontWeight: "600"
+  }}>
+    Partial Refund
+  </span>
+)}
     {openIndex === i && (
   <div style={{ marginTop: "10px" }}>
     {s.items?.map((item, idx) => (
@@ -302,8 +428,27 @@ const lastVisitDays = customer.lastPurchase
         {item.name}
       </div>
 
-      <div style={{ fontSize: "12px", color: "#64748b" }}>
-        {t("common.qty")} {item.qty}
+      <div style={{
+        fontSize: "12px",
+        color: "#64748b",
+        display: "flex",
+        flexDirection: "column",
+        gap: "3px",
+        marginTop: "4px"
+      }}>
+        <span>
+          {t("common.qty")} {item.qty}
+        </span>
+
+        <span>
+          🧴 {item.containerType || "-"}
+        </span>
+
+        {item.size && (
+          <span>
+            📏 {item.size}
+          </span>
+        )}
       </div>
     </div>
 
@@ -318,7 +463,7 @@ const lastVisitDays = customer.lastPurchase
 )}
   </div>
 ))}
-          </div>
+</div>
         )}
       </div>
 

@@ -89,6 +89,7 @@ useEffect(() => {
   const [containerType, setContainerType] = useState("bottle");
   const [oilQty, setOilQty] = useState(0);
   const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const [inventoryMap, setInventoryMap] = useState({});
   const productsWithStock = useMemo(() => {
   return products.map(p => ({
@@ -106,13 +107,16 @@ useEffect(() => {
   const fetchProducts = async () => {
     const snap = await getDocs(collection(db, "products"));
 
-    const data = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const data = snap.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(product => !product.isArchived);
 
-setProducts(data);
-  };
+    setProducts(data);
+    setLoadingProducts(false);
+      };
   
 
   fetchProducts();
@@ -243,27 +247,53 @@ const {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerData, setCustomerData] = useState(null);
   useEffect(() => {
-  if (!customerPhone || customerPhone.length < 10) return;
 
   const fetchCustomer = async () => {
+
+    const normalizedPhone = customerPhone
+      .replace(/\s/g, "")
+      .replace("+2", "")
+      .trim();
+
+    if (!normalizedPhone || normalizedPhone.length < 10) {
+      setCustomerData(null);
+      return;
+    }
+
     try {
+
       const q = query(
         collection(db, "customers"),
-        where("phone", "==", customerPhone.trim())
+        where("phone", "==", normalizedPhone)
       );
 
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        setCustomerName(snapshot.docs[0].data().name);
+
+        const data = snapshot.docs[0].data();
+
+        setCustomerName(data.name || "");
+
+        setCustomerData(data);
+        console.log("✅ Customer Found:", data.name);
+
+      } else {
+
+        setCustomerData(null);
+        setCustomerName("");
       }
+
     } catch (err) {
+
       console.error(err);
     }
   };
 
   fetchCustomer();
+
 }, [customerPhone]);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 const cleanSize = selectedSize?.name
@@ -272,6 +302,89 @@ const cleanSize = selectedSize?.name
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
   const isMobile = window.innerWidth < 768;
+  const getCustomerTier = (customer) => {
+
+  const spent = customer?.totalSpent || 0;
+  const orders = customer?.ordersCount || 0;
+
+  if (spent >= 50000 && orders >= 25) {
+    return {
+      label: "Elite 👑",
+      background: "#ede9fe"
+    };
+  }
+
+  if (spent >= 15000 && orders >= 10) {
+    return {
+      label: "VIP 💎",
+      background: "#fef3c7"
+    };
+  }
+
+  if (orders >= 5 || spent >= 6000) {
+    return {
+      label: "Loyal 🔁",
+      background: "#dbeafe"
+    };
+  }
+
+  return {
+    label: "New 🆕",
+    background: "#e2e8f0"
+  };
+};
+const visibleProducts = productsWithStock
+  .filter(p => {
+
+    const tab = (mainTab || "").toLowerCase();
+    const cat = (p.category || "").toLowerCase();
+
+    if (tab === "french") {
+      return cat.includes("french");
+    }
+
+    if (tab === "oriental") {
+
+      if (subTab) {
+
+        const parts = cat.split("-");
+
+        return (
+          parts[0] === "oriental" &&
+          parts[1] === subTab.toLowerCase()
+        );
+      }
+
+      return cat.includes("oriental");
+    }
+
+    if (tab === "body") {
+
+      if (subTab) {
+        return cat.includes(subTab.toLowerCase());
+      }
+
+      return cat.includes("body");
+    }
+
+    if (tab === "original") {
+      return (
+        cat.includes("original") ||
+        p.type === "original"
+      );
+    }
+
+    return false;
+  })
+  .filter(p =>
+    (p.name || "")
+      .toLowerCase()
+      .includes(search.trim().toLowerCase()) ||
+
+    (p.category || "")
+      .toLowerCase()
+      .includes(search.trim().toLowerCase())
+  );
   return (
   <>
   
@@ -293,7 +406,7 @@ const cleanSize = selectedSize?.name
         right: 0,
         height: "100%",
         width: isMobile ? "100%" : "360px",
-        background: "#fff",
+        background: theme.colors.background,
         padding: "10px",
         overflowY: "auto",
         boxShadow: "-10px 0 30px rgba(0,0,0,0.2)"
@@ -325,6 +438,8 @@ const cleanSize = selectedSize?.name
         setOilQty={setOilQty}
         setShowPopup={setShowPopup}
         productsWithStock={productsWithStock}
+        customerData={customerData}
+        getCustomerTier={getCustomerTier}
         customerName={customerName}
         setCustomerName={setCustomerName}
         customerPhone={customerPhone}
@@ -501,136 +616,305 @@ const cleanSize = selectedSize?.name
   >
     📄 {t("invoices.title")}
   </button>
-
-  {/* 🛒 Cart */}
-  <div
-  className="cart-btn"
-    style={{
-    width: isMobile ? "100%" : "auto",
-    textAlign: "center",
-    padding: "10px",
-    borderRadius: "10px",
-    background: theme.colors.secondary,
-    border: `1px solid ${theme.colors.border}`,
-    cursor: "pointer",
-    fontWeight: "600"
-  }}
-  onClick={() => setShowCart(true)}
->
-    🛒 {t("cart.title")}
-<span style={{
-  background: "#ef4444",
-  borderRadius: "50%",
-  padding: "2px 6px",
-  fontSize: "11px",
-  marginLeft: "6px"
-}}>
-  {cart.reduce((sum, item) => sum + item.qty, 0)}
-</span>
-  </div>
-
 </div>
 
   </div>
 
   {/* 🔍 Search */}
+  <div style={{
+  position: "relative",
+  marginBottom: "12px"
+}}>
+
+  <span style={{
+    position: "absolute",
+    left: "14px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    opacity: 0.5,
+    fontSize: "14px"
+  }}>
+    🔍
+  </span>
+
   <input
     type="text"
-    placeholder={`🔍 ${t("products.search")}`}
+    placeholder={t("products.search")}
     value={search}
     onChange={(e) => setSearch(e.target.value)}
     style={{
       width: "100%",
-      maxWidth: "100%",
-      padding: "14px 16px",
+      padding: "14px 16px 14px 40px",
       borderRadius: "12px",
       background: theme.colors.card,
-      border: `1px solid ${theme.colors.border}`,
-      marginBottom: "12px"
+      border: `1px solid ${theme.colors.border}`
     }}
   />
+
+</div>
 
   {/* 🧴 Products */}
   
 
 
-        
-        <ProductGrid
-  productsWithStock={productsWithStock}
-  search={search}
-  mainTab={mainTab}
-  subTab={subTab}
-  theme={theme}
-  t={t}
-  onSelectProduct={(p) => {
-    if (mainTab === "original") {
-  const name = addToCart({
-    ...p,
-    size: "Standard",
-    containerType: "Original",
-    containerName: "Original",   // 👈 أضف دي
-    price: p.price
-  });
+        <div style={{
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "14px"
+}}>
 
-if (name) {
-  setToastText(`${name} ${t("cart.added")}`);
-  setShowToast(true);
-}
-      return;
-    }
+  <div>
 
-    if (
-      mainTab === "body" &&
-      (subTab?.toLowerCase() === "cream" ||
-       subTab?.toLowerCase() === "makhmaria")
-    ) {
-      addToCart({
-  ...p,
-  size: selectedSize?.name || "",
-  containerType: containerType,
-  containerName: selectedSize?.name,
+    <div style={{
+      fontSize: "18px",
+      fontWeight: "700"
+    }}>
+      {mainTab === "french" && "French Perfumes "}
 
-  // 🔥 أهم سطر
-  containerId: selectedSize?.id
-})
-      return;
-    }
+      {mainTab === "oriental" &&
+        `Oriental ${subTab?.toUpperCase() || ""} 🌿`
+      }
 
-    setSelectedProduct(p);
-    setPopupStep(null);
-    setShowPopup(true);
-  }}
-/>
-        
-        <ProductPopup 
-        setToastText={setToastText}
-        setShowToast={setShowToast}
-        showPopup={showPopup}
-        selectedProduct={selectedProduct}
-        popupStep={popupStep}
-        setPopupStep={setPopupStep}
-        setShowPopup={setShowPopup}
-        theme={theme}
-        btnStyle={btnStyle}
-        t={t}
-        setSubTab={setSubTab}
-        setMainTab={setMainTab}
-        isMusk={isMusk}
-        containerType={containerType}
-        setContainerType={setContainerType}
-        selectedSize={selectedSize}
-        setSelectedSize={setSelectedSize}
-        productsWithStock={productsWithStock}
-        inventoryMap={inventoryMap}
-        oilQty={oilQty}
-        setOilQty={setOilQty}
-        addToCart={addToCart}
-        getPrice={getPrice}
-/>
+      {mainTab === "body" &&
+        `${subTab || "Body Products"} ✨`
+      }
+
+      {mainTab === "original" && "Originals ⭐"}
+    </div>
+
+    <div style={{
+      fontSize: "12px",
+      color: theme.colors.textSecondary,
+      marginTop: "3px"
+    }}>
+      {
+        visibleProducts.filter(
+          p => p.quantity > 0
+        ).length
+      } Products Available
+    </div>
+
+  </div>
+
+</div>
+        {loadingProducts ? (
+
+  <div style={{
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fill, minmax(160px,1fr))",
+    gap: "14px"
+  }}>
+
+    {[...Array(8)].map((_, i) => (
+
+      <div
+        key={i}
+        style={{
+          height: "140px",
+          borderRadius: "16px",
+          background: "#f1f5f9",
+          animation: "pulse 1.2s infinite"
+        }}
+      />
+
+    ))}
+
+  </div>
+
+) : (
+
+  <>
+  
+    <ProductGrid
+      productsWithStock={productsWithStock}
+      search={search}
+      mainTab={mainTab}
+      subTab={subTab}
+      theme={theme}
+      t={t}
+      onSelectProduct={(p) => {
+
+        if (mainTab === "original") {
+
+          const name = addToCart({
+            ...p,
+            size: "Standard",
+            containerType: "Original",
+            containerName: "Original",
+            price: p.price
+          });
+
+          if (name) {
+            setToastText(`${name} ${t("cart.added")}`);
+            setShowToast(true);
+          }
+
+          return;
+        }
+
+        const isReadyBodyProduct =
+          mainTab === "body" &&
+          !p.category?.toLowerCase()?.includes("musk");
+
+        if (isReadyBodyProduct) {
+
+          addToCart({
+            ...p,
+
+            size: "Ready",
+
+            containerType:
+              p.category?.toLowerCase()?.includes("cream")
+                ? "Cream"
+                : "مخمرية",
+
+            containerName:
+              p.category?.toLowerCase()?.includes("cream")
+                ? "Cream"
+                : "مخمرية",
+
+            containerId: null,
+
+            oilQty: 0
+          });
+
+          return;
+        }
+
+        setSelectedProduct(p);
+        setPopupStep(null);
+        setShowPopup(true);
+      }}
+    />
+
+    <ProductPopup
+      setToastText={setToastText}
+      setShowToast={setShowToast}
+      showPopup={showPopup}
+      selectedProduct={selectedProduct}
+      popupStep={popupStep}
+      setPopupStep={setPopupStep}
+      setShowPopup={setShowPopup}
+      theme={theme}
+      btnStyle={btnStyle}
+      t={t}
+      setSubTab={setSubTab}
+      setMainTab={setMainTab}
+      isMusk={isMusk}
+      containerType={containerType}
+      setContainerType={setContainerType}
+      selectedSize={selectedSize}
+      setSelectedSize={setSelectedSize}
+      productsWithStock={productsWithStock}
+      inventoryMap={inventoryMap}
+      oilQty={oilQty}
+      setOilQty={setOilQty}
+      addToCart={addToCart}
+      getPrice={getPrice}
+    />
+
+  </>
+
+)}
       </div>
     </div>
       {/* الكارت */}
 
+    {cart.length > 0 && (
+    <button
+  onClick={() => setShowCart(true)}
+
+  style={{
+    position: "fixed",
+
+    bottom: "24px",
+
+    right: isMobile ? "16px" : "24px",
+
+    zIndex: 999,
+
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: "2px",
+
+    minWidth: isMobile ? "68px" : "82px",
+    minHeight: isMobile ? "68px" : "82px",
+
+    borderRadius: "999px",
+
+    background: theme.colors.primary,
+
+    color: "#fff",
+
+    border: "none",
+
+    cursor: "pointer",
+
+    boxShadow:
+      `0 12px 30px ${theme.colors.primary}55`,
+
+    transition: "0.2s ease",
+    backdropFilter: "blur(10px)",
+  }}
+
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform =
+      "translateY(-3px) scale(1.03)";
+  }}
+
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform =
+      "translateY(0) scale(1)";
+  }}
+>
+
+  <div style={{
+    fontSize: isMobile ? "22px" : "26px"
+  }}>
+    🛒
+  </div>
+
+  <div style={{
+  position: "absolute",
+  top: "-4px",
+  right: "-4px",
+
+  minWidth: "24px",
+  height: "24px",
+
+  borderRadius: "999px",
+
+  background: "#ef4444",
+
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+
+  fontSize: "11px",
+  fontWeight: "700",
+
+  color: "#fff",
+
+  border: "2px solid white"
+}}>
+  {cart.reduce((sum, item) => sum + item.qty, 0)}
+</div>
+
+<div style={{
+  fontSize: "11px",
+  fontWeight: "700",
+  marginTop: "2px"
+}}>
+  {Number(total).toLocaleString()} EGP
+</div>
+
+</button>
+)}
     {showToast &&
   createPortal(
     <div

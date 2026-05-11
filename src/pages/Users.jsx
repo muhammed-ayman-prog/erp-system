@@ -12,6 +12,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../store/useAuth";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
+
 const ALL_PERMISSIONS = [
   "view_dashboard",
   "view_sales",
@@ -139,6 +140,7 @@ const res = await createUserFn({
 });
 
 console.log("RESULT:", res);
+
     alert("User created successfully ✅");
 
     setShowModal(false);
@@ -176,7 +178,10 @@ console.log("RESULT:", res);
     const deleteUserFn = httpsCallable(functions, "deleteUser");
 
     await deleteUserFn({ uid: id });
+    const deletedUser =
+    users.find(x => x.id === id);
 
+    
     alert("Deleted ✅");
 
     fetchData();
@@ -191,7 +196,7 @@ const toggleStatus = async (u) => {
     const toggleFn = httpsCallable(functions, "toggleUserStatus");
 
     await toggleFn({ uid: u.id });
-
+    
     if (u.id === auth.currentUser?.uid && u.status === "active") {
       await signOut(auth);
     }
@@ -217,6 +222,7 @@ const toggleStatus = async (u) => {
       permissions: selectedPermissions
     });
 
+    
     alert("Updated ✅");
 
     setEditingUser(null);

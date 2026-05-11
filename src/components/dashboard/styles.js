@@ -10,6 +10,7 @@ export const card = {
 export const grid = {
   display: "grid",
   gridTemplateColumns:
-    "repeat(auto-fit,minmax(220px,1fr))",
-  gap: 15
+    "repeat(4, 1fr)",
+  gap: 15,
+  alignItems: "start"
 };

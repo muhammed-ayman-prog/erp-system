@@ -997,11 +997,12 @@ if (existingProduct) {
 
   try {
 
-    await updateDoc(
+    await setDoc(
       doc(db, "products", product.id),
       {
         isArchived: true
-      }
+      },
+      { merge: true }
     );
     await addDoc(
   collection(db, "productLogs"),
@@ -1064,11 +1065,12 @@ const handleRestoreProduct = async (product) => {
 
   try {
 
-    await updateDoc(
+    await setDoc(
       doc(db, "products", product.id),
       {
         isArchived: false
-      }
+      },
+      { merge: true }
     );
 
     await addDoc(

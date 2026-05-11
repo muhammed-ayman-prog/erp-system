@@ -1,24 +1,80 @@
 const { logAction } = require("./log");
 const { HttpsError } = require("firebase-functions/v2/https");
 
-function withLog(action, handler) {
+function withLog(config, handler) {
   return async (request) => {
     const auth = request.auth;
-    const data = request.data;
+    let byName = "";
 
+if (auth?.uid) {
+
+  const admin =
+    require("firebase-admin");
+
+  const userSnap =
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(auth.uid)
+      .get();
+
+  byName =
+    userSnap.data()?.name || "";
+
+}
+    const data = request.data;
+    const {
+      action,
+      module = "System",
+      severity = "info"
+    } = config;
     try {
       // شغّل الفنكشن الأساسية
       const result = await handler(request);
 
       // 🧾 log success
       await logAction({
-        action,
-        by: auth?.uid || "unknown",
-        targetId: result?.targetId || null,
-        details: {
-          status: "success",
-          ...data
-        }
+
+        action:
+
+          action,
+
+        module:
+
+          module,
+
+        severity:
+
+          severity,
+
+        status:
+
+          "success",
+
+        by:
+
+          auth?.uid || "unknown",
+        byName,
+
+        userId:
+
+          auth?.uid || "",
+
+        branchId:
+
+          "",
+
+        targetId:
+
+          result?.targetId || null,
+
+        targetName:
+          result?.targetName || "",
+
+        details:
+          result?.logDetails || {}
+
+
       });
 
       return result;
@@ -28,12 +84,45 @@ function withLog(action, handler) {
 
       // 🧾 log error
       await logAction({
+
         action,
-        by: auth?.uid || "unknown",
+
+        module,
+
+        severity:
+          "danger",
+
+        status:
+          "error",
+
+        by:
+          auth?.uid || "unknown",
+          
+        byName,
+
+        userId:
+          auth?.uid || "",
+
+        branchId:
+          "",
+
+        targetId:
+          data?.uid || null,
+
+        targetName:
+          "",
+
         details: {
-          status: "error",
-          message: error.message
-        }
+
+          message:
+            error.message,
+
+          code:
+            error.code || "unknown"
+
+        },
+
+
       });
 
       if (error instanceof HttpsError) throw error;

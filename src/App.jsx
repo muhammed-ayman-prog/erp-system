@@ -81,6 +81,10 @@ function App() {
               <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
                 <Route path="/invoices" element={<Invoices />} />
               </Route>
+              <Route
+                path="/invoices/:id"
+                element={<Invoices />}
+              />
 
               {/* Reports */}
               <Route element={<ProtectedRoute permissions={["view_reports"]} />}>

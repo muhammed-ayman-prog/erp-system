@@ -2,14 +2,33 @@ import { useEffect, useState, useRef } from "react";
 import { db } from "../firebase";
 import { collection, onSnapshot, getDocs } from "firebase/firestore";
 import { useApp } from "../store/useApp";
-
+import { useNavigate }
+from "react-router-dom";
+import timeAgo from
+"../utils/timeAgo";
 export default function Notifications() {
   const { selectedBranch } = useApp();
   const [notifications, setNotifications] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
   const [hiddenIds, setHiddenIds] = useState([]); // 🧠 حل Clear All
+  const [readIds, setReadIds] =
+  useState(() => {
+
+    const saved =
+      localStorage.getItem(
+        "readNotifications"
+      );
+
+    return saved
+      ? JSON.parse(saved)
+      : [];
+
+});
   const dropdownRef = useRef(null);
   const prevCount = useRef(0);
+  const lastSoundTime =
+  useRef(0);
+  const navigate = useNavigate();
   
   // 🔊 صوت
   const playSound = () => {
@@ -123,7 +142,10 @@ snapshot.forEach(doc => {
               name: p.name,
               quantity: qty,
               priority,
-              read: false
+              read: false,
+
+              createdAt:
+                data.createdAt || null
             };
           });
         }).flat();
@@ -150,8 +172,21 @@ snapshot.forEach(doc => {
 
         // 🔊 صوت عند زيادة جديدة فقط
         if (alerts.length > prevCount.current) {
+
+        const now = Date.now();
+
+        if (
+          now - lastSoundTime.current
+          > 3000
+        ) {
+
           playSound();
+
+          lastSoundTime.current = now;
+
         }
+
+      }
 
         prevCount.current = alerts.length;
         if (
@@ -161,7 +196,16 @@ snapshot.forEach(doc => {
           return;
         }
         if (!isMounted) return;
-        setNotifications(alerts);
+        setNotifications(
+
+        alerts.map(alert => ({
+          ...alert,
+
+          read:
+            readIds.includes(alert.id)
+        }))
+
+      );
       };
 
       processData();
@@ -171,7 +215,10 @@ snapshot.forEach(doc => {
   isMounted = false;
   unsubscribe();
 };
-  }, [selectedBranch, hiddenIds]);
+  }, [
+  selectedBranch,
+  hiddenIds
+]);
 
   // ❌ قفل لما تدوس برا
   useEffect(() => {
@@ -189,10 +236,31 @@ return () =>
 
   // ✔️ mark as read
   const markAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
+
+  setReadIds(prev => {
+
+    const updated = [
+      ...new Set([...prev, id])
+    ];
+
+    localStorage.setItem(
+      "readNotifications",
+      JSON.stringify(updated)
     );
-  };
+
+    return updated;
+
+  });
+
+  setNotifications(prev =>
+    prev.map(n =>
+      n.id === id
+        ? { ...n, read: true }
+        : n
+    )
+  );
+
+};
 
   // 🧹 Clear All (FIXED)
   const clearAll = () => {
@@ -318,7 +386,17 @@ return () =>
           {notifications.map((n) => (
             <div
               key={n.id}
-              onClick={() => markAsRead(n.id)}
+              onClick={() => {
+
+              markAsRead(n.id);
+
+              setShowNotif(false);
+
+              navigate(
+                `/inventory?product=${n.productId}`
+              );
+
+            }}
               style={{
                 padding: "10px",
                 borderBottom: "1px solid #eee",
@@ -359,6 +437,16 @@ onMouseLeave={(e) => {
                 {n.quantity === 0
                   ? "Out of stock"
                   : `Low stock (${n.quantity})`}
+              </div>
+
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  marginTop: "4px"
+                }}
+              >
+                {timeAgo(n.createdAt)}
               </div>
             </div>
           ))}

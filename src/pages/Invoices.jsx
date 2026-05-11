@@ -17,7 +17,10 @@ import {
   where,
   writeBatch
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useParams
+} from "react-router-dom";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
@@ -36,6 +39,8 @@ const branchMap = {
 export default function Invoices() {
   const t = useTranslate();
   const navigate = useNavigate();
+  const { id } =
+  useParams();
   const { selectedBranch } = useApp();
   const [branchName, setBranchName] = useState("");
 
@@ -101,6 +106,25 @@ const handleRowLeave = (e) => {
     });
     return () => unsub();
   }, [selectedBranch]);
+  useEffect(() => {
+
+  if (!id || !sales.length)
+    return;
+
+  const invoice =
+    sales.find(
+      s => s.id === id
+    );
+
+  if (invoice) {
+
+    setSelectedInvoice(
+      invoice
+    );
+
+  }
+
+}, [id, sales]);
   useEffect(() => {
   const fetchBranch = async () => {
     if (!selectedInvoice?.branchId) return;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { card } from "./styles";
 function CriticalStockCard({
@@ -7,6 +8,8 @@ function CriticalStockCard({
 }) {
 
   if (!items) return null;
+  const [open, setOpen] =
+  useState(false);
 const sortedItems = [...items].sort((a, b) => {
 
   // Oils → alphabetical
@@ -69,21 +72,35 @@ const sortedItems = [...items].sort((a, b) => {
 
   return (
     <motion.div style={{
-  ...card,
-  maxHeight: 500,
-  minHeight: 350,
-  overflowY: "auto"
-}}>
-      <h4 style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        marginBottom: 10
-      }}>
-        {title} ({items.length})
+      ...card,
+      maxHeight: open ? 500 : "auto",
+      minHeight: open ? 350 : "auto",
+      overflowY: open ? "auto" : "hidden"
+    }}>
+      <h4
+        onClick={() =>
+          setOpen(!open)
+        } 
+
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 6,
+          marginBottom: 10,
+          cursor: "pointer"
+        }}
+      >
+        <span>
+          {title} ({items.length})
+        </span>
+
+        <span>
+          {open ? "−" : "+"}
+        </span>
       </h4>
 
-      {sortedItems.map((item, i) => (
+      {open && sortedItems.map((item, i) => (
 
         <div
         key={i}

@@ -35,6 +35,8 @@
     setCustomerName,
     customerPhone,
     setCustomerPhone,
+    customerData,
+    getCustomerTier,
 
     subtotal,
     discount,
@@ -163,7 +165,13 @@
             placeholder={t("customer.phone")}
             value={customerPhone}
             onChange={(e) => {
-              setCustomerPhone(e.target.value);
+
+              setCustomerPhone(
+                e.target.value
+                  .replace(/\s/g, "")
+                  .replace("+2", "")
+              );
+
               setShowErrors(false);
             }}
             style={{
@@ -199,6 +207,40 @@
                 : "none"
             }}
           />
+          {customerData && (
+  <div style={{ marginBottom: "10px" }}>
+
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      gap: "2px",
+      padding: "6px 12px",
+      borderRadius: "999px",
+      fontSize: "12px",
+      fontWeight: "600",
+      background:
+        getCustomerTier(customerData).background,
+      border: "1px solid rgba(0,0,0,0.05)"
+    }}>
+
+      <span>
+        {getCustomerTier(customerData).label}
+      </span>
+
+      <span style={{
+        fontSize: "10px",
+        color: "#64748b",
+        fontWeight: "500"
+      }}>
+        {(customerData.ordersCount || 0)} Orders • {customerData.totalSpent || 0} EGP
+      </span>
+
+    </div>
+
+  </div>
+)}
+
           <div style={{ marginBottom: "10px" }}>
     <input
       type="text"

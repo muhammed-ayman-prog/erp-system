@@ -5,7 +5,8 @@ import {
 
 import {
   collection,
-  onSnapshot
+  onSnapshot,
+  getDocs
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -25,6 +26,10 @@ import calculateProfitableOils from
 import calculateCriticalStock from
 "../utils/dashboard/calculateCriticalStock";
 
+import calculateDeadStock from
+"../utils/calculateDeadStock";
+import calculateFastMoving from
+"../utils/calculateFastMoving";
 export default function useDashboardData(range) {
 
   const [activity, setActivity] =
@@ -54,6 +59,10 @@ export default function useDashboardData(range) {
         out: 0
       }
     });
+    const [deadStock, setDeadStock] =
+  useState([]);
+  const [fastMoving, setFastMoving] =
+  useState([]);
 
   useEffect(() => {
 
@@ -68,6 +77,15 @@ export default function useDashboardData(range) {
 
           const salesDocs =
             snap.docs;
+          const inventorySnap =
+          await getDocs(
+            collection(db, "inventory")
+          );
+
+        const productsSnap =
+          await getDocs(
+            collection(db, "products")
+          );
 
           let invoices = 0;
 
@@ -385,6 +403,29 @@ export default function useDashboardData(range) {
             db,
             branchNames
           );
+          const deadStockData =
+            calculateDeadStock(
+
+              productsSnap.docs,
+
+              inventorySnap.docs,
+
+              salesDocs
+
+            );
+
+
+          setDeadStock(
+            deadStockData
+          );
+          const fastMovingData =
+          calculateFastMoving(
+            salesDocs,
+          );
+
+        setFastMoving(
+          fastMovingData
+        );
 
           setData({
 
@@ -453,9 +494,11 @@ export default function useDashboardData(range) {
 
   }, [range]);
 
-  return {
-    data,
-    activity
-  };
+ return {
+  data,
+  activity,
+  deadStock,
+  fastMoving
+};
 
 }

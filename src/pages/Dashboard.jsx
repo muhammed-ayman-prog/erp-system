@@ -55,14 +55,21 @@ import {
   alerts
 } from
 "../components/dashboard/dashboardStyles";
+import DeadStockCard from
+"../components/dashboard/DeadStockCard";
+import FastMovingCard from
+"../components/dashboard/FastMovingCard";
 export default function Dashboard() {
   const t = useTranslate();
   const today = new Date().toLocaleDateString("en-CA");
   const [range, setRange] = useState({ from: today, to: today });
   const {
   data,
-  activity
-} = useDashboardData(range);
+  activity,
+  deadStock,
+  fastMoving
+} =
+useDashboardData(range);
   
   const [
   selectedCriticalItem,
@@ -240,6 +247,12 @@ export default function Dashboard() {
   }
   onSelect={setSelectedCriticalItem}
 />
+<DeadStockCard
+  items={deadStock}
+/>
+<FastMovingCard
+  items={fastMoving}
+/>
       </div>
 
 {/* Line Chart */}
@@ -332,6 +345,7 @@ export default function Dashboard() {
     setSelectedCriticalItem
   }
 />
+
     </div>
   );
   
