@@ -23,6 +23,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import Logs from "./pages/Logs";  
 import Pricing from "./pages/Pricing";
 import { Toaster } from "react-hot-toast";
+import Splash from "./pages/Splash";
 function App() {
   const { user, loading } = useAuth();
   console.log("🔥 CURRENT USER:", user);
@@ -44,7 +45,7 @@ function App() {
           {/* Root Redirect */}
           <Route
             path="/"
-            element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+            element={<Splash />}
           />
 
           {/* 🔐 Protected App */}

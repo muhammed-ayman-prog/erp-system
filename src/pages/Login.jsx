@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  setPersistence,
+  browserSessionPersistence
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -35,7 +37,10 @@ export default function Login() {
 
     try {
       setLoading(true);
-
+      await setPersistence(
+        auth,
+        browserSessionPersistence
+      );
       
 
 
