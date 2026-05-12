@@ -5,9 +5,11 @@ import "./index.css";
 
 import { useAuth } from "./store/useAuth";
 import { initAuthListener } from "./firebase/auth";
-
+import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
 useAuth.getState().initAuth();
 initAuthListener();
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
