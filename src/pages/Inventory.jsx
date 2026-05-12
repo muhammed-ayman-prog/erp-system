@@ -515,25 +515,7 @@ const date = new Date(
 }, [stockData, transfers, adjustments, selectedMonth, selectedBranch]);
 
 
-const filteredReturned = useMemo(() => {
-  let data = [...returnedItems].filter(i =>
-    (i.name || "").toLowerCase().includes(returnedSearch.toLowerCase()) ||
-    (i.containerName || "").toLowerCase().includes(returnedSearch.toLowerCase())
-  );
 
-  if (sortType === "price") {
-    data.sort((a, b) => b.price - a.price);
-  } else {
-    data.sort(
-      (a, b) =>
-        (b.createdAt?.seconds || 0) -
-        (a.createdAt?.seconds || 0)
-    );
-  }
-
-  return data;
-}, [returnedItems, returnedSearch, sortType]);
-console.log("FILTERED RETURNED:", filteredReturned);
 useEffect(() => {
   const style = document.createElement("style");
   style.innerHTML = `
@@ -558,21 +540,7 @@ return (
     
 
     <h1>Inventory 📦</h1>
-    <button
-  onClick={() => setShowReturned(true)}
-  style={{
-    marginBottom: "15px",
-    padding: "10px 15px",
-    borderRadius: "10px",
-    border: "none",
-    background: theme.colors.primary,
-    color: "#fff",
-    cursor: "pointer",
-    width: "100%"
-  }}
->
-  📦 Returned Items ({returnedItems.length})
-</button>
+    
     <input
   type="month"
   value={selectedMonth}
@@ -722,156 +690,7 @@ return (
     {renderSection("Original 🔴", "Original")}
   </>
 )}
-    {showReturned && (
-  <div
-  onClick={() => setShowReturned(false)} // 🔥 يقفل لما تدوس برا
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    background: "rgba(0,0,0,0.4)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 999
-  }}
->
-    <div
-  onClick={(e) => e.stopPropagation()} // 🔥 يمنع القفل جوه
-  style={{
-    position: "relative",
-    background: theme.colors.card,
-    padding: "20px",
-    borderRadius: "20px",
-    width: "90%",
-    maxWidth: "700px",
-    maxHeight: "80vh",
-    overflowY: "auto",
-    animation: "fadeIn 0.25s ease"
-  }}
->
-
-      <h2>Returned Items</h2>
-      <input
-  placeholder="Search..."
-  value={returnedSearch}
-  onChange={(e) => setReturnedSearch(e.target.value)}
-  style={{
-    width: "100%",
-    marginBottom: "10px",
-    padding: "10px",
-    borderRadius: "10px"
-  }}
-/>
-
-<select
-  value={sortType}
-  onChange={(e) => setSortType(e.target.value)}
-  style={{
-    marginBottom: "15px",
-    padding: "8px",
-    borderRadius: "10px"
-  }}
->
-  <option value="newest">Newest</option>
-  <option value="price">Highest Price</option>
-</select>
-
-      <button
-  onClick={() => setShowReturned(false)}
-  style={{
-    position: "absolute",
-    top: "10px",
-    right: "10px",
-    background: "transparent",
-    border: "none",
-    fontSize: "18px",
-    cursor: "pointer"
-  }}
->
-  ✖
-</button>
-
-      {filteredReturned.length === 0 && (
-  <p style={{ opacity: 0.6 }}>مفيش منتجات مرتجعة</p>
-)}
-      {filteredReturned.map(item => {
-
-        return (
-          <div
-  key={item.id + "_" + (item.createdAt?.seconds || Math.random())}
-  style={{
-    background: theme.colors.card,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: "14px",
-    padding: "12px",
-    marginBottom: "12px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
-  }}
->
-  <strong>{item.name}</strong>
-  <div style={{
-  fontSize: "13px",
-  fontWeight: "600",
-  color: theme.colors.primary,
-  marginTop: "4px"
-}}>
-  💰 {item.price || 0} EGP
-</div>
-
-<div style={{ fontSize: "13px", opacity: 0.7 }}>
-  {item.containerName || item.size}
-</div>
-<div style={{
-  fontSize: "11px",
-  opacity: 0.6,
-  marginTop: "3px"
-}}>
-  📅 {item.createdAt?.seconds
-    ? new Date(item.createdAt.seconds * 1000).toLocaleString()
-    : "—"}
-</div>
-
-{selectedBranch === "all" && (
-  <div
-    style={{
-      fontSize: "11px",
-      marginTop: "4px",
-      display: "inline-block",
-      background: theme.colors.primary,
-      color: "#fff",
-      padding: "2px 8px",
-      borderRadius: "8px"
-    }}
-  >
-    {getBranchName(item.branchId)}
-  </div>
-)}
-
-  
-
-  <button
-  onClick={() => handleAddReturnedToCart(item)}
-  style={{
-    marginTop: "8px",
-    width: "100%",
-    background: theme.colors.primary,
-    color: "#fff",
-    padding: "10px",
-    borderRadius: "10px",
-    border: "none"
-  }}
->
-  ➕ Add To Cart
-</button>
-</div>
-        );
-      })}
-    </div>
-  </div>
-)}
+    
     </div>
   );
 }
