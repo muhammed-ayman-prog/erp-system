@@ -12,7 +12,7 @@ export default defineConfig({
 
       registerType: "autoUpdate",
 
-      
+
       workbox: {
 
       maximumFileSizeToCacheInBytes:
@@ -22,9 +22,9 @@ export default defineConfig({
 
       manifest: {
 
-        name: "ERP System",
+        name: "A Perfume Story",
 
-        short_name: "ERP",
+        short_name: "APS",
 
         description:
           "Management & Inventory System",
