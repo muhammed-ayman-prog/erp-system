@@ -69,7 +69,11 @@
           )}
           {cart.map((item) => (
           <div
-            key={item.id + item.size + item.containerType}
+            key={
+  item.isReturned
+    ? item.returnedItemId
+    : `${item.id}_${item.size}_${item.containerType}_${item.oilQty}`
+}
             style={{
               border: `1px solid ${theme.colors.border}`,
               borderRadius: "16px",
@@ -139,19 +143,21 @@
               >
                 <Trash2 size={16} />
               </button>
-                <button
-                onClick={() => {
-                  setSelectedProduct(productsWithStock.find(p => p.id === item.id));
-                  setSelectedSize({ id: item.size, name: item.sizeLabel });
-                  setContainerType(item.containerType);
-                  setOilQty(item.oilQty || 0);
-                  removeItem(item);
-                  setShowPopup(true);
-                }}
-                style={btnStyle}
-              >
-                <Pencil size={16} />
-              </button>
+                {!item.isReturned && (
+  <button
+    onClick={() => {
+      setSelectedProduct(productsWithStock.find(p => p.id === item.id));
+      setSelectedSize({ id: item.size, name: item.sizeLabel });
+      setContainerType(item.containerType);
+      setOilQty(item.oilQty || 0);
+      removeItem(item);
+      setShowPopup(true);
+    }}
+    style={btnStyle}
+  >
+    <Pencil size={16} />
+  </button>
+)}
               </div>
             </div>
           </div>
@@ -291,7 +297,9 @@
     type="number"
     placeholder={t("cart.discount")}
     value={discount === 0 ? "" : discount}
-    onChange={(e) => setDiscount(Number(e.target.value))}
+    onChange={(e) => setDiscount(
+  Math.max(0, Number(e.target.value))
+)}
     style={{
       width: "100%",
       padding: "10px",
@@ -356,6 +364,7 @@
             onClick={() => {
               setCart([]);
               localStorage.removeItem("cart");
+              localStorage.removeItem("returnedCart");
             }}
             disabled={cart.length === 0}
             style={{
@@ -382,10 +391,11 @@
 });
   }}
           disabled={
-          loadingCheckout ||
-          cart.length === 0 ||
-          !user
-        }
+            loadingCheckout ||
+            cart.length === 0 ||
+            !user ||
+            !paymentMethod
+          }
           style={{
             width: "100%",
             padding: "14px",
@@ -396,10 +406,20 @@
             color: "#fff",
             fontWeight: "bold",
             cursor: (
-            loadingCheckout ||
-            cart.length === 0
-          ) ? "not-allowed" : "pointer",
-            opacity: (!user || cart.length === 0) ? 0.5 : 1,
+              loadingCheckout ||
+              cart.length === 0 ||
+              !paymentMethod
+            )
+              ? "not-allowed"
+              : "pointer",
+            opacity:
+              (
+                !user ||
+                cart.length === 0 ||
+                !paymentMethod
+              )
+                ? 0.5
+                : 1,
             boxShadow: "0 10px 25px rgba(59,130,246,0.3)",
           }}
           onMouseEnter={(e) => {

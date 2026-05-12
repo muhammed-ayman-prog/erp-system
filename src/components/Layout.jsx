@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import Topbar from "./Topbar";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import {
+  Outlet,
+  Link,
+  useLocation
+} from "react-router-dom";
+
+import {
+  AnimatePresence,
+  motion
+} from "framer-motion";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 import { collection, getDocs } from "firebase/firestore";
@@ -30,8 +39,8 @@ export default function Layout() {
   const t = useTranslate();
   const [branches, setBranches] = useState([]);
   const { selectedBranch, setSelectedBranch } = useApp();
-  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const collapsed = false;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { user, logout, loading } = useAuth();
@@ -205,7 +214,6 @@ export default function Layout() {
     ]
   }
 ];
-  const isExpanded = !collapsed;
   return (
     <div
       style={{
@@ -223,69 +231,34 @@ export default function Layout() {
       {/* 🧱 Sidebar */}
       <div
         style={{
-          position: isMobile ? "fixed" : "relative",
-          left: isMobile ? (mobileOpen ? 0 : "-100%") : 0,
+          position: "fixed",
+          left: mobileOpen ? 0 : "-100%",
           top: 0,
           zIndex: 1000,
-          width: collapsed ? "75px" : "240px",
+          width: "260px",
           transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
           background: "#ffffff",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
           borderRight: "1px solid #eee",
           padding: "16px",
-          transition: "all 0.3s ease",
+          transition:
+           "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
           height: "100vh",
           overflowY: "auto",
           overflowX: "visible",   // 🔥 دي أهم سطر هنا
-          boxShadow: isMobile ? "2px 0 20px rgba(0,0,0,0.2)" : "none"
+          boxShadow:
+  "2px 0 30px rgba(0,0,0,0.18)"
         }}
         
       >
-        <div style={{ marginBottom: "25px", display: "flex", alignItems: "center", gap: "10px" }}>
-  
-  {/* Logo */}
-  <img
-  src="/logo.png"
-  alt="logo"
-  style={{
-    width: "40px",
-    height: "40px",
-    borderRadius: "10px",
-    objectFit: "cover",
-    transition: "0.3s"
-  }}
-/>
-
-  <div style={{
-  display: "flex",
-  flexDirection: "column",
-  opacity: isExpanded ? 1 : 0,
-  transform: collapsed ? "translateX(-10px)" : "translateX(0)",
-  transition: "all 0.3s"
-}}>
-  {isExpanded && (
-    <>
-      <span style={{ fontWeight: "600", fontSize: "14px" }}>
-        {t("system.name")}
-      </span>
-      <span style={{
-        fontSize: "11px",
-        fontWeight: "600",
-        letterSpacing: "0.5px",
-        opacity: 0.5,
-        textTransform: "uppercase"
-      }}>
-        {t("system.subtitle")}
-      </span>
-    </>
-  )}
-</div>
-</div>
+        <div style={{ marginBottom: "10px" }} />
 
         {menu.map((section, sIndex) => (
   <div key={sIndex}>
     
     {/* اسم السيكشن */}
-    {isExpanded && (
+    {(
       <div style={{ 
         fontSize: "12px", 
         opacity: 0.6, 
@@ -305,14 +278,14 @@ export default function Layout() {
   className={isActive ? "active-link" : ""}
   key={i}
   to={item.path}
-  onClick={() => isMobile && setMobileOpen(false)}
+  onClick={() => setMobileOpen(false)}
   style={{
     position: "relative", // مهم
     display: "flex",
     alignItems: "center",
-    justifyContent: collapsed ? "center" : "flex-start",
-    gap: collapsed ? "0px" : "10px",
-    padding: collapsed ? "12px 0" : "12px 10px",
+    justifyContent: "flex-start",
+    gap: "10px",
+    padding: "12px 10px",
     borderRadius: "10px",
     marginBottom: "8px",
     textDecoration: "none",
@@ -322,25 +295,7 @@ export default function Layout() {
   }}
 >
             {item.icon}
-            {collapsed && (
-  <span
-    className="tooltip"
-    style={{
-      position: "absolute",
-      left: "85px",
-      top: "50%",
-      background: "#111",
-      color: "#fff",
-      padding: "6px 10px",
-      borderRadius: "8px",
-      fontSize: "12px",
-      whiteSpace: "nowrap",
-      zIndex: 9999
-    }}
-  >
-    {item.name}
-  </span>
-)}
+            
             {isActive && (
   <span style={{
     position: "absolute",
@@ -353,7 +308,7 @@ export default function Layout() {
   }} />
 )}
             
-            {isExpanded && item.name}
+            {item.name}
           </Link>
           
         );
@@ -363,7 +318,7 @@ export default function Layout() {
       </div>
 
       {/* 📱 Overlay */}
-      {isMobile && mobileOpen && (
+      {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
           style={{
@@ -386,17 +341,50 @@ export default function Layout() {
   position: "relative", 
 }}>
         <Topbar
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-          openMobile={() => setMobileOpen(true)} // 👈 مهم
+          openMobile={() =>
+            setMobileOpen(prev => !prev)
+          } // 👈 مهم
           branches={branches}
           selectedBranch={selectedBranch}
           setSelectedBranch={setSelectedBranch}
         />
 
-        <div style={{ marginTop: "20px" }}>
-          <Outlet />
-        </div>
+        <AnimatePresence mode="wait">
+
+  <motion.div
+
+    key={location.pathname}
+
+    initial={{
+      opacity: 0,
+      y: 18
+    }}
+
+    animate={{
+      opacity: 1,
+      y: 0
+    }}
+
+    exit={{
+      opacity: 0,
+      y: -18
+    }}
+
+    transition={{
+      duration: 0.28,
+      ease: "easeOut"
+    }}
+
+    style={{
+      marginTop: "20px"
+    }}
+  >
+
+    <Outlet />
+
+  </motion.div>
+
+</AnimatePresence>
       </div>
 </div>
 );

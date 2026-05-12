@@ -157,7 +157,9 @@ useEffect(() => {
         const data = doc.data();
         if (!data.productId) return;
 
-        map[data.productId] = data.quantity;
+        map[data.productId] =
+  (map[data.productId] || 0)
+  + data.quantity;
       });
 
       setInventoryMap(map);
@@ -295,13 +297,107 @@ const {
   fetchCustomer();
 
 }, [customerPhone]);
+useEffect(() => {
+
+  const raw =
+    localStorage.getItem("returnedCart");
+
+  if (!raw) return;
+
+  localStorage.removeItem("returnedCart");
+
+  const returned = JSON.parse(raw);
+
+  if (!returned.length) return;
+
+  setCart(prev => {
+
+    const merged = [...prev];
+
+    returned.forEach(item => {
+
+      const exists = merged.find(
+        i => i.returnedItemId === item.returnedItemId
+      );
+
+      if (!exists) {
+        merged.push(item);
+      }
+    });
+
+    return merged;
+  });
+
+  setShowCart(true);
+
+}, []);
+useEffect(() => {
+
+  if (!selectedBranch) return;
+
+  let q;
+
+  if (selectedBranch === "all") {
+
+    q = collection(db, "returned_items");
+
+  } else {
+
+    q = query(
+      collection(db, "returned_items"),
+      where("branchId", "==", selectedBranch)
+    );
+  }
+
+  const unsub = onSnapshot(q, (snap) => {
+
+    const data = snap.docs
+      .map(d => ({
+        id: d.id,
+        ...d.data()
+      }))
+      .filter(i => i.status === "available");
+
+    setReturnedItems(data);
+  });
+
+  return () => unsub();
+
+}, [selectedBranch]);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 const cleanSize = selectedSize?.name
   ?.replace("Bottle ", "")
   ?.trim();
   const navigate = useNavigate();
   const [showCart, setShowCart] = useState(false);
-  const isMobile = window.innerWidth < 768;
+  const [showReturned, setShowReturned] = useState(false);
+
+const [returnedItems, setReturnedItems] = useState([]);
+
+const [returnedSearch, setReturnedSearch] = useState("");
+  const [isMobile, setIsMobile] =
+  useState(window.innerWidth < 768);
+
+useEffect(() => {
+
+  const handleResize = () => {
+    setIsMobile(
+      window.innerWidth < 768
+    );
+  };
+
+  window.addEventListener(
+    "resize",
+    handleResize
+  );
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+
+}, []);
   const getCustomerTier = (customer) => {
 
   const spent = customer?.totalSpent || 0;
@@ -397,7 +493,174 @@ const visibleProducts = productsWithStock
 };
   return (
   <>
-  
+{showReturned && (
+  <div
+    onClick={() => setShowReturned(false)}
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)",
+      zIndex: 9999,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}
+  >
+
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        width: "95%",
+        maxWidth: "900px",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        background: theme.colors.background,
+        borderRadius: "20px",
+        padding: "20px"
+      }}
+    >
+
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "15px"
+      }}>
+        <h2>📦 Returned Items</h2>
+
+        <button
+          onClick={() => setShowReturned(false)}
+        >
+          ✖
+        </button>
+      </div>
+
+      <input
+        placeholder="Search..."
+        value={returnedSearch}
+        onChange={(e) =>
+          setReturnedSearch(e.target.value)
+        }
+        style={{
+          width: "100%",
+          padding: "12px",
+          borderRadius: "12px",
+          marginBottom: "15px",
+          border: `1px solid ${theme.colors.border}`
+        }}
+      />
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit,minmax(220px,1fr))",
+        gap: "12px"
+      }}>
+
+        {returnedItems
+          .filter(i =>
+            (i.name || "")
+              .toLowerCase()
+              .includes(returnedSearch.toLowerCase())
+          )
+          .map(item => (
+
+          <div
+            key={item.id}
+            style={{
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: "16px",
+              padding: "14px",
+              background: theme.colors.card
+            }}
+          >
+
+            <div style={{
+              fontWeight: "700",
+              marginBottom: "6px"
+            }}>
+              {item.name}
+            </div>
+
+            <div style={{
+              fontSize: "13px",
+              opacity: 0.7,
+              marginBottom: "10px"
+            }}>
+              {item.containerName}
+            </div>
+
+            <div style={{
+              fontWeight: "700",
+              color: theme.colors.primary,
+              marginBottom: "10px"
+            }}>
+              {item.price} EGP
+            </div>
+
+            <button
+              onClick={() => {
+                if (
+                  selectedBranch !== "all" &&
+                  item.branchId !== selectedBranch
+                ) {
+                  return;
+                }
+
+                // ✅ منع التكرار
+                const alreadyExists = cart.find(
+                  c =>
+                    c.returnedItemId === item.id
+                );
+
+                if (alreadyExists) {
+                  return;
+                }
+                addToCart({
+                  id: item.productId,
+                  name: item.name,
+                  price: item.price,
+                  qty: 1,
+
+                  containerType:
+                    item.containerType || "",
+
+                  containerName:
+                    item.containerName || "",
+
+                  isReturned: true,
+
+                  returnedItemId: item.id,
+
+                  returnId: item.returnId,
+
+                  branchId: item.branchId
+                });
+
+                setShowReturned(false);
+
+                setShowCart(true);
+              }}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "10px",
+                border: "none",
+                background: theme.colors.primary,
+                color: "#fff",
+                cursor: "pointer"
+              }}
+            >
+              Add To Cart 🛒
+            </button>
+
+          </div>
+        ))}
+
+      </div>
+    </div>
+  </div>
+)}
 {showCart && (
   <div
     onClick={() => setShowCart(false)}
@@ -626,6 +889,20 @@ const visibleProducts = productsWithStock
   >
     📄 {t("invoices.title")}
   </button>
+  <button
+  onClick={() => setShowReturned(true)}
+  style={{
+    padding: "10px 14px",
+    borderRadius: "10px",
+    background: "#f59e0b",
+    color: "#fff",
+    border: "none",
+    fontWeight: "600",
+    cursor: "pointer"
+  }}
+>
+  📦 Returned ({returnedItems.length})
+</button>
 </div>
 
   </div>

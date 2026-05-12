@@ -24,6 +24,7 @@ import Logs from "./pages/Logs";
 import Pricing from "./pages/Pricing";
 import { Toaster } from "react-hot-toast";
 import Splash from "./pages/Splash";
+import Home from "./pages/Home";
 function App() {
   const { user, loading } = useAuth();
   console.log("🔥 CURRENT USER:", user);
@@ -39,7 +40,7 @@ function App() {
           {/* 🔓 Login */}
           <Route
             path="/login"
-            element={!user ? <Login /> : <Navigate to="/dashboard" />}
+            element={!user ? <Login /> : <Navigate to="/home" />}
           />
 
           {/* Root Redirect */}
@@ -52,7 +53,11 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
 
-
+              <Route
+                path="/home"
+                element={<Home />}
+              />
+              
               {/* Dashboard */}
               <Route element={<ProtectedRoute permissions={["view_dashboard"]} />}>
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -140,7 +145,7 @@ function App() {
           </Route>
         <Route
           path="*"
-          element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
+          element={<Navigate to={user ? "/home" : "/login"} replace />}
         />
         </Routes>
       </Router>

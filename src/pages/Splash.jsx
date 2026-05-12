@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+
 import { useAuth } from "../store/useAuth";
 
 export default function Splash() {
@@ -24,7 +26,7 @@ export default function Splash() {
 
       }
 
-    }, 2000);
+    }, 3200);
 
     return () => clearTimeout(timer);
 
@@ -34,21 +36,114 @@ export default function Splash() {
 
     <div style={container}>
 
-      <img
-        src="/pwa-512.png"
+      {/* Glow */}
+      <motion.div
+
+        initial={{
+          scale: 0.8,
+          opacity: 0
+        }}
+
+        animate={{
+          scale: 1.3,
+          opacity: 0.15
+        }}
+
+        transition={{
+          duration: 2
+        }}
+
+        style={glow}
+      />
+
+      {/* Logo */}
+      <motion.img
+
+        src="/logo.png"
+
         alt="logo"
+
+        initial={{
+          opacity: 0,
+          scale: 0.7,
+          rotate: -8
+        }}
+
+        animate={{
+          opacity: 1,
+          scale: 1,
+          rotate: 0
+        }}
+
+        transition={{
+          duration: 1
+        }}
+
         style={logo}
       />
 
-      <h1 style={title}>
+      {/* Title */}
+      <motion.h1
+
+        initial={{
+          opacity: 0,
+          y: 20
+        }}
+
+        animate={{
+          opacity: 1,
+          y: 0
+        }}
+
+        transition={{
+          delay: 0.5,
+          duration: 0.8
+        }}
+
+        style={title}
+      >
         A Perfume Story
-      </h1>
+      </motion.h1>
 
-      <p style={subtitle}>
-        ERP SYSTEM
-      </p>
+      {/* Subtitle */}
+      <motion.p
 
-      <div style={loader}></div>
+        initial={{
+          opacity: 0
+        }}
+
+        animate={{
+          opacity: 1
+        }}
+
+        transition={{
+          delay: 1,
+          duration: 1
+        }}
+
+        style={subtitle}
+      >
+        ERP • Inventory • Analytics
+      </motion.p>
+
+      {/* Loading */}
+      <motion.div
+
+        initial={{
+          width: 0
+        }}
+
+        animate={{
+          width: 220
+        }}
+
+        transition={{
+          delay: 1.4,
+          duration: 1.3
+        }}
+
+        style={loadingBar}
+      />
 
     </div>
 
@@ -61,7 +156,7 @@ const container = {
   minHeight: "100vh",
 
   background:
-    "linear-gradient(135deg,#111827,#1f2937)",
+    "linear-gradient(135deg,#0f172a,#111827,#1e293b)",
 
   display: "flex",
 
@@ -71,52 +166,80 @@ const container = {
 
   alignItems: "center",
 
-  gap: 20
+  overflow: "hidden",
+
+  position: "relative"
+};
+
+const glow = {
+
+  position: "absolute",
+
+  width: 320,
+
+  height: 320,
+
+  borderRadius: "50%",
+
+  background:
+    "radial-gradient(circle, #d4a373, transparent)",
+
+  filter: "blur(40px)"
 };
 
 const logo = {
 
-  width: 140,
+  width: 150,
 
-  height: 140,
+  marginBottom: 20,
 
-  objectFit: "contain"
+  zIndex: 2,
+
+  filter:
+    "drop-shadow(0 10px 25px rgba(0,0,0,0.25))"
 };
 
 const title = {
 
   color: "#fff",
 
-  fontSize: 34,
+  fontSize: 38,
 
-  fontWeight: "700",
+  fontWeight: 700,
 
-  margin: 0
+  margin: 0,
+
+  zIndex: 2,
+
+  letterSpacing: 1
 };
 
 const subtitle = {
 
-  color: "#9ca3af",
+  color: "#cbd5e1",
 
-  letterSpacing: 4,
+  marginTop: 12,
 
-  margin: 0
+  fontSize: 15,
+
+  letterSpacing: 3,
+
+  zIndex: 2
 };
 
-const loader = {
+const loadingBar = {
 
-  width: 45,
+  height: 4,
 
-  height: 45,
+  marginTop: 35,
 
-  border:
-    "4px solid rgba(255,255,255,0.2)",
+  borderRadius: 999,
 
-  borderTop:
-    "4px solid #fff",
+  background:
+    "linear-gradient(90deg,#d4a373,#fbbf24)",
 
-  borderRadius: "50%",
+  zIndex: 2,
 
-  animation:
-    "spin 1s linear infinite"
+  boxShadow:
+    "0 4px 15px rgba(212,163,115,0.4)"
 };

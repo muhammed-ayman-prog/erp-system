@@ -45,13 +45,24 @@
         }
 
         for (const item of cart) {
+          // 🔁 Returned Item → skip all inventory validation
+  if (item.isReturned) {
+    reads.push({ type: "returned", item });
+    continue;
+  }
+
           // ✅ تأكد إن الكونتينر موجود
           
+        const type =
+          (item.containerType || "")
+            .toLowerCase()
+            .trim();
+
         const isReadyProduct =
-          item.containerType === "Original" ||
-          item.containerType === "Ready" ||
-          item.containerType === "Cream" ||
-          item.containerType === "مخمرية";
+          type === "original" ||
+          type === "ready" ||
+          type === "cream" ||
+          type === "مخمرية";
 
         if (
           !item.containerId &&
@@ -67,15 +78,9 @@
         ) {
           throw new Error("❌ لازم تدخل كمية الزيت");
         }
-
-          // 🔁 Returned Item → skip inventory checks
-          if (item.isReturned) {
-            reads.push({ type: "returned", item });
-            continue;
-          }
           const isOilOnly = item.containerType === "oil";
           if (isOilOnly) {
-          const oilRef = doc(db, "inventory", `${branchToUse}_${item.id}`);
+          const oilRef = doc(db, "inventory", `${branchToUse}_${item.oilId || item.id}`);
           const oilDoc = await transaction.get(oilRef);
 
           if (!oilDoc.exists()) {
@@ -149,7 +154,7 @@
   oilRef = doc(
     db,
     "inventory",
-    `${branchToUse}_${item.id}`
+    `${branchToUse}_${item.oilId || item.id}`
   );
 
     const oilDoc = await transaction.get(oilRef);
@@ -189,7 +194,13 @@
           if (r.item.isReturned) {
             console.log("RETURN ITEM:", r.item); // 👈 ضيف دي
             const returnedRef = doc(db, "returned_items", r.item.returnedItemId);
-
+            const returnedSnap = await transaction.get(returnedRef);
+              if (!returnedSnap.exists()) {
+                throw new Error("❌ المنتج المرتجع غير موجود");
+              }
+              if (returnedSnap.data()?.status === "sold") {
+                throw new Error("❌ المنتج المرتجع تم بيعه بالفعل");
+              }
             transaction.update(returnedRef, {
               status: "sold",
               soldAt: serverTimestamp()
@@ -246,10 +257,17 @@
             ? "RETURN_RESALE"
             : "SALE",
 
+          movementSource:
+            item.isReturned
+              ? "RETURN_RESALE"
+              : "SALE",
+
           direction: "OUT",
 
           productType:
-            item.containerType === "oil"
+            item.isReturned
+              ? "RETURNED_PRODUCT"
+              : item.containerType === "oil"
               ? "RAW_OIL"
               : "CONTAINER",
 
@@ -275,7 +293,11 @@
         })
       );
 
-      if (item.containerType !== "oil" && item.oilQty > 0) {
+      if (
+  !item.isReturned &&
+  item.containerType !== "oil" &&
+  item.oilQty > 0
+) {
         arr.push(
           addDoc(collection(db, "stock"), {
             productId: item.id,
@@ -284,6 +306,11 @@
             movementType: item.isReturned
               ? "RETURN_RESALE"
               : "SALE",
+
+            movementSource:
+              item.isReturned
+                ? "RETURN_RESALE"
+                : "SALE",
 
             direction: "OUT",
 

@@ -20,52 +20,13 @@ export default function Inventory() {
   const { user } = useAuth();
   const [branches, setBranches] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
-  const [showReturned, setShowReturned] = useState(false);
-  const [returnedItems, setReturnedItems] = useState([]);
-  const [returnedSearch, setReturnedSearch] = useState("");
   const [sortType, setSortType] = useState("newest");
   const [transfers, setTransfers] = useState([]);
   const [adjustments, setAdjustments] = useState([]);
   
-  const handleAddReturnedToCart = (item) => {
-  if (!item.productId) {
-    alert("❌ المنتج مش مربوط بمنتج");
-    return;
-  }
+  
 
-  // 👇 نحفظه مؤقت (هنسحبه في sales page)
-  const existing = JSON.parse(localStorage.getItem("returnedCart") || "[]");
-  const exists = existing.find(
-  i => i.returnedItemId === item.id
-);
-
-if (exists) {
-  alert("العنصر موجود بالفعل");
-  return;
-}
-  existing.push({
-    id: item.productId,
-    name: item.name,
-    price: item.price,
-    qty: 1,
-
-    containerType: item.containerType || "",
-    containerName: item.containerName || "",
-
-    isReturned: true,
-    returnedItemId: item.id,
-
-    // 🔥 أهم سطر
-    returnId: item.returnId,
-
-    branchId: item.branchId
-  });
-
-  localStorage.setItem("returnedCart", JSON.stringify(existing));
-
-  alert("تم إضافته للكارت 🛒");
-};
-  useEffect(() => {
+useEffect(() => {
   const fetchBranches = async () => {
     const snapshot = await getDocs(collection(db, "branches"));
 
@@ -145,7 +106,9 @@ return () => {};
         const data = doc.data();
         if (!data.productId) return;
 
-        inventoryMap[data.productId] = data.quantity;
+        inventoryMap[data.productId] =
+  (inventoryMap[data.productId] || 0)
+  + data.quantity;
       });
 
       // 🟢 نجيب products مرة واحدة بس
@@ -199,38 +162,8 @@ useEffect(() => {
     setProductsList(data);
   });
 }, []);
-useEffect(() => {
-  let q;
 
-  if (selectedBranch === "all") {
-    q = collection(db, "returned_items");
-  } else {
-    q = query(
-      collection(db, "returned_items"),
-      where("branchId", "==", selectedBranch)
-    );
-  }
 
-  const unsub = onSnapshot(q, (snap) => {
-    const data = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(i => i.status !== "sold");
-
-    setReturnedItems(data);
-  });
-
-  return () => unsub();
-}, [selectedBranch]);
-useEffect(() => {
-  const handleEsc = (e) => {
-    if (e.key === "Escape") {
-      setShowReturned(false);
-    }
-  };
-
-  window.addEventListener("keydown", handleEsc);
-  return () => window.removeEventListener("keydown", handleEsc);
-}, []);
 
   const filtered = useMemo(() => {
   return products.filter(p =>
@@ -245,14 +178,58 @@ const emptyStats = {
   closing: 0
 }; 
 const renderSection = (title, type, isSub = false) => {
-  const items = filtered.filter(p => {
-  const sub = (p.subCategory || "").toLowerCase().trim();
-  const cat = (p.category || "").toLowerCase().trim();
+  const items = filtered
+  .filter(p => {
+    const sub = (p.subCategory || "").toLowerCase().trim();
+    const cat = (p.category || "").toLowerCase().trim();
 
-  return isSub
-    ? sub === type.toLowerCase()
-    : cat === type.toLowerCase();
-});
+    return isSub
+      ? sub === type.toLowerCase()
+      : cat === type.toLowerCase();
+  })
+  .sort((a, b) => {
+
+    const getPriority = (p) => {
+      const category = (p.category || "").toLowerCase();
+      const sub = (p.subCategory || "").toLowerCase();
+
+      const isComposed =
+        category.includes("french") ||
+        category.includes("oriental") ||
+        category.includes("musk");
+
+      const isReadyOrContainer =
+        ["cream", "makhmaria", "original"].includes(category) ||
+        ["bottle", "box", "samples"].includes(sub);
+
+      const isLowStock =
+        p.quantity > 0 &&
+        (
+          (isComposed && p.quantity <= 100) ||
+          (isReadyOrContainer && p.quantity <= 5)
+        );
+
+      // ✅ Out of stock آخر حاجة
+      if (p.quantity === 0) return 3;
+
+      // ✅ Low stock قبل الـ out
+      if (isLowStock) return 2;
+
+      // ✅ الباقي الطبيعي
+      return 1;
+    };
+
+    const priorityA = getPriority(a);
+    const priorityB = getPriority(b);
+
+    // الأولوية
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // داخل نفس المجموعة → أعلى stock الأول
+    return b.quantity - a.quantity;
+  });
 
   if (items.length === 0) return null;
 
@@ -296,7 +273,7 @@ const isComposed =
 // 🟢 Ready + Containers
 const isReadyOrContainer =
   ["cream", "makhmaria", "original"].includes(category) ||
-  ["bottle", "box"].includes(sub);
+  ["bottle", "box", "samples"].includes(sub);
 
 // 🔥 condition النهائي
 const isLowStock =
@@ -372,14 +349,14 @@ onMouseLeave={(e) => {
   background:
   p.quantity === 0
     ? "rgba(239,68,68,0.1)"
-    : p.quantity <= 5
+    : isLowStock
     ? "rgba(245,158,11,0.1)"
     : "rgba(34,197,94,0.1)",
 
 color:
   p.quantity === 0
     ? theme.colors.danger
-    : p.quantity <= 5
+    : isLowStock
     ? theme.colors.warning
     : theme.colors.success
       
@@ -450,7 +427,9 @@ const date = new Date(
 
     // قبل الشهر
     if (date < start) {
-      if (s.type === "sale" || s.type === "waste") {
+      if (
+  s.direction === "OUT"
+) {
         stat.opening -= s.quantity;
       } else {
         stat.opening += s.quantity;
@@ -459,7 +438,9 @@ const date = new Date(
 
     // خلال الشهر
     if (date >= start && date < end) {
-      if (s.type === "sale" || s.type === "waste") {
+      if (
+  s.direction === "OUT"
+) {
         stat.outQty += s.quantity;
       } else {
         stat.inQty += s.quantity;
@@ -634,7 +615,7 @@ return (
 
     const isReadyOrContainer =
       ["cream", "makhmaria", "original"].includes(category) ||
-      ["bottle", "box"].includes(sub);
+      ["bottle", "box", "samples"].includes(sub);
 
     return (
       p.quantity > 0 &&
