@@ -10,7 +10,7 @@ import { useAuth } from "../store/useAuth";
 export default function Settings() {
   const { user } = useAuth();
 const [loadingReset, setLoadingReset] = useState(false);
-
+const { t, tt, lang } = useTranslate();
 const SUPER_ADMIN_UID = "w9o5o3PnKHfXAZzzuNlbNLhbxEg2";
 const handleReset = async () => {
   const confirmText = prompt("اكتب RESET ALL للتأكيد");

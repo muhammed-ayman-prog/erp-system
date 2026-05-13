@@ -1,7 +1,6 @@
 
 export default function ProductGrid({
   productsWithStock,
-  search,
   mainTab,
   subTab,
   onSelectProduct,
@@ -15,66 +14,7 @@ export default function ProductGrid({
   return (
     <div className="products-grid">
           {productsWithStock
-            .filter(p => {
-            const tab = (mainTab || "").toLowerCase();
-            const cat = (p.category || "").toLowerCase();
-
-            if (tab === "french") {
-              return cat.includes("french");
-            }
-
-            if (tab === "oriental") {
-            if (subTab) {
-              const parts = cat.split("-"); // زي: oriental-a
-              return parts[0] === "oriental" && parts[1] === subTab.toLowerCase();
-            }
-            return cat.includes("oriental");
-          }
-
-            if (tab === "body") {
-              if (subTab) {
-                return cat.includes(subTab.toLowerCase());
-              }
-              return cat.includes("body");
-            }
-
-            if (tab === "original") {
-              return cat.includes("original") || p.type === "original";
-            }
-
-            return false;
-          })
-            .filter(p =>
-              (p.name || "")
-                .toLowerCase()
-                .includes(search.trim().toLowerCase()) ||
-
-              (p.category || "")
-                .toLowerCase()
-                .includes(search.trim().toLowerCase())
-            )
-            .sort((a, b) => {
-
-            // ✅ Available الأول
-            if (a.quantity > 5 && b.quantity <= 5) return -1;
-            if (a.quantity <= 5 && b.quantity > 5) return 1;
-
-            // ⚠️ Low Stock في النص
-            if (
-              a.quantity > 0 &&
-              a.quantity <= 5 &&
-              b.quantity === 0
-            ) return -1;
-
-            if (
-              a.quantity === 0 &&
-              b.quantity > 0 &&
-              b.quantity <= 5
-            ) return 1;
-
-            // 🔤 نفس الحالة → رتب بالاسم
-            return (a.name || "").localeCompare(b.name || "");
-          })
+            
             .map((p) => (
               <div
   key={p.id}
@@ -84,7 +24,10 @@ export default function ProductGrid({
     p.quantity <= 0
       ? "not-allowed"
       : "pointer",
-    textAlign: "left",
+    textAlign:
+      document.dir === "rtl"
+        ? "right"
+        : "left",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
@@ -108,6 +51,7 @@ filter:
         : theme.colors.card,
   }}
   onMouseEnter={(e) => {
+    if (window.innerWidth < 768) return;
 
   if (p.quantity <= 0) return;
 
@@ -119,6 +63,7 @@ filter:
 }}
 
 onMouseLeave={(e) => {
+  if (window.innerWidth < 768) return;
 
   e.currentTarget.style.transform =
     "translateY(0)";
@@ -196,7 +141,7 @@ onClick={() => {
         fontWeight: "600",
         color: "#ef4444"
       }}>
-        Out Of Stock
+        {t("products.outOfStock")}
       </div>
     )}
   </div>

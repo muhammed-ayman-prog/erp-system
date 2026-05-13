@@ -38,7 +38,7 @@ const COLORS = {
 };
 export default function Operations() {
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const [products, setProducts] = useState([]);
   const [user, setUser] = useState(null);
 

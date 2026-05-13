@@ -6,29 +6,52 @@ export const useTranslate = () => {
 
   const t = (key) => {
     const keys = key.split(".");
+
     let value = translations[lang];
 
-    // ✅ nested
+    // ✅ nested keys
     for (let k of keys) {
       value = value?.[k];
     }
 
-    // ✅ fallback old keys
-    if (!value) {
+    // ✅ fallback old flat keys
+    if (value === undefined) {
       for (let section in translations[lang]) {
-        if (translations[lang][section]?.[key]) {
+        if (translations[lang][section]?.[key] !== undefined) {
           return translations[lang][section][key];
         }
       }
     }
 
-    // 🔥 أهم إضافة
-    if (typeof value === "object") {
+    // ✅ لو object يرجع title
+    if (
+      value !== undefined &&
+      typeof value === "object"
+    ) {
       return value.title || key;
     }
 
-    return value || key;
+    // ✅ fallback للإنجليزي
+    if (value === undefined) {
+      let fallback = translations.en;
+
+      for (let k of keys) {
+        fallback = fallback?.[k];
+      }
+
+      return fallback || key;
+    }
+
+    return value;
   };
 
-  return t;
+  // ✅ helper سريع
+  const tt = (ar, en) =>
+    lang === "ar" ? ar : en;
+
+  return {
+    t,
+    tt,
+    lang
+  };
 };

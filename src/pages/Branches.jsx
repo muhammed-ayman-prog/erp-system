@@ -9,6 +9,7 @@ import {
 import { db } from "../firebase";
 
 export default function Branches() {
+  const { t, tt, lang } = useTranslate();
   const [branches, setBranches] = useState([]);
   const [name, setName] = useState("");
 

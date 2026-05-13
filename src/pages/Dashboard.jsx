@@ -60,7 +60,7 @@ import DeadStockCard from
 import FastMovingCard from
 "../components/dashboard/FastMovingCard";
 export default function Dashboard() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const today = new Date().toLocaleDateString("en-CA");
   const [range, setRange] = useState({ from: today, to: today });
   const {

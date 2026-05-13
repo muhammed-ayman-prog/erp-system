@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import { useTranslate } from "../useTranslate";
 export default function CustomerProfile() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const { id } = useParams();
 
   const [customer, setCustomer] = useState(null);

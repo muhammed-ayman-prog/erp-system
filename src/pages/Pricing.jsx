@@ -8,7 +8,7 @@ import {
 
 import { db } from "../firebase";
 export default function Pricing() {
-
+const { t, tt, lang } = useTranslate();
 const [pricing, setPricing] = useState([]);
 const [readyProducts, setReadyProducts] = useState([]);
 const [openSections, setOpenSections] =

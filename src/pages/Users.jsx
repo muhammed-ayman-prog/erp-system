@@ -49,7 +49,7 @@ const ROLE_PERMISSIONS = {
 export default function Users() {
   
   const { user } = useAuth();
-
+  const { t, tt, lang } = useTranslate(); 
   const [users, setUsers] = useState([]);
   const [branches, setBranches] = useState([]);
   const [search, setSearch] = useState("");

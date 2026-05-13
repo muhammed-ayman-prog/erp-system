@@ -18,7 +18,7 @@ import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
 export default function Waste() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const { user } = useAuth();
   const { selectedBranch } = useApp();
 

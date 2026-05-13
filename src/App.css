@@ -188,9 +188,12 @@
 .dropdown-item:hover {
   background: #f1f5f9;
 }
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+}
 @keyframes pulse {
   0% {
-    opacity: 0.5;
+    opacity: .5;
   }
 
   50% {
@@ -198,6 +201,6 @@
   }
 
   100% {
-    opacity: 0.5;
+    opacity: .5;
   }
 }

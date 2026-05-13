@@ -1,11 +1,18 @@
 import { db } from "../../firebase";
-import { useEffect, useState } from "react";
 import {
-  collection,getDocs, query, where,
-  doc, onSnapshot,
-  orderBy, limit
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+   limit
 } from "firebase/firestore";
-import { useMemo } from "react";
 import { useApp } from "../../store/useApp";
 import { theme } from "../../theme";
 import { useTranslate } from "../../useTranslate";
@@ -16,6 +23,7 @@ import ProductPopup from "./components/ProductPopup";
 import { useSales } from "./hooks/useSales";
 import { FlaskConical, Leaf, Sparkles, Star } from "lucide-react";
 import { createPortal } from "react-dom";
+
 const branchMap = {
   "Abbas Akkad 1": "abbasAkkad1",
   "Abbas Akkad 2": "abbasAkkad2",
@@ -25,11 +33,12 @@ const branchMap = {
   "El Rehab": "elRehab"
 };
 export default function SalesPage() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const translateBranch = (id) => {
   const name = getBranchName(id);
   return t(`branches.${branchMap[name]}`) || name;
 };
+const [sales, setSales] = useState([]);
   const [branches, setBranches] = useState([]);
   const getBranchName = (id) => {
   return branches.find(b => b.id === id)?.name || t("common.unknown");
@@ -49,7 +58,6 @@ export default function SalesPage() {
 }, []);
   const [user, setUser] = useState(null);
   const { selectedBranch } = useApp();
-  const [sales, setSales] = useState([]);
   const [discount, setDiscount] = useState(0);
   useEffect(() => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -250,53 +258,7 @@ const {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerData, setCustomerData] = useState(null);
-  useEffect(() => {
-
-  const fetchCustomer = async () => {
-
-    const normalizedPhone = customerPhone
-      .replace(/\s/g, "")
-      .replace("+2", "")
-      .trim();
-
-    if (!normalizedPhone || normalizedPhone.length < 10) {
-      setCustomerData(null);
-      return;
-    }
-
-    try {
-
-      const q = query(
-        collection(db, "customers"),
-        where("phone", "==", normalizedPhone)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-
-        const data = snapshot.docs[0].data();
-
-        setCustomerName(data.name || "");
-
-        setCustomerData(data);
-        console.log("✅ Customer Found:", data.name);
-
-      } else {
-
-        setCustomerData(null);
-        setCustomerName("");
-      }
-
-    } catch (err) {
-
-      console.error(err);
-    }
-  };
-
-  fetchCustomer();
-
-}, [customerPhone]);
+  
 useEffect(() => {
 
   const raw =
@@ -321,6 +283,7 @@ useEffect(() => {
       );
 
       if (!exists) {
+      if (!item.returnedItemId) return;
         merged.push(item);
       }
     });
@@ -429,7 +392,14 @@ useEffect(() => {
     background: "#e2e8f0"
   };
 };
-const visibleProducts = productsWithStock
+const normalizedSearch =
+  search.trim().toLowerCase();
+const normalizedReturnedSearch =
+  returnedSearch
+    .trim()
+    .toLowerCase();
+const visibleProducts = useMemo(() => {
+  return productsWithStock
   .filter(p => {
 
     const tab = (mainTab || "").toLowerCase();
@@ -472,25 +442,128 @@ const visibleProducts = productsWithStock
 
     return false;
   })
+  .sort((a, b) => {
+
+  if (a.quantity > 5 && b.quantity <= 5) return -1;
+  if (a.quantity <= 5 && b.quantity > 5) return 1;
+
+  if (
+    a.quantity > 0 &&
+    a.quantity <= 5 &&
+    b.quantity === 0
+  ) return -1;
+
+  if (
+    a.quantity === 0 &&
+    b.quantity > 0 &&
+    b.quantity <= 5
+  ) return 1;
+
+  return (a.name || "")
+    .localeCompare(b.name || "");
+})
   .filter(p =>
     (p.name || "")
       .toLowerCase()
-      .includes(search.trim().toLowerCase()) ||
+      .includes(normalizedSearch) ||
 
     (p.category || "")
       .toLowerCase()
-      .includes(search.trim().toLowerCase())
+      .includes(normalizedSearch)
   );
-  const playCheckoutSound = () => {
+  
+  
+ }, [
+  productsWithStock,
+  mainTab,
+  subTab,
+  normalizedSearch
+]);
+const checkoutAudio = useMemo(
+  () => new Audio("/sounds/success.mp3"),
+  []
+);
+useEffect(() => {
+  return () => {
+    checkoutAudio.pause();
+    checkoutAudio.src = "";
+  };
+}, [checkoutAudio]);
 
-  const audio = new Audio(
-    "/sounds/success.mp3"
-  );
 
-  audio.volume = 0.7;
-
-  audio.play();
+const playCheckoutSound = () => {
+  checkoutAudio.currentTime = 0;
+  checkoutAudio.volume = 0.7;
+  checkoutAudio.play();
 };
+const [mounted, setMounted] =
+  useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+const cartCount = useMemo(
+  () =>
+    cart.reduce(
+      (sum, item) => sum + item.qty,
+      0
+    ),
+  [cart]
+);
+const [debouncedPhone, setDebouncedPhone] =
+  useState(customerPhone);
+  useEffect(() => {
+  const timeout = setTimeout(() => {
+    setDebouncedPhone(customerPhone);
+  }, 400);
+
+  return () => clearTimeout(timeout);
+}, [customerPhone]);
+useEffect(() => {
+
+  const fetchCustomer = async () => {
+
+    const normalizedPhone = customerPhone
+      .replace(/\s/g, "")
+      .replace("+2", "")
+      .trim();
+
+    if (!normalizedPhone || normalizedPhone.length < 10) {
+      setCustomerData(null);
+      return;
+    }
+
+    try {
+
+      const q = query(
+        collection(db, "customers"),
+        where("phone", "==", normalizedPhone)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+
+        const data = snapshot.docs[0].data();
+
+        setCustomerName(data.name || "");
+
+        setCustomerData(data);
+
+      } else {
+
+        setCustomerData(null);
+        setCustomerName("");
+      }
+
+    } catch (err) {
+
+    }
+  };
+
+  fetchCustomer();
+
+}, [debouncedPhone]);
   return (
   <>
 {showReturned && (
@@ -500,7 +573,7 @@ const visibleProducts = productsWithStock
       position: "fixed",
       inset: 0,
       background: "rgba(0,0,0,0.4)",
-      zIndex: 9999,
+      zIndex: 3000,
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
@@ -516,7 +589,8 @@ const visibleProducts = productsWithStock
         overflowY: "auto",
         background: theme.colors.background,
         borderRadius: "20px",
-        padding: "20px"
+        padding: "20px",
+        paddingBottom: "40px",
       }}
     >
 
@@ -526,9 +600,10 @@ const visibleProducts = productsWithStock
         alignItems: "center",
         marginBottom: "15px"
       }}>
-        <h2>📦 Returned Items</h2>
+        <h2>📦 {t("returns.title")}</h2>
 
         <button
+         type="button"
           onClick={() => setShowReturned(false)}
         >
           ✖
@@ -536,7 +611,13 @@ const visibleProducts = productsWithStock
       </div>
 
       <input
-        placeholder="Search..."
+      autoComplete="off"
+        dir={
+          lang === "ar"
+            ? "rtl"
+            : "ltr"
+        }
+        placeholder= {t("common.search")}
         value={returnedSearch}
         onChange={(e) =>
           setReturnedSearch(e.target.value)
@@ -561,7 +642,7 @@ const visibleProducts = productsWithStock
           .filter(i =>
             (i.name || "")
               .toLowerCase()
-              .includes(returnedSearch.toLowerCase())
+              .includes(normalizedReturnedSearch)
           )
           .map(item => (
 
@@ -599,6 +680,7 @@ const visibleProducts = productsWithStock
             </div>
 
             <button
+             type="button"
               onClick={() => {
                 if (
                   selectedBranch !== "all" &&
@@ -651,7 +733,7 @@ const visibleProducts = productsWithStock
                 cursor: "pointer"
               }}
             >
-              Add To Cart 🛒
+              {t("cart.add")} 🛒
             </button>
 
           </div>
@@ -668,7 +750,7 @@ const visibleProducts = productsWithStock
       position: "fixed",
       inset: 0,
       background: "rgba(0,0,0,0.3)",
-      zIndex: 999
+      zIndex: 5000
     }}
   >
     <div
@@ -676,7 +758,9 @@ const visibleProducts = productsWithStock
       style={{
         position: "absolute",
         top: 0,
-        right: 0,
+        [lang === "ar"
+  ? "left"
+  : "right"]: 0,
         height: "100%",
         width: isMobile ? "100%" : "360px",
         background: theme.colors.background,
@@ -694,7 +778,8 @@ const visibleProducts = productsWithStock
         marginBottom: "10px"
       }}>
         <h3>{t("cart.title")} 🧾</h3>
-        <button onClick={() => setShowCart(false)}>✖</button>
+        <button
+  type="button" onClick={() => setShowCart(false)}>✖</button>
       </div>
 
       <Cart
@@ -758,8 +843,15 @@ const visibleProducts = productsWithStock
   </div>
 )}
     <div className="sales-layout" style={{
+  direction:
+  lang === "ar"
+    ? "rtl"
+    : "ltr",
   display: isMobile ? "block" : "grid",
-  gridTemplateColumns: isMobile ? "1fr" : "220px 1fr",
+  gridTemplateColumns:
+  isMobile
+    ? "1fr"
+    : "220px 1fr",
   width: "100%",
   alignItems: "start"
 }}>
@@ -767,9 +859,12 @@ const visibleProducts = productsWithStock
     
       
       {/* المنتجات */}
-      <div className="left-side" style={{
-  marginBottom: isMobile ? "10px" : "0"
-}}>
+      <div className="left-side" 
+      style=
+      {{order:
+        lang === "ar" ? 1 : 1,
+        marginBottom: isMobile ? "10px" : "0"
+      }}>
 
   {/* نخفي العنوان في الموبايل */}
   {!isMobile && (
@@ -780,10 +875,13 @@ const visibleProducts = productsWithStock
 
   {/* 🔥 ده الجديد */}
   <div
+  className="hide-scroll"
     style={{
       display: "flex",
       flexDirection: isMobile ? "row" : "column",
       overflowX: isMobile ? "auto" : "visible",
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
       gap: "8px",
       scrollBehavior: "smooth"
     }}
@@ -830,8 +928,10 @@ const visibleProducts = productsWithStock
   </div>
 </div>
         <div style={{
-  padding: isMobile ? "10px" : "12px 12px 12px 0",
-  maxHeight: isMobile ? "none" : "calc(100vh - 140px)"
+          order:
+            lang === "ar" ? 2 : 2,
+          padding: isMobile ? "10px" : "12px 12px 12px 0",
+          maxHeight: isMobile ? "none" : "calc(100vh - 140px)"
   
 }}>
           <div className="middle-layout" style={{ width: "100%" }}>
@@ -876,6 +976,8 @@ const visibleProducts = productsWithStock
 
   {/* 📄 Invoices */}
   <button
+   type="button"
+  
     onClick={() => navigate("/invoices")}
     style={{
       padding: "10px 14px",
@@ -890,6 +992,7 @@ const visibleProducts = productsWithStock
     📄 {t("invoices.title")}
   </button>
   <button
+  type="button"
   onClick={() => setShowReturned(true)}
   style={{
     padding: "10px 14px",
@@ -901,7 +1004,7 @@ const visibleProducts = productsWithStock
     cursor: "pointer"
   }}
 >
-  📦 Returned ({returnedItems.length})
+  📦 {t("returns.title")} ({returnedItems.length})
 </button>
 </div>
 
@@ -915,23 +1018,36 @@ const visibleProducts = productsWithStock
 
   <span style={{
     position: "absolute",
-    left: "14px",
+    [lang === "ar"
+  ? "right"
+  : "left"]: "14px",
     top: "50%",
     transform: "translateY(-50%)",
     opacity: 0.5,
-    fontSize: "14px"
+    fontSize: "15px",
+    pointerEvents: "none"
   }}>
     🔍
   </span>
 
   <input
+  autoComplete="off"
+  dir={
+      lang === "ar"
+        ? "rtl"
+        : "ltr"
+    }
     type="text"
     placeholder={t("products.search")}
     value={search}
     onChange={(e) => setSearch(e.target.value)}
     style={{
+      fontSize: "14px",
       width: "100%",
-      padding: "14px 16px 14px 40px",
+      padding:
+        lang === "ar"
+          ? "14px 40px 14px 16px"
+          : "14px 16px 14px 40px",
       borderRadius: "12px",
       background: theme.colors.card,
       border: `1px solid ${theme.colors.border}`
@@ -957,17 +1073,17 @@ const visibleProducts = productsWithStock
       fontSize: "18px",
       fontWeight: "700"
     }}>
-      {mainTab === "french" && "French Perfumes "}
+      {mainTab === "french" && t("products.french")}
 
       {mainTab === "oriental" &&
-        `Oriental ${subTab?.toUpperCase() || ""} 🌿`
+       `${t("products.oriental")} ${subTab?.toUpperCase() || ""} 🌿`
       }
 
       {mainTab === "body" &&
-        `${subTab || "Body Products"} ✨`
+        `${t("products.body")} ${subTab || ""} ✨`
       }
 
-      {mainTab === "original" && "Originals ⭐"}
+      {mainTab === "original" && t("products.original")}
     </div>
 
     <div style={{
@@ -975,11 +1091,10 @@ const visibleProducts = productsWithStock
       color: theme.colors.textSecondary,
       marginTop: "3px"
     }}>
-      {
-        visibleProducts.filter(
-          p => p.quantity > 0
-        ).length
-      } Products Available
+      {visibleProducts.filter(
+  p => p.quantity > 0
+).length}{" "}
+{t("inventory.productsAvailable")}
     </div>
 
   </div>
@@ -990,7 +1105,9 @@ const visibleProducts = productsWithStock
   <div style={{
     display: "grid",
     gridTemplateColumns:
-      "repeat(auto-fill, minmax(160px,1fr))",
+      isMobile
+        ? "repeat(auto-fill,minmax(140px,1fr))"
+        : "repeat(auto-fill,minmax(170px,1fr))",
     gap: "14px"
   }}>
 
@@ -1015,8 +1132,7 @@ const visibleProducts = productsWithStock
   <>
   
     <ProductGrid
-      productsWithStock={productsWithStock}
-      search={search}
+      productsWithStock={visibleProducts}
       mainTab={mainTab}
       subTab={subTab}
       theme={theme}
@@ -1027,9 +1143,9 @@ const visibleProducts = productsWithStock
 
           const name = addToCart({
             ...p,
-            size: "Standard",
-            containerType: "Original",
-            containerName: "Original",
+            size: t("products.standard"),
+            containerType: t("products.original"),
+            containerName: t("products.original"),
             price: p.price
           });
 
@@ -1050,17 +1166,17 @@ const visibleProducts = productsWithStock
           addToCart({
             ...p,
 
-            size: "Ready",
+            size: t("products.ready"),
 
             containerType:
               p.category?.toLowerCase()?.includes("cream")
-                ? "Cream"
-                : "مخمرية",
+                ? t("products.cream")
+                : t("products.makhmaria"),
 
             containerName:
               p.category?.toLowerCase()?.includes("cream")
-                ? "Cream"
-                : "مخمرية",
+                ? t("products.cream")
+                : t("products.makhmaria"),
 
             containerId: null,
 
@@ -1077,6 +1193,7 @@ const visibleProducts = productsWithStock
     />
 
     <ProductPopup
+      lang={lang}
       setToastText={setToastText}
       setShowToast={setShowToast}
       showPopup={showPopup}
@@ -1111,6 +1228,7 @@ const visibleProducts = productsWithStock
 
     {cart.length > 0 && (
     <button
+  type="button"
   onClick={() => setShowCart(true)}
 
   style={{
@@ -1118,9 +1236,14 @@ const visibleProducts = productsWithStock
 
     bottom: "24px",
 
-    right: isMobile ? "16px" : "24px",
+    [lang === "ar"
+  ? "left"
+  : "right"]:
+    isMobile
+      ? "16px"
+      : "24px",
 
-    zIndex: 999,
+    zIndex: 5000,
 
     display: "flex",
     flexDirection: "column",
@@ -1150,11 +1273,13 @@ const visibleProducts = productsWithStock
   }}
 
   onMouseEnter={(e) => {
+    if (isMobile) return;
     e.currentTarget.style.transform =
       "translateY(-3px) scale(1.03)";
   }}
 
   onMouseLeave={(e) => {
+    if (isMobile) return;
     e.currentTarget.style.transform =
       "translateY(0) scale(1)";
   }}
@@ -1169,7 +1294,9 @@ const visibleProducts = productsWithStock
   <div style={{
   position: "absolute",
   top: "-4px",
-  right: "-4px",
+  [lang === "ar"
+  ? "left"
+  : "right"]: "-4px",
 
   minWidth: "24px",
   height: "24px",
@@ -1189,7 +1316,7 @@ const visibleProducts = productsWithStock
 
   border: "2px solid white"
 }}>
-  {cart.reduce((sum, item) => sum + item.qty, 0)}
+  {cartCount}
 </div>
 
 <div style={{
@@ -1197,18 +1324,27 @@ const visibleProducts = productsWithStock
   fontWeight: "700",
   marginTop: "2px"
 }}>
-  {Number(total).toLocaleString()} EGP
+  {(Number(total) || 0).toLocaleString(
+  lang === "ar"
+    ? "ar-EG"
+    : "en-US"
+)} EGP
 </div>
 
 </button>
 )}
-    {showToast &&
-  createPortal(
+    {mounted &&
+ showToast &&
+ createPortal(
     <div
       style={{
         position: "fixed",
         bottom: "30px",
         left: "50%",
+        direction:
+        lang === "ar"
+          ? "rtl"
+          : "ltr",
         transform: "translateX(-50%)",
         background: theme.colors.primary,
         padding: "12px 20px",

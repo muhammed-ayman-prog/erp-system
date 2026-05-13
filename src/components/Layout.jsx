@@ -36,7 +36,7 @@ import {
 import Notifications from "../components/Notifications";
 
 export default function Layout() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const [branches, setBranches] = useState([]);
   const { selectedBranch, setSelectedBranch } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -110,7 +110,7 @@ export default function Layout() {
     section: t("navigation.main"),
     items: [
       {
-        name: t("dashboard"),
+        name: t("navigation.dashboard"),
         path: "/dashboard",
         icon: <LayoutDashboard size={collapsed ? 24 : 18} />,
         permission: "view_dashboard"
@@ -152,7 +152,7 @@ export default function Layout() {
       },
       
       {
-        name: t("purchases"),
+        name: t("navigation.purchases"),
         path: "/purchases",
         icon: <PackagePlus size={collapsed ? 24 : 18} />,
         permission: "view_purchases"
@@ -170,7 +170,7 @@ export default function Layout() {
     section: t("navigation.management"),
     items: [
       {
-        name: "Pricing",
+        name: t("navigation.pricing"),
         path: "/pricing",
         icon: <DollarSign size={collapsed ? 24 : 18} />,
         permission: "view_inventory"
@@ -217,6 +217,7 @@ export default function Layout() {
   return (
     <div
       style={{
+        direction: lang === "ar" ? "rtl" : "ltr",
         display: "flex",
         minHeight: "100vh",
         width: "100%",
@@ -232,18 +233,29 @@ export default function Layout() {
       <div
         style={{
           position: "fixed",
-          left: mobileOpen ? 0 : "-100%",
+          left:
+  lang === "ar"
+    ? "auto"
+    : mobileOpen
+    ? 0
+    : "-100%",
+
+right:
+  lang === "ar"
+    ? mobileOpen
+      ? 0
+      : "-100%"
+    : "auto",
           top: 0,
           zIndex: 1000,
-          width: "260px",
+          width: isMobile ? "85%" : "260px",
+          maxWidth: "320px",
           transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
           background: "#ffffff",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderRight: "1px solid #eee",
+          borderInlineEnd: "1px solid #eee",
           padding: "16px",
-          transition:
-           "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
           height: "100vh",
           overflowY: "auto",
           overflowX: "visible",   // 🔥 دي أهم سطر هنا
@@ -284,7 +296,11 @@ export default function Layout() {
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-start",
-    gap: "10px",
+gap: "10px",
+flexDirection:
+  lang === "ar"
+    ? "row-reverse"
+    : "row",
     padding: "12px 10px",
     borderRadius: "10px",
     marginBottom: "8px",
@@ -299,12 +315,15 @@ export default function Layout() {
             {isActive && (
   <span style={{
     position: "absolute",
-    left: 0,
+    [lang === "ar" ? "right" : "left"]: 0,
     top: "20%",
     height: "60%",
     width: "3px",
     background: "#000",
-    borderRadius: "0 4px 4px 0"
+    borderRadius:
+  lang === "ar"
+    ? "4px 0 0 4px"
+    : "0 4px 4px 0",
   }} />
 )}
             
@@ -334,7 +353,7 @@ export default function Layout() {
       <div style={{ 
   flex: 1, 
   minWidth: 0,
-  padding: isMobile ? "10px" : "20px", // 👈 الحل
+  padding: isMobile ? "8px" : "20px", // 👈 الحل
   width: "100%",
   maxWidth: "100%",
   overflow: "visible",

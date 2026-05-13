@@ -17,6 +17,7 @@ import logo from "../assets/logo.png";
 import { useAuth } from "../store/useAuth";
 export default function Reports() {
   const { user } = useAuth();
+  const { t, tt, lang } = useTranslate();
   const [resetting, setResetting] = useState(false);
   const [drillData, setDrillData] = useState([]);
   const [drillTitle, setDrillTitle] = useState("");

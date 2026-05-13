@@ -4,7 +4,8 @@ import {
 
 import {
   useEffect,
-  useState
+  useState,
+  useMemo
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
@@ -33,10 +34,26 @@ import {
   BarChart3
 
 } from "lucide-react";
+import { useTranslate } from "../useTranslate";
 export default function Home() {
-
+  const { t, tt, lang } = useTranslate();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] =
+  useState(window.innerWidth < 768);
 
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+}, []);
   const { user } = useAuth();
 
   const { selectedBranch } = useApp();
@@ -51,7 +68,9 @@ const [todayOrders, setTodayOrders] =
 
   const currentDate =
     new Date().toLocaleDateString(
-      "en-US",
+      lang === "ar"
+  ? "ar-EG"
+  : "en-US",
       {
         weekday: "long",
         day: "numeric",
@@ -60,11 +79,11 @@ const [todayOrders, setTodayOrders] =
     );
 
   const greeting =
-    currentHour < 12
-      ? "Good Morning"
-      : currentHour < 18
-      ? "Good Afternoon"
-      : "Good Evening";
+  currentHour < 12
+    ? t("greetings.morning")
+    : currentHour < 18
+    ? t("greetings.afternoon")
+    : t("greetings.evening");
 useEffect(() => {
 
   const todayStart = new Date();
@@ -139,52 +158,67 @@ const unsubscribe = onSnapshot(
   const quickActions = [
 
   {
-    title: "New Sale",
+    title: t("navigation.sales"),
     icon: ShoppingCart,
     path: "/sales",
     color: "#10b981"
   },
 
   {
-    title: "Inventory",
+    title: t("inventory.title"),
     icon: Boxes,
     path: "/inventory",
     color: "#3b82f6"
   },
 
   {
-    title: "Returns",
+    title: t("navigation.returns"),
     icon: RefreshCw,
     path: "/returns",
     color: "#f59e0b"
   },
 
   {
-    title: "Expenses",
+    title: t("navigation.expenses"),
     icon: Receipt,
     path: "/expenses",
     color: "#ef4444"
   },
 
   {
-    title: "Customers",
+    title: t("navigation.customers"),
     icon: Users2,
     path: "/customers",
     color: "#8b5cf6"
   },
 
   {
-    title: "Reports",
+    title: t("navigation.reports"),
     icon: BarChart3,
     path: "/reports",
     color: "#06b6d4"
   }
 
 ];
-
+const particles = useMemo(
+  () =>
+    [...Array(12)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`
+    })),
+  []
+);
   return (
 
-    <div style={container}>
+    <div
+  style={{
+    ...container,
+    direction:
+      lang === "ar"
+        ? "rtl"
+        : "ltr"
+  }}
+>
 
       {/* Animated Background */}
       <motion.div
@@ -218,7 +252,7 @@ const unsubscribe = onSnapshot(
       />
 
       {/* Floating Particles */}
-      {[...Array(12)].map((_, i) => (
+      {particles.map((p, i) => (
 
         <motion.div
 
@@ -237,9 +271,8 @@ const unsubscribe = onSnapshot(
           style={{
             ...particle,
 
-            left: `${Math.random() * 100}%`,
-
-            top: `${Math.random() * 100}%`
+            left: p.left,
+            top: p.top
           }}
         />
 
@@ -263,7 +296,7 @@ const unsubscribe = onSnapshot(
 ease: "easeOut"
         }}
 
-        style={card}
+        style={card(isMobile)}
       >
 
         {/* Top Info */}
@@ -279,10 +312,10 @@ ease: "easeOut"
 
             {selectedBranch === "all"
 
-                ? "All Branches"
+                ? t("branches.all")
 
                 : branchNames[selectedBranch] ||
-                "Unknown Branch"}
+                t("common.unknown")}
 
             </h2>
 
@@ -307,7 +340,7 @@ ease: "easeOut"
             duration: 5
           }}
 
-          style={logo}
+          style={logo(isMobile)}
         />
 
         {/* Greeting */}
@@ -347,9 +380,9 @@ ease: "easeOut"
             delay: 0.4
           }}
 
-          style={title}
+          style={title(isMobile)}
         >
-          Welcome back,
+          {t("greetings.welcome")},
           <br />
           {user?.name || "User"}
         </motion.h1>
@@ -369,9 +402,12 @@ ease: "easeOut"
             delay: 0.6
           }}
 
-          style={subtitle}
+          style={subtitle(isMobile)}
         >
-          Ready to manage today’s operations?
+          {tt(
+  "جاهز تدير عمليات النهاردة؟",
+  "Ready to manage today’s operations?"
+)}
         </motion.p>
 
         {/* Stats */}
@@ -391,22 +427,22 @@ ease: "easeOut"
             delay: 0.8
           }}
 
-          style={statsGrid}
+          style={statsGrid(isMobile)}
         >
 
           <StatCard
             value={`${todaySales.toLocaleString()} EGP`}
-            label="Today Sales"
+            label={tt("مبيعات اليوم", "Today Sales")}
           />
 
           <StatCard
             value={todayOrders}
-            label="Orders"
+            label={tt("الطلبات", "Orders")}
           />
 
           <StatCard
             value="3"
-            label="Alerts"
+            label={tt("التنبيهات", "Alerts")}
           />
 
         </motion.div>
@@ -426,21 +462,17 @@ ease: "easeOut"
             delay: 1
           }}
 
-          style={actionsGrid}
+          style={actionsGrid(isMobile)}
         >
 
           {quickActions.map((item) => (
 
-            <ActionCard
-
+           <ActionCard
   key={item.title}
-
+  isMobile={isMobile}
   title={item.title}
-
   icon={item.icon}
-
   color={item.color}
-
   onClick={() =>
     navigate(item.path)
   }
@@ -490,7 +522,7 @@ function StatCard({
 }
 
 function ActionCard({
-
+  isMobile,
   title,
 
   icon: Icon,
@@ -516,7 +548,7 @@ function ActionCard({
 
       onClick={onClick}
 
-      style={actionCard}
+      style={actionCard(isMobile)}
     >
 
       <motion.div
@@ -530,7 +562,7 @@ function ActionCard({
       >
         <Icon
 
-  size={34}
+  size={28}
 
   color={color}
 
@@ -549,7 +581,7 @@ function ActionCard({
 
 const container = {
 
-  minHeight: "85vh",
+  minHeight: "100vh",
 
   position: "relative",
 
@@ -623,7 +655,7 @@ const particle = {
   filter: "blur(1px)"
 };
 
-const card = {
+const card = (isMobile) => ({
 
   width: "100%",
 
@@ -640,12 +672,9 @@ const card = {
   border:
     "1px solid rgba(255,255,255,0.5)",
 
-  borderRadius: 42,
+  borderRadius: isMobile ? 28 : 42,
 
-  padding:
-  window.innerWidth < 768
-    ? 24
-    : 50,
+  padding: isMobile ? 24 : 50,
 
   position: "relative",
 
@@ -653,16 +682,16 @@ const card = {
 
   boxShadow:
     "0 25px 80px rgba(0,0,0,0.08)"
-};
+});
 
 const topInfo = {
 
   display: "flex",
 
   justifyContent: "space-between",
-
+  flexDirection: "column",
   alignItems: "center",
-
+  textAlign: "center",
   marginBottom: 20
 };
 
@@ -684,12 +713,9 @@ const branchText = {
   fontSize: 20
 };
 
-const logo = {
+const logo = (isMobile) => ({
 
-  width:
-  window.innerWidth < 768
-    ? 100
-    : 130,
+  width: isMobile ? 100 : 130,
 
   display: "block",
 
@@ -698,7 +724,7 @@ const logo = {
 
   filter:
     "drop-shadow(0 10px 25px rgba(0,0,0,0.18))"
-};
+});
 
 const greetingStyle = {
 
@@ -715,14 +741,11 @@ const greetingStyle = {
   letterSpacing: 1
 };
 
-const title = {
+const title = (isMobile) => ({
 
   textAlign: "center",
 
-  fontSize:
-  window.innerWidth < 768
-    ? 34
-    : 48,
+  fontSize: isMobile ? 28 : 48,
 
   lineHeight: 1.2,
 
@@ -731,9 +754,9 @@ const title = {
   color: "#111827",
 
   fontWeight: 800
-};
+});
 
-const subtitle = {
+const subtitle = (isMobile) => ({
 
   textAlign: "center",
 
@@ -743,20 +766,22 @@ const subtitle = {
 
   marginBottom: 40,
 
-  fontSize: 17
-};
+  fontSize: isMobile ? 15 : 17
+});
 
-const statsGrid = {
+const statsGrid = (isMobile) => ({
 
   display: "grid",
 
   gridTemplateColumns:
-    "repeat(auto-fit,minmax(180px,1fr))",
+  isMobile
+    ? "1fr"
+    : "repeat(auto-fit,minmax(180px,1fr))",
 
   gap: 18,
 
   marginBottom: 35
-};
+});
 
 const statCard = {
 
@@ -791,24 +816,26 @@ const statLabel = {
   fontSize: 14
 };
 
-const actionsGrid = {
+const actionsGrid = (isMobile) => ({
 
   display: "grid",
 
   gridTemplateColumns:
-    "repeat(auto-fit,minmax(170px,1fr))",
+  isMobile
+    ? "repeat(2,1fr)"
+    : "repeat(auto-fit,minmax(170px,1fr))",
 
   gap: 22
-};
+});
 
-const actionCard = {
+const actionCard = (isMobile) => ({
 
   background:
     "linear-gradient(135deg,#ffffff,#f8fafc)",
 
   borderRadius: 30,
 
-  padding: 30,
+  padding: isMobile ? 20 : 30,
 
   textAlign: "center",
 
@@ -822,7 +849,7 @@ const actionCard = {
     "1px solid rgba(255,255,255,0.8)",
 
   transition: "0.3s"
-};
+});
 
 const actionIcon = {
 

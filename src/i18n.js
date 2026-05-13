@@ -27,7 +27,14 @@ export const translations = {
       cancel: "Cancel",
       confirmAction: "Are you sure?",
       price: "Price",
-      close: "Close"
+      close: "Close",
+      success: "Success",
+      warning: "Warning",
+      yes: "Yes",
+      no: "No",
+      retry: "Retry",
+      refresh: "Refresh",
+      done: "Done",
       
     },
     
@@ -48,7 +55,8 @@ export const translations = {
       returns: "Returns",
       logs: "Logs",
       operations: "Operations",
-      management: "Management"
+      management: "Management",
+      pricing: "Pricing",
     },
     operations: {
       title: "Operations",
@@ -87,7 +95,8 @@ export const translations = {
       total: "Total",
       checkout: "Checkout",
       clear: "Clear Cart",
-      added: "added 🔥"
+      added: "added 🔥",
+      add: "Add To Cart",
     },
     expenses: {
       amount: "Amount",
@@ -135,7 +144,26 @@ export const translations = {
       body: "Body",
       original: "Original",
       select: "Select product",
-      oil: "Oil"
+      oil: "Oil",
+      cream: "Cream",
+      makhmaria: "Makhmaria",
+      musk: "Musk",
+      chooseType: "Choose Type",
+      ready: "Ready",
+      standard: "Standard",
+      chooseGrade: "Choose Grade",
+      chooseContainer: "Choose Container",
+      availableOptions: "Available Options",
+      bottle: "Bottle",
+      box: "Box",
+      samples: "Samples",
+      pureOil: "Pure Oil",
+      available: "available",
+      low: "Low",
+      oilQty: "Oil quantity (ml)",
+      enterOilQty: "لازم تدخل كمية الزيت",
+      noPrice: "مفيش سعر للمنتج ده",
+      
     },
 
     payment: {
@@ -178,12 +206,12 @@ export const translations = {
       stock: "Stock",
       addStock: "Add Stock",
       lowStock: "Low Stock",
-      outOfStock: "Out of Stock"
+      outOfStock: "Out of Stock",
+      productsAvailable: "Products Available"
     },
 
     reports: {
       title: "Reports",
-      sales: "Sales Report",
       expenses: "Expenses Report",
       profits: "Profits",
       dateFrom: "From",
@@ -251,6 +279,12 @@ export const translations = {
   invalidQty: "Quantity must be greater than 0",
   selectBranch: "Please select a branch",
   addItemsFirst: "Add items first"
+},
+greetings: {
+  morning: "Good Morning",
+  afternoon: "Good Afternoon",
+  evening: "Good Evening",
+  welcome: "Welcome back"
 }
     
   },
@@ -258,7 +292,6 @@ export const translations = {
   ar: {
     common: {
       save: "حفظ",
-      cancel: "إلغاء",
       delete: "حذف",
       edit: "تعديل",
       add: "إضافة",
@@ -267,7 +300,6 @@ export const translations = {
       noData: "لا يوجد بيانات",
       excel: "Excel",
       pdf: "PDF",
-      loading: "جاري التحميل...",
       notFound: "غير موجود",
       qty: "الكمية",
       unknown: "غير معروف",
@@ -284,7 +316,15 @@ export const translations = {
       confirmAction: "هل أنت متأكد؟",
       price: "السعر",
       loading: "جاري التحميل...",
-      close: "إغلاق"
+      close: "إغلاق",
+      success: "تم",
+      warning: "تحذير",
+      yes: "نعم",
+      no: "لا",
+      retry: "إعادة المحاولة",
+      refresh: "تحديث",
+      done: "تم",
+      
       
     },
 
@@ -320,7 +360,8 @@ export const translations = {
       returns: "المرتجعات",
       logs: "السجلات",
       operations: "العمليات",
-      management: "الإدارة"
+      management: "الإدارة",
+      pricing: "الأسعار",
     },
     operations: {
       title: "العمليات",
@@ -356,8 +397,8 @@ export const translations = {
       total: "الإجمالي",
       checkout: "الدفع",
       clear: "مسح الكارت",
-      title: "الكارت",
-      added: "اتضاف 🔥"
+      added: "اتضاف 🔥",
+      add: "إضافة ",
     },
     expenses: {
     amount: "المبلغ",
@@ -404,7 +445,25 @@ export const translations = {
       body: "منتجات الجسم",
       original: "أورجينال",
       select: "اختار منتج",
-      oil: "كمية الزيت"
+      oil: "كمية الزيت",
+      cream: "كريم",
+      makhmaria: "مخمرية",
+      musk: "مسك",
+      chooseType: "اختار النوع",
+      ready: "جاهز",
+      standard: "عادي",
+      chooseGrade: "اختار الفئة",
+      chooseContainer: "اختار العبوة",
+      availableOptions: "الأحجام المتاحة",
+      bottle: "زجاجة",
+      box: "بوكس",
+      samples: "تولات",
+      pureOil: "زيت خام",
+      available: "متوفر",
+      low: "قليل",
+      oilQty: "كمية الزيت (ml)",
+      enterOilQty: "لازم تدخل كمية الزيت",
+      noPrice: "مفيش سعر للمنتج ده",
     },
 
     payment: {
@@ -420,8 +479,6 @@ export const translations = {
       number: "رقم الفاتورة",
       total: "الإجمالي",
       date: "التاريخ",
-      title: "الفواتير",
-      title: "الفواتير",
       subtitle: "إدارة ومتابعة جميع الفواتير",
       search: "ابحث بالاسم أو الرقم...",
       invoice: "الفاتورة",
@@ -449,7 +506,8 @@ export const translations = {
       stock: "الكمية",
       addStock: "إضافة مخزون",
       lowStock: "كمية قليلة",
-      outOfStock: "غير متوفر"
+      outOfStock: "غير متوفر",
+      productsAvailable: "منتج متاح"
     },
 
     reports: {
@@ -460,7 +518,6 @@ export const translations = {
       dateFrom: "من",
       dateTo: "إلى",
       exportByBranch: "تصدير حسب الفرع",
-      sales: "المبيعات",
       invoices: "الفواتير",
       best: "أفضل فرع",
       worst: "أضعف فرع",
@@ -513,6 +570,12 @@ export const translations = {
   invalidQty: "الكمية لازم تكون أكبر من 0",
   selectBranch: "اختار فرع",
   addItemsFirst: "ضيف منتجات الأول"
+},
+greetings: {
+  morning: "صباح الخير",
+  afternoon: "مساء الخير",
+  evening: "مساء الخير",
+  welcome: "أهلاً بعودتك"
 }
   }
 };

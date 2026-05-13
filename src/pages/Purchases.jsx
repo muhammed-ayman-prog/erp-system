@@ -20,7 +20,7 @@
     import { useTranslate } from "../useTranslate";
     import React from "react";
     export default function Purchases() {
-      const t = useTranslate();
+      const { t, tt, lang } = useTranslate();
       const cardStyle = {
       flex: 1,
       background: theme.colors.card,

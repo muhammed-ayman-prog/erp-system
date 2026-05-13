@@ -6,11 +6,7 @@
     orderBy,
     onSnapshot,
     doc,
-    updateDoc,
     increment,
-    deleteDoc,
-    setDoc,
-    addDoc,
     getDoc,
     getDocs,
     serverTimestamp,
@@ -37,7 +33,7 @@
   };
 
   export default function Invoices() {
-    const t = useTranslate();
+    const { t, tt, lang } = useTranslate();
     const navigate = useNavigate();
     const { id } =
     useParams();
@@ -241,20 +237,6 @@
       filtered.forEach(i => {
         if (i.status === "cancelled") return;
         let net = i.total || 0;
-
-        const totalQty =
-    i.totalQty ||
-    i.items?.reduce(
-      (s, it) =>
-        s +
-        ((it.containerType || "").toLowerCase() === "oil"
-          ? it.oilQty * it.qty
-          : it.qty),
-      0
-    );
-
-        const refundedQty = i.refundedQty || 0;
-
         // 👇 لو الفاتورة متردة بالكامل
         const refundedAmount =
           i.refundedAmount || 0;
@@ -285,18 +267,42 @@
     // 🔴 CANCEL
     const handleCancel = async (inv) => {
     if (inv.status === "cancelled" || cancelling) return;
-    const totalQty =
-      inv.totalQty ||
-      inv.items?.reduce(
-        (s, i) =>
-          s +
-          ((i.containerType || "").toLowerCase() === "oil"
-            ? i.oilQty * i.qty
-            : i.qty),
-        0
-      );
+    const refundedQty =
+      inv.refundedQty || 0;
 
-    if ((inv.refundedQty || 0) >= totalQty) {
+    const refundedMl =
+      inv.refundedMl || 0;
+
+    const totalProducts =
+      inv.items
+        ?.filter(
+          i =>
+            (i.containerType || "")
+              .toLowerCase() !== "oil"
+        )
+        .reduce(
+          (sum, i) => sum + i.qty,
+          0
+        ) || 0;
+
+    const totalMl =
+      inv.items
+        ?.filter(
+          i =>
+            (i.containerType || "")
+              .toLowerCase() === "oil"
+        )
+        .reduce(
+          (sum, i) =>
+            sum + (i.oilQty * i.qty),
+          0
+        ) || 0;
+
+    const fullyRefunded =
+      refundedQty >= totalProducts &&
+      refundedMl >= totalMl;
+
+    if (fullyRefunded) {
       toast.error("Invoice already refunded");
       return;
     }
@@ -337,65 +343,40 @@
   const isOil =
     (item.containerType || "").toLowerCase().trim() === "oil";
 
-  const total =
-    isOil ? item.oilQty * item.qty : item.qty;
+  const total = isOil
+  ? (item.oilQty || 0) * (item.qty || 0)
+  : (item.qty || 0);
 
-  const remaining = total - alreadyRefunded;
+  const remaining = Math.max(
+  0,
+  total - alreadyRefunded
+);
 
   if (remaining <= 0) continue;
   
     
   if (isOil) {
-    const invQuery = query(
-    collection(db, "inventory"),
-    where("branchId", "==", inv.branchId),
-    where(
-  "productId",
-  "==",
-  item.oilId || item.id
-),
-    where("containerType", "==", item.containerType)
-  );
-
-  const invSnap = await getDocs(invQuery);
-
-  if (invSnap.empty) {
-    toast.error("Inventory item not found");
-    setCancelling(false)
-    return;
-  }
-
-  const invRef = invSnap.docs[0].ref;
+    const invRef = doc(
+  db,
+  "inventory",
+  `${inv.branchId}_${item.oilId || item.id}`
+);
 
   batch.update(invRef, {
-    quantity: increment(item.oilQty * item.qty)
-  });
+  quantity: increment(remaining)
+});
 
   }
   else {
 
-    const invQuery = query(
-      collection(db, "inventory"),
-      where("branchId", "==", inv.branchId),
-      where(
-        "productId",
-        "==",
-        item.containerId || item.id
-      )
-    );
-
-    const invSnap = await getDocs(invQuery);
-
-    if (invSnap.empty) {
-      toast.error("Inventory item not found");
-      setCancelling(false);
-      return;
-    }
-
-    const invRef = invSnap.docs[0].ref;
+    const invRef = doc(
+  db,
+  "inventory",
+  `${inv.branchId}_${item.containerId || item.id}`
+);
 
     batch.update(invRef, {
-      quantity: increment(item.qty)
+      quantity: increment(remaining)
     });
     const isReadyProduct =
   item.containerType === "Original" ||
@@ -416,8 +397,8 @@ if (
 
 batch.update(oilRef, {
   quantity: increment(
-    item.oilQty * item.qty
-  )
+    (item.oilQty || 0) * remaining
+)
 });
 }
   }
@@ -427,16 +408,27 @@ batch.update(oilRef, {
 
       batch.update(saleRef, {
         status: "cancelled",
-        cancelledAt: serverTimestamp()
+        cancelledAt: serverTimestamp(),
+        hasRefund: true,
+        refundedQty: totalProducts,
+        refundedMl: totalMl,
+        refundedAmount: inv.total || 0
       });
       // optimistic update
   setSales(prev =>
-    prev.map(s =>
-      s.id === inv.id
-        ? { ...s, status: "cancelled" }
-        : s
-    )
-  );
+  prev.map(s =>
+    s.id === inv.id
+      ? {
+          ...s,
+          status: "cancelled",
+          hasRefund: true,
+          refundedQty: totalProducts,
+          refundedMl: totalMl,
+          refundedAmount: inv.total || 0
+        }
+      : s
+  )
+);
 
 
       await batch.commit();
@@ -515,19 +507,41 @@ batch.update(oilRef, {
   }
     if (!selectedInvoice || !selectedInvoice.items) return;
 
-  const refunded = selectedInvoice.refundedQty || 0;
+  const refunded =
+  selectedInvoice.refundedQty || 0;
 
-  const total =
-    selectedInvoice.totalQty ||
-    selectedInvoice.items.reduce(
-      (s, i) =>
-        s +
-        ((i.containerType || "").toLowerCase() === "oil"
-          ? i.oilQty * i.qty
-          : i.qty),
+const refundedMl =
+  selectedInvoice.refundedMl || 0;
+
+const totalProducts =
+  selectedInvoice.items
+    ?.filter(
+      i =>
+        (i.containerType || "")
+          .toLowerCase() !== "oil"
+    )
+    .reduce(
+      (sum, i) => sum + i.qty,
       0
-    );
-  if (refunded >= total) {
+    ) || 0;
+
+const totalMl =
+  selectedInvoice.items
+    ?.filter(
+      i =>
+        (i.containerType || "")
+          .toLowerCase() === "oil"
+    )
+    .reduce(
+      (sum, i) =>
+        sum + (i.oilQty * i.qty),
+      0
+    ) || 0;
+
+const fullyRefunded =
+  refunded >= totalProducts &&
+  refundedMl >= totalMl;
+  if (fullyRefunded) {
     toast.error(t("invoices.closed"));
     return;
   }
@@ -616,16 +630,16 @@ batch.update(oilRef, {
     const invRef = doc(
   db,
   "inventory",
-  `${selectedInvoice.branchId}_${item.oilId || item.id}`
+  `${selectedInvoice.branchId}_${
+  isOil
+  ? item.oilId || item.id
+  : item.productId || item.id
+}`
 );
 
-  batch.update(invRef, {
-    quantity: increment(
-    isOil
-      ? item.oilQty * item.qty
-      : item.qty
-  )
-  });
+ batch.update(invRef, {
+  quantity: increment(item.qty)
+});
 
   } else {
 
@@ -637,7 +651,7 @@ batch.update(oilRef, {
 
       batch.set(returnedRef, {
 
-        productId: item.id,
+        productId: item.productId || item.id,
         name: item.name,
 
         quantity: 1,
@@ -669,7 +683,7 @@ batch.update(oilRef, {
     // 🔥 ده لازم يكون جوه اللوب وتحت الكل
     batch.set(returnRef, {
       invoiceId: selectedInvoice.id,
-      productId: item.id,
+      productId: item.productId || item.id,
       productName: item.name,
       productType: item.type || "unknown",
       category: item.category || "",
@@ -706,22 +720,28 @@ batch.update(oilRef, {
   }
 
 
-  const totalRefundedNow = validItems.reduce((s, i) => {
-    const isOil =
-      (i.containerType || "").toLowerCase() === "oil";
+  const refundedQtyNow = validItems.reduce((s, i) => {
+  const isOil =
+    (i.containerType || "").toLowerCase() === "oil";
 
-    return s + (
-      isOil
-        ? i.oilQty * i.qty
-        : i.qty
-    );
-  }, 0);
+  return isOil ? s : s + i.qty;
+}, 0);
+
+const refundedMlNow = validItems.reduce((s, i) => {
+  const isOil =
+    (i.containerType || "").toLowerCase() === "oil";
+
+  return isOil ? s + i.qty : s;
+}, 0);
 
   const saleRef = doc(db, "sales", selectedInvoice.id);
 
   const refundAmountNow = validItems.reduce(
   (sum, item) => {
-
+    const originalItem =
+     selectedInvoice.items.find(
+      i => getKey(i) === getKey(item)
+    );
     const isOil =
       (item.containerType || "")
         .toLowerCase() === "oil";
@@ -729,8 +749,8 @@ batch.update(oilRef, {
     if (isOil) {
 
   const originalMl =
-    (item.oilQty || 0) *
-    (item.originalQty || 1);
+    item.oilQty *
+    (originalItem?.qty || 1);
 
   const pricePerMl =
     originalMl > 0
@@ -754,9 +774,9 @@ batch.update(oilRef, {
 batch.update(saleRef, {
   hasRefund: true,
 
-  refundedQty: increment(
-    totalRefundedNow
-  ),
+  refundedQty: increment(refundedQtyNow),
+
+  refundedMl: increment(refundedMlNow),
 
   refundedAmount: increment(
     refundAmountNow
@@ -767,25 +787,47 @@ batch.update(saleRef, {
 });
 
   setSales(prev =>
-    prev.map(s =>
-      s.id === selectedInvoice.id
-        ? {
-            ...s,
-            refundedQty: (s.refundedQty || 0) + totalRefundedNow,
-            hasRefund: true
-          }
-        : s
-    )
-  );
+  prev.map(s =>
+    s.id === selectedInvoice.id
+      ? {
+          ...s,
+
+          refundedQty:
+            (s.refundedQty || 0) + refundedQtyNow,
+
+          refundedMl:
+            (s.refundedMl || 0) + refundedMlNow,
+
+          hasRefund: true
+        }
+      : s
+  )
+);
   // 🔥 مرة واحدة بس
   await batch.commit();
   toast.success("Refund done successfully");
 
     // UI
     setShowRefundPopup(false);
-    setRefundItems([]);
-    setSelectedInvoice(null);
-    setPreviousReturns([]);
+
+setRefundItems([]);
+
+setSelectedInvoice(prev => ({
+  ...prev,
+
+  refundedQty:
+    (prev?.refundedQty || 0) + refundedQtyNow,
+
+  refundedMl:
+    (prev?.refundedMl || 0) + refundedMlNow,
+
+  refundedAmount:
+    (prev?.refundedAmount || 0) + refundAmountNow,
+
+  hasRefund: true
+}));
+
+setPreviousReturns([]);
 
   } catch (err) {
     console.error(err);
@@ -798,33 +840,11 @@ batch.update(saleRef, {
 
 
   };
-
-
-
-
-  const refundedAmount = (previousReturns || []).reduce((sum, r) => {
-    const isPureOil =
-    (r.container || r.containerType || "")
-      .toLowerCase() === "oil";
-
-    if (isPureOil) {
-      const totalMl =
-        (r.originalOilQty || parseInt(r.size) || 1) *
-        (r.originalQty || 1);
-
-      const pricePerMl =
-        totalMl > 0 ? (r.price || 0) / totalMl : 0;
-
-      return sum + pricePerMl * r.quantity;
-    }
-
-    return sum + (r.price || 0) * (r.quantity || 0);
-  }, 0);
-
     const netTotal = Math.max(
-      0,
-      (selectedInvoice?.total || 0) - refundedAmount
-    );
+  0,
+    (selectedInvoice?.total || 0) -
+    (selectedInvoice?.refundedAmount || 0)
+  );
     const liveReturns = previousReturns || [];
     return (
       <div style={{ padding: 20 }}>
@@ -1004,7 +1024,6 @@ batch.update(saleRef, {
     </tr>
   ) : (
     paginated.map(s => {
-  const totalQty =
     s.totalQty ||
     s.items?.reduce(
       (sum, i) =>
@@ -1016,14 +1035,45 @@ batch.update(saleRef, {
     );
 
   const refundedQty = s.refundedQty || 0;
-  const statusStyle =
-    s.status === "cancelled"
-      ? { bg: "#e5e7eb", color: "#374151" }
-      : refundedQty >= totalQty
-      ? { bg: "#fee2e2", color: "#dc2626" }
-      : refundedQty > 0
-      ? { bg: "#fef9c3", color: "#ca8a04" }
-      : { bg: "#dcfce7", color: "#16a34a" };
+const refundedMl = s.refundedMl || 0;
+
+const totalProducts =
+  s.items
+    ?.filter(
+      i =>
+        (i.containerType || "")
+          .toLowerCase() !== "oil"
+    )
+    .reduce(
+      (sum, i) => sum + i.qty,
+      0
+    ) || 0;
+
+const totalMl =
+  s.items
+    ?.filter(
+      i =>
+        (i.containerType || "")
+          .toLowerCase() === "oil"
+    )
+    .reduce(
+      (sum, i) =>
+        sum + (i.oilQty * i.qty),
+      0
+    ) || 0;
+
+const fullyRefunded =
+  refundedQty >= totalProducts &&
+  refundedMl >= totalMl;
+
+const statusStyle =
+  s.status === "cancelled"
+    ? { bg: "#e5e7eb", color: "#374151" }
+    : fullyRefunded
+    ? { bg: "#fee2e2", color: "#dc2626" }
+    : refundedQty > 0 || refundedMl > 0
+    ? { bg: "#fef9c3", color: "#ca8a04" }
+    : { bg: "#dcfce7", color: "#16a34a" };
 
 
   return ( 
@@ -1115,9 +1165,9 @@ batch.update(saleRef, {
           {
     s.status === "cancelled"
       ? t("invoices.cancelled")
-      : refundedQty >= totalQty
+      : fullyRefunded
       ? t("invoices.refunded")
-      : refundedQty > 0
+      : refundedQty > 0 || refundedMl > 0
       ? t("invoices.partialRefunded")
       : t("invoices.completed")
   }
@@ -1212,7 +1262,11 @@ batch.update(saleRef, {
         color: theme.colors.textSecondary,
         marginTop: "4px"
       }}>
-        {new Date(selectedInvoice.createdAt?.seconds * 1000).toLocaleString()}
+        {selectedInvoice.createdAt?.seconds
+  ? new Date(
+      selectedInvoice.createdAt.seconds * 1000
+    ).toLocaleString()
+  : "-"}
       </div>
     </div>
 
@@ -1384,21 +1438,43 @@ batch.update(saleRef, {
 
 
   {(() => {
-    const refunded = selectedInvoice.refundedQty || 0;
 
-    const total =
-      selectedInvoice.totalQty ||
-      selectedInvoice.items.reduce(
-        (s, i) =>
-          s +
-          ((i.containerType || "").toLowerCase() === "oil"
-            ? i.oilQty * i.qty
-            : i.qty),
+  const refunded =
+    selectedInvoice.refundedQty || 0;
+
+  const refundedMl =
+    selectedInvoice.refundedMl || 0;
+
+  const totalProducts =
+    selectedInvoice.items
+      ?.filter(
+        i =>
+          (i.containerType || "")
+            .toLowerCase() !== "oil"
+      )
+      .reduce(
+        (sum, i) => sum + i.qty,
         0
-      );
+      ) || 0;
 
-      
-      return (
+  const totalMl =
+    selectedInvoice.items
+      ?.filter(
+        i =>
+          (i.containerType || "")
+            .toLowerCase() === "oil"
+      )
+      .reduce(
+        (sum, i) =>
+          sum + (i.oilQty * i.qty),
+        0
+      ) || 0;
+
+  const fullyRefunded =
+    refunded >= totalProducts &&
+    refundedMl >= totalMl;
+
+  return (
       <div style={{
         marginTop: "10px",
         padding: "6px 12px",
@@ -1407,22 +1483,22 @@ batch.update(saleRef, {
         fontWeight: "600",
         display: "inline-block",
         background:
-          refunded >= total
+          fullyRefunded
             ? "#fee2e2"
-            : refunded > 0
+            : refunded > 0 || refundedMl > 0
             ? "#fef9c3"
             : "#dcfce7",
         color:
-          refunded >= total
+          fullyRefunded
             ? "#dc2626"
-            : refunded > 0
+            : refunded > 0 || refundedMl > 0
             ? "#ca8a04"
             : "#16a34a"
       }}>
         {
-          refunded >= total
+          fullyRefunded
             ? t("invoices.refunded")
-            : refunded > 0
+            : refunded > 0 || refundedMl > 0
             ? t("invoices.partialRefunded")
             : t("invoices.completed")
         }
@@ -1469,7 +1545,7 @@ batch.update(saleRef, {
 
           {/* 🔹 Items */}
           {selectedInvoice.items.map((item, i) => (
-              <div key={`${item.id}_${item.containerType}_${item.size}`} style={{
+              <div key={`${getKey(item)}_${i}`} style={{
               display: "flex",
               justifyContent: "space-between",
               marginBottom: "10px",
@@ -1515,7 +1591,9 @@ batch.update(saleRef, {
               </span>
 
               <span style={{ flex: 1, textAlign: "right" }}>
-                  {(item.price || 0) * item.qty} EGP
+                  {(item.containerType || "").toLowerCase() === "oil"
+                    ? `${item.price} EGP`
+                    : `${(item.price || 0) * item.qty} EGP`}
               </span>
               </div>
           ))}
@@ -1687,12 +1765,15 @@ batch.update(saleRef, {
     const isOil =
     (item.containerType || "").toLowerCase().trim() === "oil";
 
-  const remaining = isOil
-    ? (item.oilQty * item.qty) - alreadyRefunded
-    : item.qty - alreadyRefunded;
+  const remaining = Math.max(
+  0,
+  isOil
+    ? ((item.oilQty || 0) * (item.qty || 0)) - alreadyRefunded
+    : item.qty - alreadyRefunded
+);
 
     return (
-      <div key={`${item.id}_${item.containerType}_${item.size}`} style={{ marginBottom: "10px" }}>
+      <div key={`${getKey(item)}_${i}`} style={{ marginBottom: "10px" }}>
         <div>
           <>
     {item.name}
@@ -1756,10 +1837,11 @@ batch.update(saleRef, {
     const maxQty = remaining;
 
     if (value > maxQty) {
+      handleRefundQty(item, maxQty);
     toast.error(`Max allowed is ${maxQty}`);
     value = maxQty;
   }
-    handleRefundQty(item, value);
+    
   }}
           disabled={remaining === 0}
           placeholder={

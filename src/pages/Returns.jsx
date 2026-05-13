@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import { useTranslate } from "../useTranslate";
 export default function Returns() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 

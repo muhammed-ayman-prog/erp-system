@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "../store/useAuth";
 
 export default function Splash() {
-
+  const { t, tt, lang } = useTranslate();
   const navigate = useNavigate();
 
   const { user, loading } = useAuth();

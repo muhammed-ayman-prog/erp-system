@@ -12,7 +12,7 @@ import { useAuth } from "../store/useAuth";
 
 export default function Login() {
   const savedEmail = localStorage.getItem("rememberEmail") || "";
-
+  const { t, tt, lang } = useTranslate();
   const [email, setEmail] = useState(savedEmail);
   const [remember, setRemember] = useState(!!savedEmail);
   const [password, setPassword] = useState("");

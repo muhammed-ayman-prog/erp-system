@@ -36,7 +36,7 @@ import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 export default function Expenses() {
-  const t = useTranslate();
+  const { t, tt, lang } = useTranslate();
   const { user } = useAuth();
   const { selectedBranch } = useApp();
   const [employeeName, setEmployeeName] = useState("");

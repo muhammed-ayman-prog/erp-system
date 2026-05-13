@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 
 export default function ProductPopup({
+  lang,
   showPopup,
   selectedProduct,
   popupStep,
@@ -74,7 +75,8 @@ const price =
         left: 0,
         width: "100vw",
         height: "100vh",
-        background: "rgba(15,23,42,0.6)",
+        background: "rgba(15,23,42,0.55)",
+        backdropFilter: "blur(4px)",
         display: "grid",
         placeItems: "center",
         zIndex: 9999,
@@ -102,7 +104,7 @@ const price =
               )}
       {popupStep === "oriental" && (
     <>
-    <h3>Choose Grade</h3>
+    <h3>{t("products.chooseGrade")}</h3>
 
       <button style={btnStyle} onClick={() => {
         setSubTab("A");
@@ -134,7 +136,7 @@ const price =
   )}
     {popupStep === "body" && (
     <>
-    <h3>Choose Type</h3>
+    <h3>{t("products.chooseType")}</h3>
 
       <button style={btnStyle} onClick={() => {
         setSubTab("Musk");
@@ -142,7 +144,7 @@ const price =
         setPopupStep(null);
         setShowPopup(false);
       }}>
-        Musk
+        {t("products.musk")}
       </button>
 
       <button style={btnStyle} onClick={() => {
@@ -151,7 +153,7 @@ const price =
         setPopupStep(null);
         setShowPopup(false);
       }}>
-        Cream
+        {t("products.cream")}
       </button>
 
       <button style={btnStyle} onClick={() => {
@@ -160,13 +162,13 @@ const price =
         setPopupStep(null);
         setShowPopup(false);
       }}>
-        مخمرية
+        {t("products.makhmaria")}
       </button>
     </>
   )}
   {!popupStep && (
   <>
-    <p>Choose Container:</p>
+    <p>{t("products.chooseContainer")}</p>
     <div
   style={{
     display: "flex",
@@ -193,7 +195,7 @@ const price =
         transform: containerType === "bottle" ? "scale(1.05)" : "scale(1)",
       }}
     >
-      Bottle
+      {t("products.bottle")}
     </button>
 
     <button
@@ -210,7 +212,7 @@ const price =
         transform: containerType === "box" ? "scale(1.05)" : "scale(1)",
       }}
     >
-      Box
+      {t("products.box")}
     </button>
   </>
 )}
@@ -231,7 +233,7 @@ const price =
     transform: containerType === "sample" ? "scale(1.05)" : "scale(1)",
   }}
 >
-  Samples
+  {t("products.samples")}
 </button>
 <button
   onClick={() => {
@@ -246,7 +248,7 @@ const price =
     color: containerType === "oil" ? "#fff" : theme.colors.text,
   }}
 >
-   Pure Oil
+   {t("products.pureOil")}
 </button>
 </div>
 
@@ -254,7 +256,7 @@ const price =
     
     {containerType !== "oil" && (
   <>
-    <p>Available Options:</p>
+    <p>{t("products.availableOptions")}</p>
 
     <div style={{
       display: "grid",
@@ -345,10 +347,10 @@ const price =
       : theme.colors.danger
   }}>
     {stock === 0
-  ? "Out of stock"
+  ? t("products.outOfStock")
   : stock < 5
-  ? `Low (${stock})`
-  : `${stock} available`}
+  ? `${t("products.low")} (${stock})`
+  : `${stock} ${t("products.available")}`}
   </div>
   </div>
       );
@@ -358,7 +360,14 @@ const price =
  </>
 )}    
       <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-  Price: {price} EGP
+  {t("common.price")}:
+{" "}
+{Number(price).toLocaleString(
+  lang === "ar"
+    ? "ar-EG"
+    : "en-US"
+)}
+{" "}EGP
 </p>
 
 {/* 🔥 هنا تحط input الزيت */}
@@ -369,7 +378,7 @@ const price =
 ) && (
   <input
     type="number"
-    placeholder="كمية الزيت (ml)"
+    placeholder={t("products.oilQty")}
     value={oilQty === 0 ? "" : oilQty}
     onChange={(e) => setOilQty(Number(e.target.value))}
     style={{
@@ -403,7 +412,7 @@ const price =
               cursor: "pointer"
             }}
           >
-            {t("Close")}
+            {t("common.close")}
           </button>
             
           <button
@@ -414,12 +423,14 @@ const price =
                 isMusk;
 
               if (needsOil && (!oilQty || oilQty <= 0)) {
-                alert("⚠️ لازم تدخل كمية الزيت");
+                setToastText(t("products.enterOilQty"));
+                setShowToast(true);
                 return;
               }
 
               if (!price || price <= 0) {
-                alert("❌ مفيش سعر متحدد للمنتج ده");
+                setToastText(t("products.noPrice"));
+                setShowToast(true);
                 return;
               }
               console.log(selectedSize);
@@ -549,7 +560,7 @@ const margin =
               opacity: isValid ? 1 : 0.5
             }}
           >
-            {t("Add To Cart")}
+            {t("cart.add")}
           </button>
           
 

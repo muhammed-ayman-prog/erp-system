@@ -22,7 +22,7 @@ export default function Topbar({
   selectedBranch,
   setSelectedBranch
 }) {
-  const t = useTranslate();
+ const { t, tt, lang } = useTranslate();
   const branchOrder = [
   "Abbas Akkad 1",
   "Abbas Akkad 2",
@@ -31,7 +31,22 @@ export default function Topbar({
   "El Obour",
   "El Rehab"
 ];
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(
+  window.innerWidth < 768
+);
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+}, []);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
   const navigate = useNavigate();
@@ -48,7 +63,7 @@ export default function Topbar({
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  const { lang, setLang } = useApp();
+  const { setLang } = useApp();
   const [openLang, setOpenLang] = useState(false);
   const [searchOpen, setSearchOpen] =
   useState(false);
@@ -105,42 +120,34 @@ e.key.toLowerCase() === "f"
 
 }, []);
 const pages = [
-
   {
-    name: "Sales",
+    name: t("navigation.sales"),
     path: "/sales"
   },
-
   {
-    name: "Inventory",
+    name: t("navigation.inventory"),
     path: "/inventory"
   },
-
   {
-    name: "Expenses",
+    name: t("navigation.expenses"),
     path: "/expenses"
   },
-
   {
-    name: "Reports",
+    name: t("navigation.reports"),
     path: "/reports"
   },
-
   {
-    name: "Customers",
+    name: t("navigation.customers"),
     path: "/customers"
   },
-
   {
-    name: "Branches",
+    name: t("navigation.branches"),
     path: "/branches"
   },
-
   {
-    name: "Users",
+    name: t("navigation.users"),
     path: "/users"
   }
-
 ];
 
 const filteredPages =
@@ -152,6 +159,10 @@ const filteredPages =
   return (
     <div
       style={{
+        direction:
+        lang === "ar"
+          ? "rtl"
+          : "ltr",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -319,9 +330,9 @@ const filteredPages =
 
   style={{
 
-    flex: 1,
+    flex: isMobile ? "100%" : 1,
 
-    maxWidth: "320px",
+    maxWidth: isMobile ? "100%" : "320px",
 
     height: "40px",
 
@@ -354,17 +365,21 @@ const filteredPages =
       fontSize: "14px"
     }}
   >
-    Search...
+    {t("common.search")}
   </span>
 
   <div
     style={{
-      marginLeft: "auto",
+      marginInlineStart: "auto",
       fontSize: "11px",
       opacity: 0.6
     }}
   >
+    {!isMobile && (
+  <div>
     Ctrl + Shift + F
+  </div>
+)}
   </div>
 
 </div>
@@ -416,13 +431,14 @@ const filteredPages =
     {openLang && (
       <div
         style={{
-          position: window.innerWidth < 768 ? "fixed" : "absolute",
-          top: window.innerWidth < 768 ? "auto" : "45px",
-          bottom: window.innerWidth < 768 ? "20px" : "auto",
-          left: window.innerWidth < 768 ? "50%" : "auto",
-          right: window.innerWidth < 768 ? "auto" : 0,
-          transform: window.innerWidth < 768 ? "translateX(-50%)" : "none",
-          width: window.innerWidth < 768 ? "90%" : "140px",
+          position: isMobile ? "fixed" : "absolute",
+          top: isMobile ? "auto" : "45px",
+          bottom: isMobile ? "20px" : "auto",
+          left: isMobile ? "50%" : "auto",
+          [lang === "ar" ? "left" : "right"]:
+          isMobile ? "auto" : 0,
+          transform: isMobile ? "translateX(-50%)" : "none",
+          width: isMobile ? "90%" : "140px",
           background: theme.colors.card,
           borderRadius: "12px",
           boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
@@ -520,7 +536,7 @@ onMouseLeave={(e) =>
               style={{
                 position: "absolute",
                 top: "45px",
-                right: 0,
+                [lang === "ar" ? "left" : "right"]: 0,
                 background: theme.colors.card,
                 color: theme.colors.text,
                 borderRadius: "12px",
@@ -604,7 +620,7 @@ onMouseLeave={(e) =>
 
       alignItems: "flex-start",
 
-      paddingTop: "120px"
+      paddingTop: isMobile ? "80px" : "120px"
     }}
   >
 
@@ -655,7 +671,7 @@ onMouseLeave={(e) =>
           setSearch(e.target.value)
         }
 
-        placeholder="Search pages..."
+        placeholder={t("common.search")}
 
         style={{
 
@@ -694,7 +710,7 @@ onMouseLeave={(e) =>
             }}
           >
 
-            No results found
+            {t("operations.noResults")}
 
           </div>
 
