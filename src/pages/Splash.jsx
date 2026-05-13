@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { useAuth } from "../store/useAuth";
-
+import { useTranslate } from "../useTranslate";
 export default function Splash() {
   const { t, tt, lang } = useTranslate();
   const navigate = useNavigate();

@@ -9,7 +9,7 @@ import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
-
+import { useTranslate } from "../useTranslate";
 export default function Login() {
   const savedEmail = localStorage.getItem("rememberEmail") || "";
   const { t, tt, lang } = useTranslate();

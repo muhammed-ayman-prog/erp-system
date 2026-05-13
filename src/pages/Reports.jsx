@@ -11,7 +11,7 @@ import {
   Calendar, Building2, Download, TrendingUp,
   DollarSign, FileText
 } from "lucide-react";
-
+import { useTranslate } from "../useTranslate";
 import { exportToExcel, exportToPDF } from "../utils/exportReports";
 import logo from "../assets/logo.png";
 import { useAuth } from "../store/useAuth";

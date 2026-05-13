@@ -45,7 +45,7 @@ const ROLE_PERMISSIONS = {
     "view_sales"
   ]
 };
-
+import { useTranslate } from "../useTranslate";
 export default function Users() {
   
   const { user } = useAuth();

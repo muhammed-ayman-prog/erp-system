@@ -5,7 +5,7 @@ import {
   updateDoc,
   doc
 } from "firebase/firestore";
-
+import { useTranslate } from "../useTranslate";
 import { db } from "../firebase";
 export default function Pricing() {
 const { t, tt, lang } = useTranslate();

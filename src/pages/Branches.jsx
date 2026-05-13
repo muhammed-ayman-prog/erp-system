@@ -7,7 +7,7 @@ import {
   doc
 } from "firebase/firestore";
 import { db } from "../firebase";
-
+import { useTranslate } from "../useTranslate";
 export default function Branches() {
   const { t, tt, lang } = useTranslate();
   const [branches, setBranches] = useState([]);

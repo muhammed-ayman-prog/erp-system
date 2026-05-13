@@ -1,32 +1,38 @@
-import { createPortal } from "react-dom";
-
+import AppModal from "../../../components/ui/AppModal";
 export default function ProductPopup({
   lang,
-  showPopup,
   selectedProduct,
-  popupStep,
-  setPopupStep,
-  setShowPopup,
   theme,
   btnStyle,
   t,
   setSubTab,
   setMainTab,
   isMusk,
-  containerType,
-  setContainerType,
-  selectedSize,
-  setSelectedSize,
   productsWithStock,
   inventoryMap,
   getPrice,
-  oilQty,
-  setOilQty,
   addToCart,
-  setToastText,   
-  setShowToast
+  setToastText,
+  setShowToast,
+  popupState
 }) {
-  if (!showPopup) return null;
+  if (!popupState.showPopup) return null;
+  const {
+  popupStep,
+  setPopupStep,
+
+  showPopup: popupVisible,
+  setShowPopup,
+
+  containerType,
+  setContainerType,
+
+  selectedSize,
+  setSelectedSize,
+
+  oilQty,
+  setOilQty
+} = popupState;
 const selectedValue = selectedSize?.size || selectedSize?.name;
 const isMobile = window.innerWidth < 768;
 const isFrenchBox =
@@ -66,36 +72,18 @@ const price =
   containerType === "oil"
     ? oilQty && oilQty > 0 && price > 0
     : selectedSize && price > 0;
-  return createPortal(
-  <div
-      onClick={() => setShowPopup(false)}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(15,23,42,0.55)",
-        backdropFilter: "blur(4px)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 9999,
-        animation: "fadeIn 0.25s ease-out"
-      }}
-    >
+  return (
 
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="card"
-        style={{
-          background: theme.colors.card,
-          width: "90%",
-          maxWidth: "420px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: "16px"
-        }}
-      >
+<AppModal
+  open={popupState.showPopup}
+  onClose={() =>
+    setShowPopup(false)
+  }
+  width="700px"
+>
+  
+
+      
               
               {selectedProduct && !popupStep && (
                 <h3 style={{ marginBottom: "10px" }}>
@@ -567,12 +555,7 @@ const margin =
         
         </div>
         </>
-        )}
-        
-        
-
-      </div>
-    </div>,
-  document.body
+        )}          
+</AppModal>
 );
 }

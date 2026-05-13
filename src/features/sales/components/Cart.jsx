@@ -24,35 +24,49 @@
     increaseQty,
     decreaseQty,
     removeItem,
-    setSelectedProduct,
-    setSelectedSize,
-    setContainerType,
-    setOilQty,
-    setShowPopup,
     productsWithStock,
-
-    customerName,
-    setCustomerName,
-    customerPhone,
-    setCustomerPhone,
-    customerData,
-    getCustomerTier,
-
-    subtotal,
-    discount,
-    setDiscount,
-    total,
-
-    paymentMethod,
-    setPaymentMethod,
-
+    popupActions,
+    customerState,
+    checkoutState,
     handleCheckout,
-    loadingCheckout,
     selectedBranch,
     user
   }) {
     const [salesName, setSalesName] = useState("");
     const [showErrors, setShowErrors] = useState(false);
+    const {
+  setSelectedProduct,
+  setSelectedSize,
+  setContainerType,
+  setOilQty,
+  setShowPopup
+} = popupActions;
+
+const {
+  customerName,
+  setCustomerName,
+
+  customerPhone,
+  setCustomerPhone,
+
+  customerData,
+
+  getCustomerTier
+} = customerState;
+
+const {
+  subtotal,
+
+  discount,
+  setDiscount,
+
+  total,
+
+  paymentMethod,
+  setPaymentMethod,
+
+  loadingCheckout
+} = checkoutState;
     return (
       <div className="card cart" style={{
     flex: 0.8,

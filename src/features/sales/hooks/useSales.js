@@ -1,22 +1,15 @@
 import { useState, useEffect } from "react";
-import { db } from "../../../firebase";
-import {
-  runTransaction,
-  doc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  increment,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  setDoc,      
-  deleteDoc    
-} from "firebase/firestore";
-import { processCheckout } from "../services/checkoutService";
 import { showToast } from "../../../utils/toast";
-export function useSales(productsWithStock, discount, pricing) {
+export function useSales(
+  productsWithStock,
+  discount,
+  pricing,
+  toast
+) {
+  const {
+  setToastText,
+  setShowToast
+} = toast;
   const [cart, setCart] = useState(() => {
   return JSON.parse(localStorage.getItem("cart") || "[]");
 });
@@ -389,218 +382,8 @@ if (!salesName?.trim()) {
 
   setLoadingCheckout(false);
 };
-const handleCancelInvoice = async ({
-  sale,
-  setToastText,
-  setShowToast
-}) => {
-  try {
-    // 🟢 1) رجّع المخزون
-    await Promise.all(
-  sale.items.map(async (item) => {
 
-    // 🧴 رجوع الكونتينر
-    await addDoc(collection(db, "stock"), {
-      productId: item.size || item.id,
-      quantity: item.qty,
-      type: "purchase",
-      branchId: sale.branchId,
-      createdAt: serverTimestamp()
-    });
 
-    await setDoc(
-      doc(db, "inventory", `${sale.branchId}_${item.size || item.id}`),
-      {
-        quantity: increment(item.qty)
-      },
-      { merge: true }
-    );
-
-    // 🛢 رجوع الزيت
-    if (item.oilQty > 0) {
-      await addDoc(collection(db, "stock"), {
-        productId: item.id,
-        quantity: item.oilQty * item.qty,
-        type: "purchase",
-        branchId: sale.branchId,
-        createdAt: serverTimestamp()
-      });
-
-      await setDoc(
-        doc(db, "inventory", `${sale.branchId}_${item.id}`),
-        {
-          quantity: increment(item.oilQty * item.qty)
-        },
-        { merge: true }
-      );
-    }
-
-  })
-);
-
-    // 🔴 2) تعديل الـ stats
-    const statsRef = doc(db, "stats", "dashboard");
-    const method = (sale.paymentMethod || "").toLowerCase();
-
-    await setDoc(statsRef, {
-  totalSales: increment(-sale.total),
-  invoices: increment(-1),
-  cash: increment(method === "cash" ? -sale.total : 0),
-  visa: increment(method === "visa" ? -sale.total : 0),
-  instapay: increment(method === "instapay" ? -sale.total : 0)
-}, { merge: true });
-
-    // ❌ 3) حذف الفاتورة
-    await deleteDoc(doc(db, "sales", sale.id));
-
-    showToast(setToastText, setShowToast,"تم إلغاء الفاتورة ✅");
-    return;
-
-    // 🔄 refresh
-
-  } catch (err) {
-    console.error(err);
-    showToast(setToastText, setShowToast,"Error في الإلغاء");
-    return;
-  }
-};
-const handleRefundItem = async ({
-  sale,
-  item,
-  setToastText,
-  setShowToast
-}) => {
-  if (!item.qty || item.qty <= 0) {
-  showToast(setToastText, setShowToast,"مفيش كمية تتعملها refund ❗");
-  return;
-}
-  try {
-    const cat = item.category?.toLowerCase() || "";
-    const isOilOnly =
-  (item.containerType || "").toLowerCase().trim() === "oil";
-
-    const type = (item.containerType || "").toLowerCase().trim();
-
-const isOil = type === "oil";
-
-const isComposed =
-  !isOil &&
-  (
-    cat === "french" ||
-    cat.includes("oriental") ||
-    cat.includes("musk")
-  );
-
-    // 🔴 CASE 1: French / Oriental → Returned Items
-    if (isComposed && type !== "oil") {
-
-         await addDoc(collection(db, "stock"), {
-        productId: item.id,
-        quantity: item.qty,
-        type: "refund",
-        branchId: sale.branchId,
-        createdAt: serverTimestamp()
-      });
-      // 🔥 1) اعمل returnRef الأول
-      const returnRef = doc(collection(db, "returns"));
-
-      // 🔥 2) خزّن returned item ومعاه returnId
-      const returnedRef = await addDoc(collection(db, "returned_items"), {
-        productId: item.id,
-        price: item.price,
-        branchId: sale.branchId,
-        size: item.size,
-        containerType: item.containerType,
-        containerName: item.containerName,
-        status: "available",
-        type: "perfume",
-
-        returnId: returnRef.id, // 🔥 أهم سطر
-
-        createdAt: serverTimestamp()
-      });
-
-      // 🔥 3) خزّن return مربوط بالreturned item
-      await setDoc(returnRef, {
-        invoiceId: sale.id,
-        productId: item.id,
-        productName: item.name,
-        quantity: item.qty,
-        type: "refund",
-        status: "returned",
-
-        returnedItemId: returnedRef.id,
-        returnId: returnRef.id,
-
-        container: item.containerName || "",
-        size: item.size || "",
-        productType: item.category || "unknown",
-
-        createdAt: serverTimestamp()
-      });
-    }
-
-    // 🟢 CASE 2: Ready Products
-else {
-  // 1. رجوع في stock (log)
-  await addDoc(collection(db, "stock"), {
-    productId: item.id,
-    quantity: item.containerType === "oil"
-      ? item.oilQty * item.qty
-      : item.qty,
-    type: "refund",
-    branchId: sale.branchId,
-    createdAt: serverTimestamp()
-  });
-
-  // 2. رجوع في inventory (real data)
-  const ref = doc(db, "inventory", `${sale.branchId}_${item.id}`);
-
-await setDoc(ref, {
-  quantity: increment(
-  item.containerType === "oil"
-    ? item.oilQty * item.qty
-    : item.qty
-)
-}, { merge: true });
-}
-
-    // 🧾 تحديث الفاتورة (Partial Refund 🔥)
-    const updatedItems = sale.items
-      .map(i => {
-        if (
-          i.id === item.id &&
-          i.containerType === item.containerType &&
-          i.containerName === item.containerName
-        ) {
-          return { ...i, qty: i.qty - item.qty };
-        }
-        return i;
-      })
-      .filter(i => i.qty > 0);
-
-    const newTotal = updatedItems.reduce(
-      (sum, i) => sum + i.price * i.qty,
-      0
-    );
-
-    await updateDoc(doc(db, "sales", sale.id), {
-      items: updatedItems,
-      total: newTotal,
-      refunds: increment(
-        item.containerType === "oil"
-          ? item.oilQty * item.qty
-          : item.qty
-      )
-    });
-
-    showToast(setToastText, setShowToast,"تم Refund المنتج ✅");return;
-
-  } catch (err) {
-    console.error(err);
-    showToast(setToastText, setShowToast,"Error في الريفاند ❌");return;
-  }
-};
 return {
   cart,
   setCart,
@@ -612,7 +395,5 @@ return {
   total,
   getPrice,
   handleCheckout,
-  handleCancelInvoice,
-  handleRefundItem
 };
 }

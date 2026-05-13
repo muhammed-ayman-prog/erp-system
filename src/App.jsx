@@ -1,30 +1,60 @@
+import {
+  lazy,
+  Suspense
+} from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./store/useAuth";
 
 import Login from "./pages/Login";
-import SalesPage from "./features/sales/SalesPage";
-import Reports from "./pages/Reports";
-import Inventory from "./pages/Inventory";
-import Customers from "./pages/Customers";
-import CustomerProfile from "./pages/CustomerProfile";
+import SalesPage from "./features/sales/pages/SalesPage";;
+
 import Branches from "./pages/Branches";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Operations from "./pages/Operations";
-import Purchases from "./pages/Purchases";
-import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Waste from "./pages/Waste";
 import Returns from "./pages/Returns";
-import Invoices from "./pages/Invoices";
-
 import Layout from "./components/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import Logs from "./pages/Logs";  
-import Pricing from "./pages/Pricing";
 import { Toaster } from "react-hot-toast";
 import Splash from "./pages/Splash";
 import Home from "./pages/Home";
+const Dashboard = lazy(() =>
+  import("./pages/Dashboard")
+);
+
+const Reports = lazy(() =>
+  import("./pages/Reports")
+);
+
+const Inventory = lazy(() =>
+  import("./pages/Inventory")
+);
+
+const Customers = lazy(() =>
+  import("./pages/Customers")
+);
+
+const CustomerProfile = lazy(() =>
+  import("./pages/CustomerProfile")
+);
+
+const Purchases = lazy(() =>
+  import("./pages/Purchases")
+);
+
+const Invoices = lazy(() =>
+  import("./pages/Invoices")
+);
+
+const Logs = lazy(() =>
+  import("./pages/Logs")
+);
+
+const Pricing = lazy(() =>
+  import("./pages/Pricing")
+);
 function App() {
   const { user, loading } = useAuth();
   console.log("🔥 CURRENT USER:", user);
@@ -35,7 +65,10 @@ function App() {
       <div className="global-bg-logo"></div>
 
       <Router>
-        <Routes>
+
+        <Suspense fallback={<div>Loading...</div>}>
+
+          <Routes>
 
           {/* 🔓 Login */}
           <Route
@@ -148,6 +181,7 @@ function App() {
           element={<Navigate to={user ? "/home" : "/login"} replace />}
         />
         </Routes>
+        </Suspense>
       </Router>
       <Toaster
   position="top-right"

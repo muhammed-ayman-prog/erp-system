@@ -5,7 +5,7 @@ import { db } from "../firebase";
 import { useState } from "react";
 import { resetSystem } from "../utils/resetSystem";
 import { useAuth } from "../store/useAuth";
-
+import { useTranslate } from "../useTranslate";
 
 export default function Settings() {
   const { user } = useAuth();
