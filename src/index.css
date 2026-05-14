@@ -281,35 +281,7 @@
     margin: 0 auto;
     padding: 12px 10px;
   }
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-    
-  }
-  
-  .product-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 8px;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04); /* 👈 جديد */
-
-    transition: 0.15s ease;
-  }
-  /* hover */
-  .product-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
-    border-color: #dbeafe;
-  }
-
-  /* ضغط */
-  .product-card:active {
-    transform: scale(0.97);
-  }
-  .stock-badge {
+    .stock-badge {
     font-size: 9px;
     padding: 2px 6px;
     border-radius: 999px;
@@ -514,4 +486,16 @@
   transform: translate(-50%, -50%);
   opacity: 0.05;
   width: 250px;
+}
+@keyframes skeleton-loading {
+
+  0% {
+    background-position:
+      100% 50%;
+  }
+
+  100% {
+    background-position:
+      0 50%;
+  }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { showToast } from "../../../utils/toast";
+import { processCheckout } from "../services/checkoutService";
 export function useSales(
   productsWithStock,
   discount,

@@ -29,8 +29,8 @@
     paymentMethod,
     customerName,
     customerPhone,
-    salesName, // 👈 ضيف دي
-    user       // 👈 ودي
+    seller,
+    user       
   }) => {
     try {
 
@@ -192,7 +192,6 @@
 
           // 🔁 Returned Item
           if (r.item.isReturned) {
-            console.log("RETURN ITEM:", r.item); // 👈 ضيف دي
             const returnedRef = doc(db, "returned_items", r.item.returnedItemId);
             const returnedSnap = await transaction.get(returnedRef);
               if (!returnedSnap.exists()) {
@@ -449,7 +448,11 @@
 
     refundedQty: 0,
 
-    salesName: salesName || user?.name || "—",
+    seller:
+      seller || {
+        name: user?.name || "—",
+        role: "seller"
+      },
     enteredBy: user?.name || "—",
     enteredById:
       user?.uid || null
@@ -493,8 +496,11 @@
       branchName:
       branchMap[branchToUse] || "Unknown",
 
-      salesName:
-      salesName || user?.name || "—",
+      seller:
+        seller || {
+          name: user?.name || "—",
+          role: "seller"
+        },
 
       
 

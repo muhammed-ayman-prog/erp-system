@@ -5,6 +5,7 @@ export const theme = {
 
     secondary: "#f1f5f9",
     background: "#f8fafc",
+
     card: "#ffffff",
     cardSoft: "#f9fafb",
 
@@ -14,9 +15,19 @@ export const theme = {
     border: "#e2e8f0",
     borderLight: "#e5e7eb",
 
-    danger: "#ef4444",
+    danger: "#dc2626",
     warning: "#f59e0b",
-    success: "#22c55e",
-    muted: "#94a3b8"
-  }
+    success: "#16a34a",
+
+    muted: "#94a3b8",
+
+    cardBorder: "#e5e7eb",
+
+    overlay: "rgba(0,0,0,0.4)",
+
+    shadow:
+      "0 1px 3px rgba(0,0,0,0.05)",
+
+    white: "#ffffff"
+}
 };

@@ -1,3 +1,5 @@
+import { theme } from "../../theme";
+
 export default function AppModal({
   open,
   onClose,
@@ -19,7 +21,7 @@ export default function AppModal({
         inset: 0,
 
         background:
-          "rgba(0,0,0,0.4)",
+          theme.colors.overlay,
 
         zIndex: 9999,
 
@@ -43,7 +45,8 @@ export default function AppModal({
 
           maxWidth: width,
 
-          background: "#fff",
+          background:
+            theme.colors.card,
 
           borderRadius: "20px",
 
@@ -51,7 +54,10 @@ export default function AppModal({
 
           maxHeight: "90vh",
 
-          overflowY: "auto"
+          overflowY: "auto",
+
+          boxShadow:
+            theme.colors.shadow
         }}
       >
 

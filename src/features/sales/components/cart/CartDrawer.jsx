@@ -1,4 +1,5 @@
-import AppDrawer from "../../../components/ui/AppDrawer";
+import AppDrawer from "../../../../components/ui/AppDrawer";
+import AppButton from "../../../../components/ui/AppButton";
 export default function CartDrawer({
   showCart,
   setShowCart,
@@ -59,15 +60,18 @@ export default function CartDrawer({
             {t("cart.title")} 🧾
           </h3>
 
-          <button
-            type="button"
-
+          <AppButton
+            variant="secondary"
             onClick={() =>
               setShowCart(false)
             }
+
+            style={{
+              padding: "8px 12px"
+            }}
           >
             ✖
-          </button>
+          </AppButton>
 
         </div>
 

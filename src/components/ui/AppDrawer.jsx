@@ -1,3 +1,5 @@
+import { theme } from "../../theme";
+
 export default function AppDrawer({
   open,
   onClose,
@@ -20,7 +22,7 @@ export default function AppDrawer({
         inset: 0,
 
         background:
-          "rgba(0,0,0,0.3)",
+          theme.colors.overlay,
 
         zIndex: 5000
       }}
@@ -42,12 +44,13 @@ export default function AppDrawer({
 
           height: "100%",
 
-          background: "#fff",
+          background:
+            theme.colors.card,
 
           overflowY: "auto",
 
           boxShadow:
-            "0 0 30px rgba(0,0,0,0.2)"
+            theme.colors.shadow
         }}
       >
 

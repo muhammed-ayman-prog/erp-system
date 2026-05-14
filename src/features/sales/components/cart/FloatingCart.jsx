@@ -1,14 +1,24 @@
-export default function FloatingCart({
+import {
+  useCartContext
+} from "../../context/CartContext";
+
+import {
+  useSalesContext
+} from "../../context/SalesContext";
+export default function FloatingCart() {
+ const {
   cart,
   cartCount,
-  total,
+  total
+} = useCartContext();
+const {
   lang,
   isMobile,
   setShowCart,
   theme
-}) {
+} = useSalesContext();
 
-  if (cart.length <= 0) {
+  if (!cart.length) {
     return null;
   }
 
@@ -23,7 +33,7 @@ export default function FloatingCart({
       style={{
         position: "fixed",
 
-        bottom: "24px",
+        bottom: "18px",
 
         [lang === "ar"
           ? "left"
@@ -46,14 +56,14 @@ export default function FloatingCart({
 
         minWidth:
           isMobile
-            ? "68px"
+            ? "64px"
             : "82px",
 
         minHeight:
           isMobile
-            ? "68px"
+            ? "64px"
             : "82px",
-
+        
         borderRadius: "999px",
 
         background:

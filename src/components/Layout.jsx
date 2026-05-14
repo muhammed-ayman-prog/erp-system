@@ -22,7 +22,6 @@ import {
   Boxes,
   Users,
   BarChart3,
-  Settings,
   Building2,
   Users2,
   PackagePlus,
@@ -205,12 +204,6 @@ export default function Layout() {
         icon: <FileText size={collapsed ? 24 : 18} />,
         permission: "view_logs"
       },
-      {
-        name: t("navigation.settings"),
-        path: "/settings",
-        icon: <Settings size={collapsed ? 24 : 18} />,
-        permission: "view_settings"
-      }
     ]
   }
 ];

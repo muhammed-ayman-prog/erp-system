@@ -1,115 +1,66 @@
+import PageHeader from "../../../components/ui/layout/PageHeader";
+import AppButton from "../../../components/ui/AppButton";
+
 export default function SalesHeader({
-  isMobile,
   selectedBranch,
   translateBranch,
   navigate,
   setShowReturned,
   returnedItems,
-  theme,
   t
 }) {
 
   return (
-    <div
-      className="top-bar"
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "10px",
-        alignItems: "center",
-        marginBottom: "12px"
-      }}
-    >
 
-      {/* Header */}
-      <div style={{
-        flex: 1,
-        padding: "12px 16px",
-        borderRadius: "14px",
-        background: theme.colors.card,
-        border: `1px solid ${theme.colors.border}`
-      }}>
+    <PageHeader
 
-        <div style={{
-          fontSize: "18px",
-          fontWeight: "700"
-        }}>
-          🧾 {t("navigation.sales")}
-        </div>
+      title={`🧾 ${t("navigation.sales")}`}
 
-        <div style={{
-          fontSize: "12px",
-          color: theme.colors.textSecondary
-        }}>
-          {t("branches.title")}:
-          {" "}
-          {selectedBranch
+      subtitle={
+        `${t("branches.title")}: ${
+          selectedBranch
             ? translateBranch(selectedBranch)
-            : "—"}
-        </div>
+            : "—"
+        }`
+      }
 
-      </div>
+      actions={
+        <>
 
-      {/* Buttons */}
-      <div style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "10px",
-        width:
-          isMobile
-            ? "100%"
-            : "auto"
-      }}>
+          <AppButton
+            onClick={() =>
+              navigate("/invoices")
+            }
+          >
+            📄 {t("invoices.title")}
+          </AppButton>
 
-        <button
-          type="button"
+          <AppButton
+            variant="secondary"
 
-          onClick={() =>
-            navigate("/invoices")
-          }
+            onClick={() =>
+              setShowReturned(true)
+            }
 
-          style={{
-            padding: "10px 14px",
-            borderRadius: "10px",
-            background:
-              theme.colors.primary,
+            style={{
+              background: "#f59e0b",
+              color: "#fff",
+              border: "none",
+            }}
+          >
+            📦 {t("returns.title")}
+            {" "}
+            ({returnedItems.length})
+          </AppButton>
 
-            color: "#fff",
+        </>
+      }
 
-            border: "none",
+      style={{
+        marginBottom: "16px",
+      }}
+    />
 
-            fontWeight: "600",
-
-            cursor: "pointer"
-          }}
-        >
-          📄 {t("invoices.title")}
-        </button>
-
-        <button
-          type="button"
-
-          onClick={() =>
-            setShowReturned(true)
-          }
-
-          style={{
-            padding: "10px 14px",
-            borderRadius: "10px",
-            background: "#f59e0b",
-            color: "#fff",
-            border: "none",
-            fontWeight: "600",
-            cursor: "pointer"
-          }}
-        >
-          📦 {t("returns.title")}
-          {" "}
-          ({returnedItems.length})
-        </button>
-
-      </div>
-
-    </div>
   );
+
 }

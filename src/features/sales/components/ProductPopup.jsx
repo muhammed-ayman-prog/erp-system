@@ -1,27 +1,49 @@
 import AppModal from "../../../components/ui/AppModal";
+import PopupHeader from "./popup/PopupHeader";
+import PopupPrice from "./popup/PopupPrice";
+import PopupFooter from "./popup/PopupFooter";
+import PopupOptionsGrid from "./popup/PopupOptionsGrid";
+import PopupOilInput from "./popup/PopupOilInput";
+import PopupContainerButtons
+from "./popup/PopupContainerButtons";
+import PopupStepOptions
+from "./popup/PopupStepOptions";
+import {
+  popupButtonStyle
+}
+from "../constants/popupStyles";
+import { useMemo } from "react";
+import {
+  useSalesContext
+} from "../context/SalesContext";
 export default function ProductPopup({
-  lang,
   selectedProduct,
-  theme,
-  btnStyle,
-  t,
   setSubTab,
   setMainTab,
   isMusk,
-  productsWithStock,
-  inventoryMap,
-  getPrice,
-  addToCart,
-  setToastText,
-  setShowToast,
   popupState
 }) {
+  const {
+  isMobile,
+  lang,
+
+  theme,
+  t,
+
+  productsWithStock,
+  inventoryMap,
+
+  getPrice,
+  addToCart,
+
+  setToastText,
+  setShowToast
+} = useSalesContext();
   if (!popupState.showPopup) return null;
   const {
   popupStep,
   setPopupStep,
 
-  showPopup: popupVisible,
   setShowPopup,
 
   containerType,
@@ -33,15 +55,22 @@ export default function ProductPopup({
   oilQty,
   setOilQty
 } = popupState;
-const selectedValue = selectedSize?.size || selectedSize?.name;
-const isMobile = window.innerWidth < 768;
+
 const isFrenchBox =
   selectedProduct?.category
     ?.toLowerCase()
     ?.includes("french") &&
 
   containerType === "box";
+const needsOil =
 
+  selectedProduct.category === "French" ||
+
+  selectedProduct.category
+    ?.toLowerCase()
+    .includes("oriental") ||
+
+  isMusk;
 const price =
   isFrenchBox
 
@@ -72,250 +101,53 @@ const price =
   containerType === "oil"
     ? oilQty && oilQty > 0 && price > 0
     : selectedSize && price > 0;
-  return (
+const btnStyle =
+  popupButtonStyle(theme);
+const getContainerButtonStyle = (
+  type
+) => ({
 
-<AppModal
-  open={popupState.showPopup}
-  onClose={() =>
-    setShowPopup(false)
-  }
-  width="700px"
->
-  
+  ...btnStyle,
 
-      
-              
-              {selectedProduct && !popupStep && (
-                <h3 style={{ marginBottom: "10px" }}>
-  {selectedProduct.name}
-</h3>
-              )}
-      {popupStep === "oriental" && (
-    <>
-    <h3>{t("products.chooseGrade")}</h3>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("A");
-        setMainTab("oriental");
-        setPopupStep(null);
-        setShowPopup(false);   // 👈 ده الحل
-      }}>
-        A
-      </button>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("B");
-        setMainTab("oriental");
-        setPopupStep(null);
-        setShowPopup(false);   // 👈 ده الحل
-      }}>
-        B
-      </button>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("C");
-        setMainTab("oriental");
-        setPopupStep(null);
-        setShowPopup(false);   // 👈 ده الحل
-      }}>
-        C
-      </button>
-    </>
-  )}
-    {popupStep === "body" && (
-    <>
-    <h3>{t("products.chooseType")}</h3>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("Musk");
-        setMainTab("body");
-        setPopupStep(null);
-        setShowPopup(false);
-      }}>
-        {t("products.musk")}
-      </button>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("Cream");
-        setMainTab("body");
-        setPopupStep(null);
-        setShowPopup(false);
-      }}>
-        {t("products.cream")}
-      </button>
-
-      <button style={btnStyle} onClick={() => {
-        setSubTab("Makhmaria");
-        setMainTab("body");
-        setPopupStep(null);
-        setShowPopup(false);
-      }}>
-        {t("products.makhmaria")}
-      </button>
-    </>
-  )}
-  {!popupStep && (
-  <>
-    <p>{t("products.chooseContainer")}</p>
-    <div
-  style={{
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "10px"
-  }}
->
-  
-
-{/* ❌ نخفيهم في حالة Musk */}
-{!isMusk && (
-  <>
-    <button
-      onClick={() => {
-        setContainerType("bottle");
-        setSelectedSize(null);
-      }}
-      style={{
-        ...btnStyle,
-        background: containerType === "bottle"
-          ? theme.colors.primary
-          : theme.colors.secondary,
-        color: containerType === "bottle" ? "#fff" : theme.colors.text,
-        transform: containerType === "bottle" ? "scale(1.05)" : "scale(1)",
-      }}
-    >
-      {t("products.bottle")}
-    </button>
-
-    <button
-      onClick={() => {
-        setContainerType("box");
-        setSelectedSize(null);
-      }}
-      style={{
-        ...btnStyle,
-        background: containerType === "box"
-          ? theme.colors.primary
-          : theme.colors.secondary,
-        color: containerType === "box" ? "#fff" : theme.colors.text,
-        transform: containerType === "box" ? "scale(1.05)" : "scale(1)",
-      }}
-    >
-      {t("products.box")}
-    </button>
-  </>
-)}
-
-
-{/* ✅ Samples يفضل ظاهر دايماً */}
-<button
-  onClick={() => {
-    setContainerType("sample");
-    setSelectedSize(null);
-  }}
-  style={{
-    ...btnStyle,
-    background: containerType === "sample"
+  background:
+    containerType === type
       ? theme.colors.primary
       : theme.colors.secondary,
-    color: containerType === "sample" ? "#fff" : theme.colors.text,
-    transform: containerType === "sample" ? "scale(1.05)" : "scale(1)",
-  }}
->
-  {t("products.samples")}
-</button>
-<button
-  onClick={() => {
-    setContainerType("oil");
-    setSelectedSize(null);
-  }}
-  style={{
-    ...btnStyle,
-    background: containerType === "oil"
-      ? theme.colors.primary
-      : theme.colors.secondary,
-    color: containerType === "oil" ? "#fff" : theme.colors.text,
-  }}
->
-   {t("products.pureOil")}
-</button>
-</div>
 
-    <hr />
-    
-    {containerType !== "oil" && (
-  <>
-    <p>{t("products.availableOptions")}</p>
+  color:
+    containerType === type
+      ? "#fff"
+      : theme.colors.text,
 
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-      gap: "12px",
-      marginTop: "15px"
-    }}>
-  {productsWithStock
-    .filter(p => p.type === "container")
-  .filter(p => {
-    const sub = (p.subCategory || "").toLowerCase().trim();
+  transform:
+    containerType === type
+      ? "scale(1.05)"
+      : "scale(1)"
+});
 
-    if (containerType === "bottle") return sub === "bottle";
-    if (containerType === "box") return sub === "box";
 
-     if (containerType === "sample") {
-      // 🔥 لو Musk → نشيل Tester بس
-      if (isMusk) {
-        return (
-          sub === "samples" &&
-          !p.name?.toLowerCase().includes("tester") &&
-          !p.name?.includes("تستر")
-        );
-      }
+const resetPopup = () => {
 
-      // ✅ باقي المنتجات عادي
-      return sub === "samples";
-    }
+  setShowPopup(false);
 
-    return false;
-  })
-    .sort((a, b) => {
-      const getSize = (name) => {
-        const match = name.match(/\d+/);
-        return match ? parseInt(match[0]) : 0;
-      };
-      return getSize(a.name) - getSize(b.name);
-    })
-    .map(p => {
-      const stock = inventoryMap[p.id] || 0;
-      
-  
-  return (
-      <div
-  key={p.id}
-  onClick={() => {
-    if (stock === 0) return; // ❌ يمنع الاختيار لو مفيش
-    setSelectedSize(p);
-  }}
-  style={{
-    padding: isMobile ? "12px" : "18px",
-    background: selectedSize?.id === p.id
-      ? theme.colors.primary
-      : theme.colors.secondary,
-    borderRadius: "14px",
-    cursor: stock === 0 ? "not-allowed" : "pointer",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: "14px",
-    border: stock === 0
-  ? `1px solid ${theme.colors.danger}`
-  : `1px solid ${theme.colors.border}`,
-    transition: "all 0.25s ease",
-    opacity: stock === 0 ? 0.5 : 1
-  }}
->
-  {/* 🧴 اسم الكونتينر */}
-  <div>
-    {(() => {
-      const num = (p.name.match(/\d+/) || [""])[0];
-      const text = p.name
+  setSelectedSize(null);
+
+  setPopupStep(null);
+
+  setOilQty(0);
+};
+const formatContainerName =
+  useMemo(() => {
+
+    return (name) => {
+
+      const num =
+        (
+          name.match(/\d+/) ||
+          [""]
+        )[0];
+
+      const text = name
         .replace(/\d+/g, "")
         .replace(/ml/gi, "")
         .trim();
@@ -323,237 +155,258 @@ const price =
       if (!num) return text;
 
       return `${num}ml ${text}`;
-    })()}
-  </div>
+    };
 
-  {/* 🔥 الكمية */}
-  <div style={{
-    marginTop: "6px",
-    fontSize: "12px",
-    color: stock > 0
-      ? theme.colors.success
-      : theme.colors.danger
-  }}>
-    {stock === 0
-  ? t("products.outOfStock")
-  : stock < 5
-  ? `${t("products.low")} (${stock})`
-  : `${stock} ${t("products.available")}`}
-  </div>
-  </div>
-      );
-    })
-  }
-</div>    
+  }, []);
+
+  
+
+  return (
+
+<AppModal
+  open={popupState.showPopup}
+  onClose={resetPopup}
+  width="700px"
+>
+  
+
+      
+              
+              {selectedProduct && !popupStep && (
+  <PopupHeader
+    selectedProduct={
+      selectedProduct
+    }
+    theme={theme}
+  />
+)}
+      {popupStep === "oriental" && (
+
+  <PopupStepOptions
+
+    title={
+      t("products.chooseGrade")
+    }
+
+    btnStyle={btnStyle}
+
+    options={[
+
+      {
+        label: "A",
+
+        onClick: () => {
+
+          setSubTab("A");
+
+          setMainTab("oriental");
+
+          resetPopup();
+        }
+      },
+
+      {
+        label: "B",
+
+        onClick: () => {
+
+          setSubTab("B");
+
+          setMainTab("oriental");
+
+          resetPopup();
+        }
+      },
+
+      {
+        label: "C",
+
+        onClick: () => {
+
+          setSubTab("C");
+
+          setMainTab("oriental");
+
+          resetPopup();
+        }
+      }
+    ]}
+  />
+)}
+    {popupStep === "body" && (
+
+  <PopupStepOptions
+
+    title={
+      t("products.chooseType")
+    }
+
+    btnStyle={btnStyle}
+
+    options={[
+
+      {
+        label:
+          t("products.musk"),
+
+        onClick: () => {
+
+          setSubTab("Musk");
+
+          setMainTab("body");
+
+          resetPopup();
+        }
+      },
+
+      {
+        label:
+          t("products.cream"),
+
+        onClick: () => {
+
+          setSubTab("Cream");
+
+          setMainTab("body");
+
+          resetPopup();
+        }
+      },
+
+      {
+        label:
+          t("products.makhmaria"),
+
+        onClick: () => {
+
+          setSubTab("Makhmaria");
+
+          setMainTab("body");
+
+          resetPopup();
+        }
+      }
+    ]}
+  />
+)}
+  {!popupStep && (
+  <>
+    <p>{t("products.chooseContainer")}</p>
+    <PopupContainerButtons
+      isMusk={isMusk}
+
+      containerType={
+        containerType
+      }
+
+      setContainerType={
+        setContainerType
+      }
+
+      getContainerButtonStyle={
+        getContainerButtonStyle
+      }
+
+      t={t}
+    />
+
+    <hr />
+    
+    {containerType !== "oil" && (
+  <>
+    <p>{t("products.availableOptions")}</p>
+
+    <PopupOptionsGrid
+      productsWithStock={
+        productsWithStock
+      }
+
+      containerType={
+        containerType
+      }
+
+      inventoryMap={
+        inventoryMap
+      }
+
+      selectedSize={
+        selectedSize
+      }
+
+      setSelectedSize={
+        setSelectedSize
+      }
+
+      isMusk={isMusk}
+
+      isMobile={isMobile}
+
+      formatContainerName={
+        formatContainerName
+      }
+
+      theme={theme}
+      t={t}
+    /> 
  </>
 )}    
-      <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-  {t("common.price")}:
-{" "}
-{Number(price).toLocaleString(
-  lang === "ar"
-    ? "ar-EG"
-    : "en-US"
-)}
-{" "}EGP
-</p>
+      <PopupPrice
+  price={price}
+  lang={lang}
+  t={t}
+/>
 
 {/* 🔥 هنا تحط input الزيت */}
 {(
-  selectedProduct.category === "French" ||
-  selectedProduct.category?.toLowerCase()?.includes("oriental") ||
-  isMusk   // 👈 أهم إضافة
+  needsOil
 ) && (
-  <input
-    type="number"
-    placeholder={t("products.oilQty")}
-    value={oilQty === 0 ? "" : oilQty}
-    onChange={(e) => setOilQty(Number(e.target.value))}
-    style={{
-      width: "100%",
-      padding: "10px",
-      marginTop: "10px",
-      borderRadius: "10px",
-      border: `1px solid ${theme.colors.border}`,
-      fontSize: "16px"
-    }}
-  />
+  <PopupOilInput
+  oilQty={oilQty}
+  setOilQty={setOilQty}
+  theme={theme}
+  t={t}
+/>
 )}
         <br />
 
-        <div style={{
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          gap: "10px",
-          marginTop: "20px"
-        }}>
+        <PopupFooter
+          isValid={isValid}
+          needsOil={needsOil}
+          oilQty={oilQty}
 
-          <button
-            onClick={() => setShowPopup(false)}
-            style={{
-              flex: 1,
-              padding: "14px",
-              background: theme.colors.secondary,
-              borderRadius: "12px",
-              border: `1px solid ${theme.colors.border}`,
-              color: theme.colors.text,
-              cursor: "pointer"
-            }}
-          >
-            {t("common.close")}
-          </button>
-            
-          <button
-            onClick={() => {
-              const needsOil =
-                selectedProduct.category === "French" ||
-                selectedProduct.category?.toLowerCase().includes("oriental") ||
-                isMusk;
+          price={price}
 
-              if (needsOil && (!oilQty || oilQty <= 0)) {
-                setToastText(t("products.enterOilQty"));
-                setShowToast(true);
-                return;
-              }
+          selectedProduct={
+            selectedProduct
+          }
 
-              if (!price || price <= 0) {
-                setToastText(t("products.noPrice"));
-                setShowToast(true);
-                return;
-              }
-              console.log(selectedSize);
+          selectedSize={
+            selectedSize
+          }
 
-const oilCostPerML = selectedProduct.cost || 0;
+          containerType={
+            containerType
+          }
 
-const oilCost = oilQty * oilCostPerML;
+          oilCostPerML={
+            selectedProduct.cost || 0
+          }
 
-const containerCost =
-  containerType === "oil"
-    ? 0
-    : selectedSize?.cost || 0;
+          addToCart={addToCart}
 
-const overheadCost = 0;
+          setToastText={
+            setToastText
+          }
 
-const unitCost =
-  oilCost +
-  containerCost +
-  overheadCost;
+          setShowToast={
+            setShowToast
+          }
 
-const profit =
-  price - unitCost;
+          resetPopup={resetPopup}
 
-const margin =
-  price > 0
-    ? Number(((profit / price) * 100).toFixed(2))
-    : 0;
-
-
-              
-              const item = {
-                id: selectedProduct.id,
-                name: selectedProduct.name,
-                category: selectedProduct.category || "",
-                subCategory: selectedProduct.subCategory || "",
-                type: selectedProduct.type || "",
-
-                stockQuantity: selectedProduct.quantity || 0,
-
-                // 🔥 ERP Metadata
-                itemType: "BLENDED_ITEM",
-
-                saleMode:
-                  containerType === "oil"
-                    ? "PURE_OIL"
-                    : containerType === "bottle"
-                    ? "BOTTLE"
-                    : containerType === "box"
-                    ? "BOX"
-                    : containerType === "sample"
-                    ? "SAMPLE"
-                    : "UNKNOWN",
-
-                // 🛢 Oil
-                oilId: selectedProduct.id,
-                oilName: selectedProduct.name,
-                oilCategory: selectedProduct.category || "",
-
-                oilQtyML: oilQty || 0,
-
-                // 🧴 Container
-                size: selectedSize?.size || selectedSize?.name || "",
-
-                containerType,
-
-                containerName:
-                  containerType === "oil"
-                    ? `Pure Oil ${oilQty}ml`
-                    : selectedSize?.name?.trim() || containerType,
-
-                containerId:
-                  containerType === "oil"
-                    ? null
-                    : selectedSize?.id || null,
-
-                // 💰 Pricing
-                unitPrice: price || 0,
-                price: price || 0,
-                oilCostPerML,
-
-                oilCost,
-
-                containerCost,
-
-                overheadCost,
-
-                unitCost,
-
-                profit,
-
-                margin,
-                qty: 1,
-
-                // 🟡 Backward Compatibility
-                oilQty: oilQty || 0
-              };
-
-              console.log("NEW CART ITEM:", item);
-
-              const name = addToCart(item);
-              
-
-              if (name) {
-                setToastText(`${name} added 🔥`);
-                setShowToast(true);
-
-                setShowPopup(false);
-                setSelectedSize(null);
-                setPopupStep(null);
-                setOilQty(0);
-              }
-            }}
-
-            disabled={!isValid}
-
-            style={{
-              flex: 1,
-              padding: "14px",
-              background: isValid
-                ? theme.colors.primary
-                : theme.colors.secondary,
-              borderRadius: "12px",
-              border: "none",
-              color: isValid ? "#fff" : theme.colors.text,
-              fontWeight: "bold",
-              cursor: isValid ? "pointer" : "not-allowed",
-              opacity: isValid ? 1 : 0.5
-            }}
-          >
-            {t("cart.add")}
-          </button>
-          
-
-        
-        </div>
+          theme={theme}
+          t={t}
+        />
         </>
         )}          
 </AppModal>

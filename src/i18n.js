@@ -35,7 +35,20 @@ export const translations = {
       retry: "Retry",
       refresh: "Refresh",
       done: "Done",
+      archive: "Archive",
+      restore: "Restore",
+      active: "Active",
+      inactive: "Inactive",
+      notAvailable: "Not Available",
+      "show": "Show",
+      "hide": "Hide"
       
+    },
+    "roles": {
+      "seller": "Seller",
+      "supervisor": "Supervisor",
+      "manager": "Branch Manager",
+      "owner": "Owner"
     },
     
 
@@ -97,6 +110,9 @@ export const translations = {
       clear: "Clear Cart",
       added: "added 🔥",
       add: "Add To Cart",
+      "selectSeller": "Select Seller",
+      "noSellers": "No Sellers",
+      "seller": "Seller"
     },
     expenses: {
       amount: "Amount",
@@ -256,7 +272,34 @@ export const translations = {
       title: "Branches",
       all: "All Branches",
       single: "Branch",
-      select: "Select a branch first"
+      select: "Select a branch first",
+      subtitle: "Manage company branches",
+      activeBranches: "Active Branches",
+      search: "Search branches...",
+      add: "Add Branch",
+      empty: "No branches found",
+      users: "Users",
+      salesToday: "Sales Today",
+      archiveConfirm: "Archive {{name}} ?",
+      employees: "Employees",
+      employeeName: "Employee Name",
+      addEmployee: "Add Employee",
+      "addBranch": "Add Branch",
+      "editBranch": "Edit Branch",
+      "manageBranches": "Manage branches and employees",
+      
+
+      validation: {
+        nameRequired: "Branch name is required"
+      },
+
+      fields: {
+        name: "Branch Name",
+        code: "Code",
+        phone: "Phone",
+        manager: "Manager",
+        address: "Address"
+      },
     },
 
     settings: {
@@ -324,8 +367,22 @@ greetings: {
       retry: "إعادة المحاولة",
       refresh: "تحديث",
       done: "تم",
+      archive: "أرشفة",
+      restore: "استعادة",
+      active: "نشط",
+      inactive: "غير نشط",
+      notAvailable: "غير متوفر",
+       "show": "إظهار",
+       "hide": "إخفاء"
+
       
       
+    },
+    "roles": {
+      "seller": "بائع",
+      "supervisor": "مشرف",
+      "manager": "مدير فرع",
+      "owner": "المالك"
     },
 
     
@@ -343,6 +400,7 @@ greetings: {
       refund: "استرجاع",
       exchange: "استبدال"
     },
+
 
     navigation: {
       dashboard: "الرئيسية",
@@ -399,14 +457,18 @@ greetings: {
       clear: "مسح الكارت",
       added: "اتضاف 🔥",
       add: "إضافة ",
-    },
-    expenses: {
-    amount: "المبلغ",
-    note: "ملاحظة",
-    add: "إضافة مصروف",
-    noExpenses: "لا توجد مصروفات",
-    enterAmount: "اكتب المبلغ"
-    },
+      "seller": "بائع",
+      "selectSeller": "اختر البائع",
+      "noSellers": "لا يوجد بائعين",
+      },
+      expenses: {
+      amount: "المبلغ",
+      note: "ملاحظة",
+      add: "إضافة مصروف",
+      noExpenses: "لا توجد مصروفات",
+      enterAmount: "اكتب المبلغ",
+      
+      },
     waste: {
       add: "تسجيل هدر",
       addItem: "إضافة منتج",
@@ -547,7 +609,33 @@ greetings: {
       title: "الفروع",
       all: "كل الفروع",
       single: "الفرع",
-      select: "اختار فرع الأول"
+      select: "اختار فرع الأول",
+      subtitle: "إدارة فروع الشركة",
+      activeBranches: "فرع نشط",
+      search: "ابحث عن فرع...",
+      add: "إضافة فرع",
+      empty: "لا توجد فروع",
+      users: "المستخدمين",
+      salesToday: "مبيعات اليوم",
+      archiveConfirm: "هل تريد أرشفة {{name}} ؟",
+      employees: "الموظفين",
+      employeeName: "اسم الموظف",
+      addEmployee: "إضافة موظف",
+      "addBranch": "إضافة فرع",
+      "editBranch": "تعديل الفرع",
+      "manageBranches": "إدارة بيانات الفروع والموظفين",
+
+      validation: {
+        nameRequired: "اكتب اسم الفرع"
+      },
+
+      fields: {
+        name: "اسم الفرع",
+        code: "الكود",
+        phone: "رقم الهاتف",
+        manager: "المدير",
+        address: "العنوان"
+      },
     },
 
     settings: {
