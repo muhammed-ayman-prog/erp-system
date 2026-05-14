@@ -1,7 +1,9 @@
 import {
   useEffect,
   useMemo,
-  useState
+  useState,
+  lazy,
+  Suspense
 } from "react";
 import { useApp } from "../../../store/useApp";
 import { theme } from "../../../theme";
@@ -9,7 +11,6 @@ import { useTranslate } from "../../../useTranslate";
 import { useNavigate } from "react-router-dom";
 import ProductGrid from "../components/ProductGrid";
 import Cart from "../components/cart/Cart";
-import ProductPopup from "../components/ProductPopup";
 import { useSales } from "../hooks/useSales";
 import { useProducts } from "../hooks/useProducts";
 import SalesCategories from "../components/SalesCategories";
@@ -55,6 +56,9 @@ import {
 
 import "../style/sales.css";
 import "../style/popup.css";
+const ProductPopup = lazy(() =>
+  import("../components/ProductPopup")
+);
 const branchMap = {
   "Abbas Akkad 1": "abbasAkkad1",
   "Abbas Akkad 2": "abbasAkkad2",
@@ -63,6 +67,7 @@ const branchMap = {
   "El Obour": "elObour",
   "El Rehab": "elRehab"
 };
+
 export default function SalesPage() {
   const { t,  lang } = useTranslate();
   const getBranchName = (id) => {
@@ -251,7 +256,7 @@ const {
   oilQty,
   setOilQty
 } = popupState;
-const customerState = {
+const customerState = useMemo(() => ({
   customerName,
   setCustomerName,
 
@@ -261,8 +266,13 @@ const customerState = {
   customerData,
 
   getCustomerTier
-};
-const checkoutState = {
+}), [
+  customerName,
+  customerPhone,
+  customerData,
+  getCustomerTier
+]);
+const checkoutState = useMemo(() => ({
   subtotal,
 
   discount,
@@ -274,14 +284,20 @@ const checkoutState = {
   setPaymentMethod,
 
   loadingCheckout
-};
-const popupActions = {
+}), [
+  subtotal,
+  discount,
+  total,
+  paymentMethod,
+  loadingCheckout
+]);
+const popupActions = useMemo(() => ({
   setSelectedProduct,
   setSelectedSize,
   setContainerType,
   setOilQty,
   setShowPopup
-};
+}), []);
 const {
   handleSelectProduct
 } = useSelectProduct({
@@ -327,44 +343,68 @@ const {
   setCustomerName,
   setCustomerPhone
 });
+const salesContextValue = useMemo(() => ({
+  theme,
+  t,
+  selectedBranch: selectedBranchData,
+  lang,
+  isMobile,
+  setShowCart,
+  productsWithStock,
+  popupActions,
+  customerState,
+  checkoutState,
+  handleCheckoutAction,
+  user,
+  inventoryMap,
+  addToCart,
+  getPrice,
+  setToastText,
+  setShowToast
+}), [
+  t,
+  selectedBranchData,
+  lang,
+  isMobile,
+  productsWithStock,
+  popupActions,
+  customerState,
+  checkoutState,
+  handleCheckoutAction,
+  user,
+  inventoryMap,
+  addToCart,
+  getPrice
+]);
 
+const cartContextValue = useMemo(() => ({
+  cart,
+  setCart,
+
+  cartCount,
+
+  subtotal,
+  total,
+
+  increaseQty,
+  decreaseQty,
+  removeItem
+}), [
+  cart,
+  cartCount,
+  subtotal,
+  total,
+  increaseQty,
+  decreaseQty,
+  removeItem
+]);
 return (
   <SalesProvider
-    value={{
-      theme,
-      t,
-      selectedBranch: selectedBranchData,
-      lang,
-      isMobile,
-      setShowCart,
-      productsWithStock,
-      popupActions,
-      customerState,
-      checkoutState,
-      handleCheckoutAction,
-      user,
-      inventoryMap,
-      addToCart,
-      getPrice,
-      setToastText,
-      setShowToast
-    }}
-  >
+  value={salesContextValue}
+>
     <CartProvider
-    value={{
-      cart,
-      setCart,
-
-      cartCount,
-
-      subtotal,
-      total,
-
-      increaseQty,
-      decreaseQty,
-      removeItem
-    }}
-  >
+  value={cartContextValue}
+>
     
 <ReturnedModal
   showReturned={showReturned}
@@ -490,13 +530,15 @@ return (
       onSelectProduct={handleSelectProduct}
     />
 
-    <ProductPopup
-  selectedProduct={selectedProduct}
-  setSubTab={setSubTab}
-  setMainTab={setMainTab}
-  isMusk={isMusk}
-  popupState={popupState}
-/>
+    <Suspense fallback={null}>
+  <ProductPopup
+    selectedProduct={selectedProduct}
+    setSubTab={setSubTab}
+    setMainTab={setMainTab}
+    isMusk={isMusk}
+    popupState={popupState}
+  />
+</Suspense>
 
   </>
 

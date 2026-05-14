@@ -45,16 +45,16 @@ export function useProducts(selectedBranch) {
 
   }, []);
 
-  // 🔥 Products
-  useEffect(() => {
+ // 🔥 Products Realtime
+useEffect(() => {
 
-    const fetchProducts = async () => {
+  const unsub = onSnapshot(
 
-      const snap = await getDocs(
-        collection(db, "products")
-      );
+    collection(db, "products"),
 
-      const data = snap.docs
+    (snapshot) => {
+
+      const data = snapshot.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -64,11 +64,13 @@ export function useProducts(selectedBranch) {
       setProducts(data);
 
       setLoadingProducts(false);
-    };
+    }
 
-    fetchProducts();
+  );
 
-  }, []);
+  return () => unsub();
+
+}, []);
 
   // 🔥 Inventory
   useEffect(() => {

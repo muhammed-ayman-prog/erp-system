@@ -39,7 +39,6 @@ export default function ProductPopup({
   setToastText,
   setShowToast
 } = useSalesContext();
-  if (!popupState.showPopup) return null;
   const {
   popupStep,
   setPopupStep,
@@ -64,11 +63,11 @@ const isFrenchBox =
   containerType === "box";
 const needsOil =
 
-  selectedProduct.category === "French" ||
+  selectedProduct?.category === "French" ||
 
-  selectedProduct.category
+  selectedProduct?.category
     ?.toLowerCase()
-    .includes("oriental") ||
+    ?.includes("oriental") ||
 
   isMusk;
 const price =
@@ -158,7 +157,7 @@ const formatContainerName =
     };
 
   }, []);
-
+if (!popupState.showPopup) return null;
   
 
   return (
@@ -389,7 +388,7 @@ const formatContainerName =
           }
 
           oilCostPerML={
-            selectedProduct.cost || 0
+            selectedProduct?.cost || 0
           }
 
           addToCart={addToCart}

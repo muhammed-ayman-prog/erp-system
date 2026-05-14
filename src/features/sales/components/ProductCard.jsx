@@ -1,4 +1,8 @@
-import { memo } from "react";
+import {
+  memo,
+  useCallback,
+  useMemo
+} from "react";
 
 import AppCard
 from "../../../components/ui/AppCard";
@@ -15,6 +19,70 @@ function ProductCard({
 
   const isOut =
     p.quantity <= 0;
+const handleClick = useCallback(() => {
+
+  if (isOut) return;
+
+  onSelectProduct(p);
+
+}, [
+  isOut,
+  onSelectProduct,
+  p
+]);
+
+const handleKeyDown = useCallback((e) => {
+
+  if (
+    e.key === "Enter" ||
+    e.key === " "
+  ) {
+
+    if (isOut) return;
+
+    onSelectProduct(p);
+  }
+
+}, [
+  isOut,
+  onSelectProduct,
+  p
+]);
+const cardStyle = useMemo(() => ({
+  cursor:
+    isOut
+      ? "not-allowed"
+      : "pointer",
+
+  textAlign:
+    isRTL
+      ? "right"
+      : "left",
+
+  opacity:
+    isOut ? 0.5 : 1,
+
+  filter:
+    isOut
+      ? "grayscale(20%)"
+      : "none",
+
+  border:
+    isOut
+      ? `1px solid ${theme.colors.borderLight}`
+      : `1px solid ${theme.colors.border}`,
+
+  background:
+    isOut
+      ? theme.colors.cardSoft
+      : theme.colors.card
+
+}), [
+  isOut,
+  isRTL,
+  theme
+]);
+
 
   return (
 
@@ -31,68 +99,11 @@ function ProductCard({
 
       className="product-card"
 
-      style={{
+      style={cardStyle}
 
-        cursor:
+      onClick={handleClick}
 
-          isOut
-
-            ? "not-allowed"
-
-            : "pointer",
-
-        textAlign:
-          isRTL
-            ? "right"
-            : "left",
-
-        opacity:
-          isOut ? 0.5 : 1,
-
-        filter:
-
-          isOut
-
-            ? "grayscale(20%)"
-
-            : "none",
-
-        border:
-
-          isOut
-
-            ? `1px solid ${theme.colors.borderLight}`
-
-            : `1px solid ${theme.colors.border}`,
-
-        background:
-
-          isOut
-
-            ? theme.colors.cardSoft
-
-            : theme.colors.card
-      }}
-
-      onClick={() => {
-
-        if (isOut) return;
-
-        onSelectProduct(p);
-      }}
-
-      onKeyDown={(e) => {
-
-        if (
-          e.key === "Enter" ||
-          e.key === " "
-        ) {
-
-          if (isOut) return;
-
-          onSelectProduct(p);
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
 
       <div className="product-top">
@@ -185,4 +196,18 @@ function ProductCard({
   );
 }
 
-export default memo(ProductCard);
+
+export default memo(
+  ProductCard,
+  (prev, next) => {
+
+    return (
+      prev.p.id === next.p.id &&
+      prev.p.quantity === next.p.quantity &&
+      prev.p.price === next.p.price &&
+      prev.p.name === next.p.name &&
+      prev.isRTL === next.isRTL &&
+      prev.theme === next.theme
+    );
+  }
+);

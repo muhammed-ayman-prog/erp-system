@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 export function useSelectProduct({
   mainTab,
   addToCart,
@@ -11,7 +12,7 @@ export function useSelectProduct({
   setShowPopup
 }) {
 
-  function handleSelectProduct(p) {
+  const handleSelectProduct = useCallback((p) => {
 
     if (mainTab === "original") {
 
@@ -81,7 +82,16 @@ export function useSelectProduct({
     setPopupStep(null);
 
     setShowPopup(true);
-  }
+  }, [
+  mainTab,
+  addToCart,
+  t,
+  setToastText,
+  setShowToast,
+  setSelectedProduct,
+  setPopupStep,
+  setShowPopup
+]);
 
   return {
     handleSelectProduct

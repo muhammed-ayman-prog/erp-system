@@ -1,5 +1,8 @@
 import ProductCard from "./ProductCard";
-import { memo } from "react";
+import {
+  memo,
+  useMemo
+} from "react";
 
 function ProductGrid({
   productsWithStock,
@@ -22,7 +25,10 @@ function ProductGrid({
     </div>
   );
 }
-const isRTL = t("dir") === "rtl";
+const isRTL = useMemo(
+  () => t("dir") === "rtl",
+  [t]
+);
   return (
     
     <div className="products-grid">
