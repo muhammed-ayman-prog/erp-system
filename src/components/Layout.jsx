@@ -14,32 +14,20 @@ import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { LayoutDashboard } from "lucide-react";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
 import {
-  ShoppingCart,
-  Boxes,
-  Users,
-  BarChart3,
-  Building2,
-  Users2,
-  PackagePlus,
-  Receipt,
-  Trash2,// 👈 NEW ICON
-  RefreshCw,
-  FileText,
-  Repeat,
-  DollarSign
-} from "lucide-react";
-import Notifications from "../components/Notifications";
+  NAVIGATION_ITEMS
+} from "../constants/navigation";
+import {
+  hasPermission
+} from "../utils/permissions";
 
 export default function Layout() {
   const { t, tt, lang } = useTranslate();
   const [branches, setBranches] = useState([]);
   const { selectedBranch, setSelectedBranch } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const collapsed = false;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { user, logout, loading } = useAuth();
@@ -51,31 +39,6 @@ export default function Layout() {
       logout();
     }
   }, [user?.status]);
-
-  const ROLE_PERMISSIONS = {
-  admin: ["*"],
-
-  branch_manager: [
-    "view_dashboard",
-    "view_sales",
-    "view_reports",
-    "view_inventory",
-    "view_customers",
-    "view_operations"
-  ],
-
-  employee: [
-    "view_dashboard",
-    "view_sales"
-  ]
-};
-  const hasPermission = (perm) => {
-    return (
-      user?.permissions?.includes("*") ||
-      user?.permissions?.includes(perm)
-    );
-  };
-
   const location = useLocation();
 
   useEffect(() => {
@@ -104,109 +67,7 @@ export default function Layout() {
   }, []);
 
   // 🔥 MENU
- const menu = [
-  {
-    section: t("navigation.main"),
-    items: [
-      {
-        name: t("navigation.dashboard"),
-        path: "/dashboard",
-        icon: <LayoutDashboard size={collapsed ? 24 : 18} />,
-        permission: "view_dashboard"
-      },
-      {
-        name: t("navigation.sales"),
-        path: "/sales",
-        icon: <ShoppingCart size={collapsed ? 24 : 18} />,
-        permission: "view_sales",
-      }
-    ]
-  },
-  {
-    section: t("navigation.operations"),
-    items: [
-      {
-        name: t("navigation.expenses"),
-        path: "/expenses",
-        icon: <Receipt size={collapsed ? 24 : 18} />,
-        permission: "view_expenses"
-      },
-      {
-        name: t("navigation.waste"),
-        path: "/waste",
-        icon: <Trash2 size={collapsed ? 24 : 18} />,
-        permission: "view_waste"
-      },
-      {
-      name: t("navigation.returns"),
-      path: "/returns",
-      icon: <RefreshCw size={collapsed ? 24 : 18} />,
-      permission: "view_returns"
-    },
-      {
-        name: t("inventory.title"),
-        path: "/inventory",
-        icon: <Boxes size={collapsed ? 24 : 18} />,
-        permission: "view_inventory"
-      },
-      
-      {
-        name: t("navigation.purchases"),
-        path: "/purchases",
-        icon: <PackagePlus size={collapsed ? 24 : 18} />,
-        permission: "view_purchases"
-      },
-      {
-        name: t("operations.title"),
-        path: "/operations",
-        icon: <Repeat size={collapsed ? 24 : 18} />,
-        permission: "view_operations"
-      },
-      
-    ]
-  },
-  {
-    section: t("navigation.management"),
-    items: [
-      {
-        name: t("navigation.pricing"),
-        path: "/pricing",
-        icon: <DollarSign size={collapsed ? 24 : 18} />,
-        permission: "view_inventory"
-      },
-      {
-        name: t("navigation.reports"),
-        path: "/reports",
-        icon: <BarChart3 size={collapsed ? 24 : 18} />,
-        permission: "view_reports"
-      },
-      {
-        name: t("navigation.customers"),
-        path: "/customers",
-        icon: <Users2 size={collapsed ? 24 : 18} />,
-        permission: "view_customers"
-      },
-      {
-        name: t("navigation.branches"),
-        path: "/branches",
-        icon: <Building2 size={collapsed ? 24 : 18} />,
-        permission: "view_branches"
-      },
-      {
-        name: t("navigation.users"),
-        path: "/users",
-        icon: <Users size={collapsed ? 24 : 18} />,
-        permission: "view_users"
-      },
-      {
-        name: t("navigation.logs"),
-        path: "/logs",
-        icon: <FileText size={collapsed ? 24 : 18} />,
-        permission: "view_logs"
-      },
-    ]
-  }
-];
+ 
   return (
     <div
       style={{
@@ -259,7 +120,33 @@ right:
       >
         <div style={{ marginBottom: "10px" }} />
 
-        {menu.map((section, sIndex) => (
+        {NAVIGATION_ITEMS
+  .map((section) => ({
+
+    ...section,
+
+    items:
+      section.items.filter(
+        (item) => {
+
+          if (
+            !item.permission
+          ) {
+            return true;
+          }
+
+          return hasPermission(
+            user,
+            item.permission
+          );
+        }
+      )
+  }))
+  .filter(
+    section =>
+      section.items.length > 0
+  )
+  .map((section, sIndex) => (
   <div key={sIndex}>
     
     {/* اسم السيكشن */}
@@ -275,7 +162,6 @@ right:
 
     {/* العناصر */}
     {section.items
-      .filter(item => hasPermission(item.permission))
       .map((item, i) => {
         const isActive = location.pathname.startsWith(item.path)
         return (
@@ -303,7 +189,7 @@ flexDirection:
     color: isActive ? "#fff" : theme.colors.text
   }}
 >
-            {item.icon}
+            <item.icon size={18} />
             
             {isActive && (
   <span style={{
@@ -320,7 +206,7 @@ flexDirection:
   }} />
 )}
             
-            {item.name}
+            {item.label}
           </Link>
           
         );

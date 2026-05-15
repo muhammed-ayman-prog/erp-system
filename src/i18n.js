@@ -41,14 +41,12 @@ export const translations = {
       inactive: "Inactive",
       notAvailable: "Not Available",
       "show": "Show",
-      "hide": "Hide"
+      "hide": "Hide",
+      name: "Name",
+      email: "Email",
+      password: "Password",
+      disabled: "Disabled",
       
-    },
-    "roles": {
-      "seller": "Seller",
-      "supervisor": "Supervisor",
-      "manager": "Branch Manager",
-      "owner": "Owner"
     },
     
 
@@ -259,7 +257,23 @@ export const translations = {
       addUser: "Add User",
       role: "Role",
       admin: "Admin",
-      employee: "Employee"
+      employee: "Employee",
+      "title": "Users",
+      "subtitle": "Manage users and permissions",
+      "addUser": "Add User",
+      "search": "Search users",
+      "user": "User",
+      "role": "Role",
+      "branch": "Branches",
+      permissions: "Permissions",
+    },
+
+    "roles": {
+      "owner": "Owner",
+      "supervisor": "Supervisor",
+      "branchManager": "Branch Manager",
+      "assistantManager": "Assistant Manager",
+      "sales": "Sales"
     },
 
     branches: {
@@ -373,16 +387,12 @@ greetings: {
       inactive: "غير نشط",
       notAvailable: "غير متوفر",
        "show": "إظهار",
-       "hide": "إخفاء"
+       "hide": "إخفاء",
+      name: "الاسم",
+      email: "البريد الإلكتروني",
+      password: "كلمة المرور",
+      disabled: "معطل",
 
-      
-      
-    },
-    "roles": {
-      "seller": "بائع",
-      "supervisor": "مشرف",
-      "manager": "مدير فرع",
-      "owner": "المالك"
     },
 
     
@@ -592,11 +602,27 @@ greetings: {
     },
 
     users: {
-      title: "المستخدم",
+      title: "المستخدمين",
       addUser: "إضافة مستخدم",
       role: "الصلاحية",
       admin: "مدير",
-      employee: "موظف"
+      employee: "موظف",
+      "title": "المستخدمين",
+      "subtitle": "إدارة المستخدمين والصلاحيات",
+      "addUser": "إضافة مستخدم",
+      "search": "بحث عن مستخدم",
+      "user": "المستخدم",
+      "role": "الوظيفة",
+      "branch": "الفروع",
+      permissions: "الصلاحيات",
+    },
+
+    "roles": {
+      "owner": "مالك النظام",
+      "supervisor": "مشرف",
+      "branchManager": "مدير فرع",
+      "assistantManager": "مساعد مدير",
+      "sales": "موظف مبيعات"
     },
 
     branches: {

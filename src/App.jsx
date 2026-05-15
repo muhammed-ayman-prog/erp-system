@@ -17,6 +17,9 @@ import Waste from "./pages/Waste";
 import Returns from "./pages/Returns";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import {
+  PERMISSIONS
+} from "./constants/permissions";
 import { Toaster } from "react-hot-toast";
 import Splash from "./pages/Splash";
 import Home from "./pages/Home";
@@ -92,32 +95,32 @@ function App() {
               />
               
               {/* Dashboard */}
-              <Route element={<ProtectedRoute permissions={["view_dashboard"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.REPORTS_VIEW]} />}>
                 <Route path="/dashboard" element={<Dashboard />} />
               </Route>
 
               {/* Sales */}
-              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.SALES_VIEW]} />}>
                 <Route path="/sales" element={<SalesPage />} />
               </Route>
 
               {/* Expenses */}
-              <Route element={<ProtectedRoute permissions={["view_expenses"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.EXPENSES_VIEW]} />}>
                 <Route path="/expenses" element={<Expenses />} />
               </Route>
 
               {/* Waste */}
-              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_ADJUST]} />}>
                 <Route path="/waste" element={<Waste />} />
               </Route>
 
               {/* Returns */}
-              <Route element={<ProtectedRoute permissions={["returns.view"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.RETURNS_VIEW]} />}>
                 <Route path="/returns" element={<Returns />} />
               </Route>
 
               {/* Invoices */}
-              <Route element={<ProtectedRoute permissions={["view_sales"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.SALES_VIEW]} />}>
                 <Route path="/invoices" element={<Invoices />} />
               </Route>
               <Route
@@ -126,51 +129,51 @@ function App() {
               />
 
               {/* Reports */}
-              <Route element={<ProtectedRoute permissions={["view_reports"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.REPORTS_VIEW]} />}>
                 <Route path="/reports" element={<Reports />} />
               </Route>
 
               {/* Inventory */}
-              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_VIEW]} />}>
                 <Route path="/inventory" element={<Inventory />} />
               </Route>
 
               {/* Purchases */}
-              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_VIEW]} />}>
                 <Route path="/purchases" element={<Purchases />} />
               </Route>
 
               {/* Customers */}
-              <Route element={<ProtectedRoute permissions={["view_customers"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.CUSTOMERS_VIEW]} />}>
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customers/:id" element={<CustomerProfile />} />
               </Route>
 
               {/* Branches */}
-              <Route element={<ProtectedRoute permissions={["view_branches"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.SETTINGS_VIEW]} />}>
                 <Route path="/branches" element={<Branches />} />
               </Route>
 
               {/* Users */}
-              <Route element={<ProtectedRoute permissions={["view_users"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.USERS_VIEW]} />}>
                 <Route path="/users" element={<Users />} />
               </Route>
 
               {/* Settings */}
-              <Route element={<ProtectedRoute permissions={["view_settings"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.SETTINGS_VIEW]} />}>
                 <Route path="/settings" element={<Settings />} />
               </Route>
               <Route
-              element={<ProtectedRoute permissions={["view_logs"]} />}
+              element={<ProtectedRoute permissions={[PERMISSIONS.REPORTS_VIEW]} />}
             >
               <Route path="/logs" element={<Logs />} />
             </Route>
               {/* Operations */}
-              <Route element={<ProtectedRoute permissions={["view_operations"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_TRANSFER]} />}>
                 <Route path="/operations" element={<Operations />} />
               </Route>
               {/* Pricing */}
-              <Route element={<ProtectedRoute permissions={["view_inventory"]} />}>
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.PRICING_VIEW]} />}>
                 <Route path="/pricing" element={<Pricing />} />
               </Route>
 

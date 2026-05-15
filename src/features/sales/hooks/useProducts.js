@@ -13,7 +13,17 @@ import { db } from "../../../firebase";
 export function useProducts(selectedBranch) {
 
   const [products, setProducts] = useState([]);
+  const productsMap = useMemo(() => {
 
+  return products.reduce((acc, product) => {
+
+    acc[product.id] = product;
+
+    return acc;
+
+  }, {});
+
+}, [products]);
   const [loadingProducts, setLoadingProducts] =
     useState(true);
 
@@ -163,15 +173,23 @@ useEffect(() => {
   // 🔥 Memoized products
   const productsWithStock = useMemo(() => {
 
-    return products.map(p => ({
-      ...p,
-      quantity: inventoryMap[p.id] || 0
-    }));
+  return Object.keys(productsMap).map((id) => ({
 
-  }, [products, inventoryMap]);
+    ...productsMap[id],
+
+    quantity:
+      inventoryMap[id] || 0
+
+  }));
+
+}, [
+  productsMap,
+  inventoryMap
+]);
 
   return {
     products,
+    productsMap,
     productsWithStock,
     loadingProducts,
     inventoryMap,

@@ -1,33 +1,79 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../store/useAuth";
+import {
+  Navigate,
+  Outlet,
+  useLocation
+} from "react-router-dom";
 
-export default function ProtectedRoute({ permissions = [] }) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
+import { useAuth }
+from "../store/useAuth";
 
-  // ⏳ لسه بيحمل
+import {
+  hasPermission
+}
+from "../utils/Permissions";
+
+export default function ProtectedRoute({
+  permissions = []
+}) {
+
+  const {
+    user,
+    loading
+  } = useAuth();
+
+  const location =
+    useLocation();
+
+  // ⏳ loading
   if (loading) {
-    return <div>Loading...</div>;
+
+    return (
+      <div>
+        Loading...
+      </div>
+    );
   }
 
-  // ❌ مش لوجين
+  // ❌ not logged in
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+
+    return (
+      <Navigate
+        to="/login"
+        state={{
+          from: location
+        }}
+        replace
+      />
+    );
   }
 
-  // 👑 Super Admin
-  if (user.permissions?.includes("*")) {
+  // 👑 owner
+  if (
+    user?.role === "owner"
+  ) {
+
     return <Outlet />;
   }
 
-  // 🔐 Check permissions
+  // 🔐 permissions
   const hasAccess =
-    permissions.length === 0 ||
-    permissions.some((p) => user.permissions?.includes(p));
 
-  // ❌ مفيش صلاحية
+    permissions.length === 0 ||
+
+    permissions.some((p) =>
+      hasPermission(user, p)
+    );
+
+  // ❌ denied
   if (!hasAccess) {
-    return <Navigate to="/dashboard" replace />;
+
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
   return <Outlet />;

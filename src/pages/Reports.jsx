@@ -143,7 +143,7 @@ const resetInventory = async () => {
 };
 
 const handleResetSystem = async () => {
-  if (!user || !user.permissions?.includes("*")) {
+  if (user?.role !== "owner") {
     alert("❌ غير مسموح");
     return;
   }
