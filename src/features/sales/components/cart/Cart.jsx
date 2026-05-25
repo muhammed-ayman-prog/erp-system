@@ -15,6 +15,8 @@ import {
   const {
   theme,
   t,
+  selectedSeller,
+  setSelectedSeller,
   selectedBranch,
   productsWithStock,
   popupActions,
@@ -31,17 +33,20 @@ import {
 } = useCartContext();
   
 const {
-  selectedSeller,
-  setSelectedSeller,
-
   showErrors,
   setShowErrors,
 
   clearCart,
   handleCheckoutClick
 } = useCartActions({
+
   setCart,
-  handleCheckout: handleCheckoutAction
+
+  handleCheckout:
+    handleCheckoutAction,
+
+  selectedSeller,
+  setSelectedSeller
 });
 const {
   customerName,

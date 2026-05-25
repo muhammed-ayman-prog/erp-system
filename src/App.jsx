@@ -164,12 +164,26 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
               </Route>
               <Route
-              element={<ProtectedRoute permissions={[PERMISSIONS.REPORTS_VIEW]} />}
-            >
+                element={
+                  <ProtectedRoute
+                    permissions={[
+                      PERMISSIONS.LOGS_VIEW
+                    ]}
+                  />
+                }
+              >
               <Route path="/logs" element={<Logs />} />
             </Route>
               {/* Operations */}
-              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_TRANSFER]} />}>
+              <Route
+                element={
+                  <ProtectedRoute
+                    permissions={[
+                      PERMISSIONS.OPERATIONS_VIEW
+                    ]}
+                  />
+                }
+              >
                 <Route path="/operations" element={<Operations />} />
               </Route>
               {/* Pricing */}

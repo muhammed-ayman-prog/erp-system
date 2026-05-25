@@ -12,25 +12,25 @@ export default function CartItemsList({
 
   return (
     <>
-      {cart.map((item) => (
+      {cart.map((item, index) => (
 
-        <CartItemCard
-          key={
-            item.isReturned
-              ? item.returnedItemId
-              : `${item.id}_${item.size}_${item.containerType}_${item.oilQty}`
-          }
+  <CartItemCard
+    key={
+      item.isReturned
+        ? `${item.returnedItemId}_${index}`
+        : `${item.id}_${item.size}_${item.containerType}_${item.oilQty}_${index}`
+    }
 
-          item={item}
-          theme={theme}
-          increaseQty={increaseQty}
-          decreaseQty={decreaseQty}
-          removeItem={removeItem}
-          productsWithStock={productsWithStock}
-          popupActions={popupActions}
-        />
+    item={item}
+    theme={theme}
+    increaseQty={increaseQty}
+    decreaseQty={decreaseQty}
+    removeItem={removeItem}
+    productsWithStock={productsWithStock}
+    popupActions={popupActions}
+  />
 
-      ))}
+))}
     </>
   );
 }

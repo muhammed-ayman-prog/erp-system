@@ -53,14 +53,16 @@ const { selectedBranch } = useApp();
   if (!user) return;
 
   const branchToUse =
-    user.role === "admin"
-      ? selectedBranch
-      : user.branchId;
-
+  selectedBranch ||
+  user.branchIds?.[0];
+    
   if (!branchToUse) return;
 
   // 🟢 ALL → نسيبه زي ما هو (getDocs)
-  if (branchToUse === "all") {
+  if (
+  branchToUse === "all" &&
+  user?.role === "owner"
+) {
     const fetchAll = async () => {
       const [productsSnap, inventorySnap, stockSnap] = await Promise.all([
         getDocs(collection(db, "products")),
@@ -141,18 +143,88 @@ setProducts(finalProducts);
 }, [selectedBranch, user, productsList.length]);
 useEffect(() => {
   const fetchTransfers = async () => {
-    const snap = await getDocs(collection(db, "transfers"));
-    setTransfers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-  };
+
+  if (!selectedBranch) {
+    setTransfers([]);
+    return;
+  }
+
+  try {
+
+    const fromSnap = await getDocs(
+      query(
+        collection(db, "transfers"),
+        where(
+          "fromBranch",
+          "==",
+          selectedBranch
+        )
+      )
+    );
+
+    const toSnap = await getDocs(
+      query(
+        collection(db, "transfers"),
+        where(
+          "toBranch",
+          "==",
+          selectedBranch
+        )
+      )
+    );
+
+    const allTransfers = [
+
+      ...fromSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })),
+
+      ...toSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+    ];
+
+    // إزالة التكرار
+    const uniqueTransfers = Array.from(
+      new Map(
+        allTransfers.map(item => [
+          item.id,
+          item
+        ])
+      ).values()
+    );
+
+    setTransfers(uniqueTransfers);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+};
 
   const fetchAdjustments = async () => {
-    const snap = await getDocs(collection(db, "adjustments"));
+    const snap = await getDocs(
+
+  query(
+    collection(db, "adjustments"),
+
+    where(
+      "branchId",
+      "==",
+      selectedBranch
+    )
+  )
+
+);
     setAdjustments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   };
 
   fetchTransfers();
   fetchAdjustments();
-}, []);
+}, [selectedBranch]);
 useEffect(() => {
   getDocs(collection(db, "products")).then((snap) => {
     const data = snap.docs.map(doc => ({
@@ -556,7 +628,7 @@ return (
   }}
 />
 
-{user?.role === "admin" && !selectedBranch && (
+{user?.role === "owner" && !selectedBranch && (
   <p style={{ marginBottom: "20px", opacity: 0.6,color: theme.colors.muted }}>
     اختار فرع من فوق 👆
   </p>
@@ -672,7 +744,7 @@ return (
 
 
       
-      {!selectedBranch && user?.role === "admin" ? null : (
+      {!selectedBranch && user?.role === "owner" ? null : (
   <>
     
     {renderSection("French", "French")}

@@ -1,30 +1,52 @@
-import { useEffect, useMemo } from "react";
+import {
+  useEffect,
+  useRef
+} from "react";
 
 export function useAudio(src) {
 
-  const audio = useMemo(
-    () => new Audio(src),
-    [src]
-  );
+  const audioRef = useRef(null);
 
   useEffect(() => {
+
+    const audio = new Audio(src);
+
+    audio.preload = "auto";
+
+    audioRef.current = audio;
 
     return () => {
 
       audio.pause();
 
       audio.src = "";
+
+      audioRef.current = null;
     };
 
-  }, [audio]);
+  }, [src]);
 
-  const play = () => {
+  const play = async () => {
 
-    audio.currentTime = 0;
+    try {
 
-    audio.volume = 0.7;
+      const audio = audioRef.current;
 
-    audio.play();
+      if (!audio) return;
+
+      audio.currentTime = 0;
+
+      audio.volume = 0.7;
+
+      await audio.play();
+
+    } catch (err) {
+
+      console.error(
+        "Audio playback failed:",
+        err
+      );
+    }
   };
 
   return {

@@ -143,8 +143,10 @@ export default function CreateUserModal({
 
             <div
               style={{
-                display: "flex",
-                flexDirection: "column",
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "10px",
                 gap: "6px",
 
                 maxHeight:

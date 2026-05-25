@@ -2,15 +2,13 @@ import { useState } from "react";
 
 export default function useCartActions({
   setCart,
-  handleCheckout
+  handleCheckout,
+
+  selectedSeller,
+  setSelectedSeller
 }) {
 
-  const [
-    selectedSeller,
-    setSelectedSeller
-  ] = useState(null);
-
-  const [
+    const [
     showErrors,
     setShowErrors
   ] = useState(false);
@@ -27,9 +25,10 @@ export default function useCartActions({
   }
 
   function handleCheckoutClick() {
-
+    console.log("🔥 BUTTON CLICKED");
     setShowErrors(true);
     if (!selectedSeller) {
+      console.log("❌ NO SELLER");
       return;
     }
     handleCheckout({

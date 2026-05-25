@@ -8,6 +8,8 @@ export function useCheckoutAction({
 
   paymentMethod,
 
+  selectedSeller,
+
   selectedBranch,
   user,
 
@@ -41,7 +43,8 @@ export function useCheckoutAction({
       customerPhone,
 
       paymentMethod,
-
+      salesName:
+        selectedSeller,
       selectedBranch,
       user,
 

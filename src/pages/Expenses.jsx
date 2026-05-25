@@ -61,9 +61,9 @@ export default function Expenses() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const branchToUse =
-    user?.role === "admin"
-      ? selectedBranch
-      : user?.branchId;
+    user?.role === "owner"
+  ? selectedBranch
+  : user?.branchIds?.[0];
   const [search, setSearch] = useState("");
   const [tableSort, setTableSort] =
   useState({
@@ -88,14 +88,34 @@ const [editNote, setEditNote] = useState("");
 const [editCategory, setEditCategory] = useState("عام");
   // 📥 fetch expenses
   useEffect(() => {
-  if (!branchToUse || branchToUse === "all")
+
+  if (!branchToUse)
     return;
 
-  const q = query(
-    collection(db, "expenses"),
-    where("branchId", "==", branchToUse),
-    orderBy("createdAt", "desc")
-  );
+  const q =
+
+  user?.role === "owner" &&
+  branchToUse === "all"
+
+    ? query(
+        collection(db, "expenses"),
+        orderBy("createdAt", "desc")
+      )
+
+    : query(
+        collection(db, "expenses"),
+
+        where(
+          "branchId",
+          "==",
+          branchToUse
+        ),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
 
   const unsubscribe = onSnapshot(q, snap => {
 
@@ -110,23 +130,61 @@ const [editCategory, setEditCategory] = useState("عام");
 
   return () => unsubscribe();
 
-}, [branchToUse]);
+}, [branchToUse, user?.role]);
   useEffect(() => {
 
-  if (!branchToUse || branchToUse === "all")
+  if (!branchToUse)
     return;
 
-  const loansQuery = query(
-    collection(db, "loans"),
-    where("branchId", "==", branchToUse),
-    orderBy("createdAt", "desc")
-  );
+  const loansQuery =
 
-  const bonusQuery = query(
-    collection(db, "bonus"),
-    where("branchId", "==", branchToUse),
-    orderBy("createdAt", "desc")
-  );
+  user?.role === "owner" &&
+  branchToUse === "all"
+
+    ? query(
+        collection(db, "loans"),
+        orderBy("createdAt", "desc")
+      )
+
+    : query(
+        collection(db, "loans"),
+
+        where(
+          "branchId",
+          "==",
+          branchToUse
+        ),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
+
+  const bonusQuery =
+
+  user?.role === "owner" &&
+  branchToUse === "all"
+
+    ? query(
+        collection(db, "bonus"),
+        orderBy("createdAt", "desc")
+      )
+
+    : query(
+        collection(db, "bonus"),
+
+        where(
+          "branchId",
+          "==",
+          branchToUse
+        ),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
 
   const unsubscribeLoans =
     onSnapshot(loansQuery, snap => {
@@ -157,8 +215,12 @@ const [editCategory, setEditCategory] = useState("عام");
     unsubscribeBonus();
   };
 
-}, [branchToUse]);
+}, [branchToUse, user?.role]);
 const handleAddLoan = async () => {
+  if (!branchToUse || branchToUse === "all") {
+  toast.error("اختر فرع محدد أولًا");
+  return;
+}
   if (!employeeName || !loanAmount) {
   toast.error("اكتب اسم الموظف والمبلغ");
   return;
@@ -191,6 +253,10 @@ await addDoc(collection(db, "loans"), {
 
 };
 const handleAddBonus = async () => {
+  if (!branchToUse || branchToUse === "all") {
+  toast.error("اختر فرع محدد أولًا");
+  return;
+}
   if (!employeeName || !bonusAmount) {
   toast.error("اكتب اسم الموظف والمبلغ");
   return;
@@ -226,7 +292,7 @@ await addDoc(collection(db, "bonus"), {
   // ➕ add expense
   const handleAddExpense = async () => {
     if (!branchToUse || branchToUse === "all") {
-      toast.error(t("branches.select"));
+      toast.error("اختر فرع محدد أولًا");
       return;
     }
 
@@ -707,7 +773,7 @@ const addLog = async ({
   targetName = "",
   targetId = ""
 }) => {
-
+if (!branchToUse) return;
   try {
     const autoSeverity =
       action?.includes("DELETE")
@@ -736,7 +802,9 @@ const addLog = async ({
         user?.uid || null,
 
       branchId:
-        branchToUse || null,
+        branchToUse === "all"
+          ? null
+          : branchToUse || null,
         
       userAgent:
          navigator.userAgent,
@@ -1508,7 +1576,7 @@ e.currentTarget.style.transform =
 
 
       {/* ⚠️ اختار فرع */}
-      {user?.role === "admin" && !selectedBranch && (
+      {user?.role === "owner" && !selectedBranch && (
         <p style={{ color: theme.colors.muted }}>
           {t("branches.select")}
         </p>

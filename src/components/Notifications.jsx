@@ -1,12 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { db } from "../firebase";
-import { collection, onSnapshot, getDocs } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  getDocs,
+  query,
+  where
+} from "firebase/firestore";
 import { useApp } from "../store/useApp";
 import { useNavigate }
 from "react-router-dom";
 import timeAgo from
 "../utils/timeAgo";
+import { useAuth } from "../store/useAuth";
 export default function Notifications() {
+  const { user } = useAuth();
   const { selectedBranch } = useApp();
   const [notifications, setNotifications] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
@@ -42,7 +50,27 @@ export default function Notifications() {
   // 🔔 Real-time
   useEffect(() => {
     let isMounted = true;
-    const unsubscribe = onSnapshot(collection(db, "stock"), (snapshot) => {
+    const stockQuery =
+
+selectedBranch === "all" &&
+user?.role === "owner"
+
+  ? query(
+      collection(db, "stock")
+    )
+
+  : query(
+      collection(db, "stock"),
+
+      where(
+        "branchId",
+        "==",
+        selectedBranch
+      )
+    );
+
+const unsubscribe = onSnapshot(
+  stockQuery, (snapshot) => {
       const processData = async () => {
 
         const latestStock = {};

@@ -238,6 +238,8 @@
         }
       });
       // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
+  try {
+
   await Promise.all(
     cart.flatMap(item => {
       const arr = [];
@@ -333,6 +335,13 @@
     })
   );
 
+} catch (err) {
+
+  
+
+  throw err;
+}
+
       // 🟢 2) INVOICE NUMBER
       let invoiceNumber = "";
 
@@ -418,7 +427,6 @@
     total > 0
       ? Number(((totalProfit / total) * 100).toFixed(2))
       : 0;
-
   const saleRef = await addDoc(collection(db, "sales"), {
     invoiceNumber,
     items: cleanedCart,
@@ -551,10 +559,15 @@
 
     }
 
-  });    
+  });   
       
-      // 🔗 ربط العميل
-  if (customerPhone) {
+  
+  // 🔗 ربط العميل
+  /*
+  if (
+  customerPhone &&
+  user?.role === "owner"
+) {
     const q = query(
       collection(db, "customers"),
       where("phone", "==", customerPhone.trim())
@@ -604,6 +617,7 @@
       }
     );
   }
+  */
 
   return invoiceNumber;
 

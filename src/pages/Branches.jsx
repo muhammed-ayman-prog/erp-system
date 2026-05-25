@@ -32,7 +32,8 @@ import {
 
 import { db } from "../firebase";
 import { useTranslate } from "../useTranslate";
-
+import { useAuth } from "../store/useAuth";
+import { useApp } from "../store/useApp";
 const cardStyle = {
   background: "#fff",
   borderRadius: "20px",
@@ -55,6 +56,7 @@ const defaultForm = {
     }
   ]
 };
+
 export default function Branches() {
 
   const {
@@ -63,7 +65,9 @@ export default function Branches() {
   } = useTranslate();
 
   
+const { user } = useAuth();
 
+const { selectedBranch } = useApp();
   const [branches, setBranches] =
     useState([]);
 
@@ -98,8 +102,22 @@ export default function Branches() {
   // 🔥 Branches realtime
   useEffect(() => {
 
-    const q = query(
+    const q =
+
+user?.role === "owner"
+
+  ? query(
       collection(db, "branches")
+    )
+
+  : query(
+      collection(db, "branches"),
+
+      where(
+        "__name__",
+        "in",
+        user?.branchIds || []
+      )
     );
 
     const unsub = onSnapshot(q, (snap) => {
@@ -122,8 +140,23 @@ export default function Branches() {
   // 🔥 Users realtime
   useEffect(() => {
 
-    const unsub = onSnapshot(
-      collection(db, "users"),
+  const q =
+    user?.role === "owner"
+
+      ? collection(db, "users")
+
+      : query(
+          collection(db, "users"),
+
+          where(
+            "branchIds",
+            "array-contains",
+            selectedBranch
+          )
+        );
+
+  const unsub = onSnapshot(
+    q,
       (snap) => {
 
         setUsers(
@@ -149,20 +182,28 @@ export default function Branches() {
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
 
-      const q = query(
+      const q =
+  user?.role === "owner" &&
+  selectedBranch === "all"
+
+    ? query(
+        collection(db, "sales"),
+
+        where("createdAt", ">=", todayStart),
+        where("createdAt", "<=", todayEnd)
+      )
+
+    : query(
         collection(db, "sales"),
 
         where(
-          "createdAt",
-          ">=",
-          todayStart
+          "branchId",
+          "==",
+          selectedBranch
         ),
 
-        where(
-          "createdAt",
-          "<=",
-          todayEnd
-        )
+        where("createdAt", ">=", todayStart),
+        where("createdAt", "<=", todayEnd)
       );
 
     const unsub = onSnapshot(q, (snap) => {

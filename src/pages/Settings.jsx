@@ -2,13 +2,19 @@ import { auth } from "../firebase";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { useState } from "react";
+import {
+  useState,
+  useEffect
+} from "react";
 import { resetSystem } from "../utils/resetSystem";
 import { useAuth } from "../store/useAuth";
 import { useTranslate } from "../useTranslate";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const {
+  user,
+  updateUser
+} = useAuth();
 const [loadingReset, setLoadingReset] = useState(false);
 const { t, tt, lang } = useTranslate();
 const SUPER_ADMIN_UID = "w9o5o3PnKHfXAZzzuNlbNLhbxEg2";
@@ -33,11 +39,18 @@ if (confirmText !== "RESET ALL") {
 };
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name || "");
+  useEffect(() => {
+  setName(user?.name || "");
+}, [user?.name]);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
   const handleChangePassword = async () => {
-    const user = auth.currentUser;
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert("لازم تسجل دخول تاني");
+      return;
+    }
 
     if (!currentPassword || !newPassword) {
       alert("كمل البيانات ❗");
@@ -47,14 +60,20 @@ if (confirmText !== "RESET ALL") {
     try {
       // 🔐 re-auth
       const credential = EmailAuthProvider.credential(
-        user.email,
+        currentUser.email,
         currentPassword
       );
 
-      await reauthenticateWithCredential(user, credential);
+      await reauthenticateWithCredential(
+        currentUser,
+        credential
+      );
 
       // 🔥 update password
-      await updatePassword(user, newPassword);
+      await updatePassword(
+        currentUser,
+        newPassword
+      );
 
       alert("تم تغيير الباسورد ✅");
 
@@ -70,21 +89,25 @@ if (confirmText !== "RESET ALL") {
     alert("اكتب اسم ❗");
     return;
   }
+  if (name.trim() === user?.name) {
+  setEditing(false);
+  return;
+}
 
   try {
     // 🔥 update firestore
-    await updateDoc(doc(db, "users", user.uid), {
-      name
-    });
+    await updateDoc(
+      doc(db, "users", user.uid),
+      {
+  name: name.trim()
+}
+    );
 
-    // 🔥 update localStorage
-    const updatedUser = { ...user, name };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-
+    updateUser({
+  name: name.trim()
+});
     alert("تم تحديث الاسم ✅");
-
     setEditing(false);
-
   } catch (err) {
     alert("في مشكلة ❌");
   }
@@ -148,8 +171,8 @@ if (confirmText !== "RESET ALL") {
     padding: "4px 10px",
     borderRadius: "999px",
     display: "inline-block",
-    background: user?.role === "admin" ? "#fee2e2" : "#e0f2fe",
-    color: user?.role === "admin" ? "#b91c1c" : "#0369a1"
+    background: user?.role === "owner" ? "#fee2e2" : "#e0f2fe",
+    color: user?.role === "owner" ? "#b91c1c" : "#0369a1"
   }}>
     {user?.role}
   </div>
@@ -230,9 +253,9 @@ if (confirmText !== "RESET ALL") {
 
         <p style={{ marginTop: "8px" }}>
         <strong>Branch:</strong> {
-            user?.role === "admin"
+            user?.role === "owner"
             ? "All Branches"
-            : user?.branchId || "—"
+            : user?.branchIds?.join(", ") || "—"
         }
         </p>
 

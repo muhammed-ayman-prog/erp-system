@@ -190,6 +190,10 @@ const {
     search
   });
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [
+  selectedSeller,
+  setSelectedSeller
+] = useState("");
   
   
 
@@ -323,6 +327,7 @@ const {
   customerPhone,
 
   paymentMethod,
+  selectedSeller,
 
   selectedBranch,
   user,
@@ -354,6 +359,8 @@ const salesContextValue = useMemo(() => ({
   popupActions,
   customerState,
   checkoutState,
+  selectedSeller,
+  setSelectedSeller,
   handleCheckoutAction,
   user,
   inventoryMap,

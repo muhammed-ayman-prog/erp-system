@@ -11,11 +11,11 @@ import {
 } from "react";
 
 import { db } from "../../../firebase";
-
+import { useAuth } from "../../../store/useAuth";
 export function useReturnedItems(
   selectedBranch
 ) {
-
+const { user } = useAuth();
   const [returnedItems, setReturnedItems] =
     useState([]);
 
@@ -25,7 +25,10 @@ export function useReturnedItems(
 
     let q;
 
-    if (selectedBranch === "all") {
+    if (
+  selectedBranch === "all" &&
+  user?.role === "owner"
+) {
 
       q = collection(
         db,
@@ -68,7 +71,7 @@ export function useReturnedItems(
 
     return () => unsub();
 
-  }, [selectedBranch]);
+  }, [selectedBranch, user]);
 
   return {
     returnedItems

@@ -91,17 +91,44 @@
     e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
   };
     useEffect(() => {
-      const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
-      const unsub = onSnapshot(q, snap => {
-        let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (selectedBranch && selectedBranch !== "all") {
-          data = data.filter(s => s.branchId === selectedBranch);
-        }
-        setSales(data);
-        setLoadingSales(false);
-      });
-      return () => unsub();
-    }, [selectedBranch]);
+
+  if (!selectedBranch) return;
+
+  const q = query(
+    collection(db, "sales"),
+
+    where(
+      "branchId",
+      "==",
+      selectedBranch
+    ),
+
+    orderBy(
+      "createdAt",
+      "desc"
+    )
+  );
+
+  const unsub = onSnapshot(
+    q,
+    (snap) => {
+
+      const data = snap.docs.map(
+        (d) => ({
+          id: d.id,
+          ...d.data(),
+        })
+      );
+
+      setSales(data);
+
+      setLoadingSales(false);
+    }
+  );
+
+  return () => unsub();
+
+}, [selectedBranch]);
     useEffect(() => {
 
     if (!id || !sales.length)
@@ -146,9 +173,20 @@
     }
 
     const q = query(
-      collection(db, "returns"),
-      where("invoiceId", "==", selectedInvoice.id)
-    );
+  collection(db, "returns"),
+
+  where(
+    "invoiceId",
+    "==",
+    selectedInvoice.id
+  ),
+
+  where(
+    "branchId",
+    "==",
+    selectedInvoice.branchId
+  )
+);
 
     const unsub = onSnapshot(q, (snap) => {
       setPreviousReturns(
@@ -562,11 +600,22 @@ const fullyRefunded =
 
   const freshInvoice = freshSaleSnap.data();
   const freshReturnsSnap = await getDocs(
-    query(
-      collection(db, "returns"),
-      where("invoiceId", "==", selectedInvoice.id)
+  query(
+    collection(db, "returns"),
+
+    where(
+      "invoiceId",
+      "==",
+      selectedInvoice.id
+    ),
+
+    where(
+      "branchId",
+      "==",
+      selectedInvoice.branchId
     )
-  );
+  )
+);
 
   const freshReturns = freshReturnsSnap.docs.map(d => d.data());
 

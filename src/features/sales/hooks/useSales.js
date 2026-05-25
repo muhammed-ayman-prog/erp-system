@@ -6,7 +6,13 @@ export function useSales(
   discount,
   pricing,
   toast
-) {
+)
+ {
+  const normalize = (value) =>
+  value
+    ?.toString()
+    ?.trim()
+    ?.toLowerCase();
   const {
   setToastText,
   setShowToast
@@ -32,61 +38,82 @@ useEffect(() => {
 }, []);
 
   const addToCart = (product) => {
-  const originalProduct = productsWithStock.find(p => p.id === product.id);
 
-if (!originalProduct) return;
+  const originalProduct =
+    productsWithStock.find(
+      p => p.id === product.id
+    );
 
-if (originalProduct.quantity <= 0) {
-  alert("المنتج خلص ❌");
-  return; 
-}
+  if (!originalProduct) return;
 
-const existing = cart.find(
-  (item) =>
-    item.id === product.id &&
-    item.size === product.size &&
-    item.containerType === product.containerType
+  if (originalProduct.quantity <= 0) {
+
+    showToast(
+  setToastText,
+  setShowToast,
+  "المنتج خلص ❌"
 );
 
-if (existing && existing.qty >= originalProduct.quantity) {
-  showToast(setToastText, setShowToast,"وصلت لأقصى كمية ❌");
-  return;
-}
-
-  if (existing) {
-    setCart(prev =>
-      prev.map((item) =>
-        item.id === product.id &&
-        item.size === product.size &&
-        item.containerType === product.containerType
-          ? { ...item, qty: item.qty + 1 }
-          : item
-      )
-    );
-  } else {
-      setCart(prev => [
-  ...prev,
-  {
-    ...product,
-    qty: 1,
-    category: product.category 
+    return;
   }
-]);
+
+  setCart(prev => {
+
+    const existing = prev.find(
+      (item) =>
+        normalize(item.id) === normalize(product.id) &&
+        normalize(item.size) === normalize(product.size) &&
+        normalize(item.containerType) === normalize(product.containerType)
+    );
+
+    if (
+      existing &&
+      existing.qty >= originalProduct.quantity
+    ) {
+
+      showToast(
+        setToastText,
+        setShowToast,
+        "وصلت لأقصى كمية ❌"
+      );
+
+      return prev;
     }
 
-  
-  return product.name;
+    if (existing) {
 
-  
+      return prev.map((item) =>
+        normalize(item.id) === normalize(product.id) &&
+        normalize(item.size) === normalize(product.size) &&
+        normalize(item.containerType) === normalize(product.containerType)
+          ? {
+              ...item,
+              qty: item.qty + 1
+            }
+          : item
+      );
+    }
+
+    return [
+      ...prev,
+      {
+        ...product,
+        qty: 1,
+        category: product.category
+      }
+    ];
+  });
+
+  return product.name;
 };
 const removeItem = (target) => {
   setCart(prev =>
     prev.filter(
       (item) =>
         !(
-          item.id === target.id &&
-          item.size === target.size &&
-          item.containerType === target.containerType
+          normalize(item.id) === normalize(target.id) &&
+          normalize(item.size) === normalize(target.size) &&
+          normalize(item.containerType) === normalize(target.containerType)
         )
     )
   );
@@ -103,27 +130,27 @@ if (target.qty >= product.quantity) {
 
   setCart(prev =>
     prev.map((item) =>
-      item.id === target.id &&
-      item.size === target.size &&
-      item.containerType === target.containerType
+      normalize(item.id) === normalize(target.id) &&
+      normalize(item.size) === normalize(target.size) &&
+      normalize(item.containerType) === normalize(target.containerType)
         ? { ...item, qty: item.qty + 1 }
         : item
     )
   );
 };
   const decreaseQty = (target) => {
-    setCart(prev =>
-      prev
-        .map((item) =>
-          item.id === target.id &&
-          item.size === target.size &&
-          item.containerType === target.containerType
-            ? { ...item, qty: item.qty - 1 }
-            : item
-        )
-        .filter((item) => item.qty > 0)
-    );
-  };
+  setCart(prev =>
+    prev
+      .map((item) =>
+        normalize(item.id) === normalize(target.id) &&
+        normalize(item.size) === normalize(target.size) &&
+        normalize(item.containerType) === normalize(target.containerType)
+          ? { ...item, qty: item.qty - 1 }
+          : item
+      )
+      .filter((item) => item.qty > 0)
+  );
+};
 const subtotal = cart.reduce((sum, item) => {
   return sum + (item.price || 0) * item.qty;
 }, 0);
@@ -293,6 +320,7 @@ if (containerType === "box") {
 
   return 0;
 };  
+
 const handleCheckout = async (params) => {
   const {
     customerName,
@@ -314,6 +342,13 @@ const handleCheckout = async (params) => {
     setCustomerName,
     setCustomerPhone,
   } = params;
+  const sellerName =
+
+  typeof salesName === "string"
+
+    ? salesName
+
+    : salesName?.name || "";
 if (!paymentMethod) {
   showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
   return;
@@ -338,7 +373,7 @@ if (!customerName?.trim()) {
   showToast(setToastText, setShowToast,"ادخل اسم العميل ❗");
   return;
 }
-if (!salesName?.trim()) {
+if (!sellerName.trim()) {
   showToast(
     setToastText,
     setShowToast,
@@ -350,17 +385,17 @@ if (!salesName?.trim()) {
 
   try {
     const invoiceNumber = await processCheckout({
-  cart,
-  branchToUse: selectedBranch,
-  total,
-  paymentMethod,
-  customerName,
-  customerPhone,
+      cart,
+      branchToUse: selectedBranch,
+      total,
+      paymentMethod,
+      customerName,
+      customerPhone,
 
-  // 👇 ضيف دول
-  salesName,
-  user
-});
+      seller: salesName,
+
+      user
+    });
 
     showToast(setToastText, setShowToast, `Invoice: ${invoiceNumber} ✅`);
     playCheckoutSound?.();

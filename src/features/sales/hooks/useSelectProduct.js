@@ -46,36 +46,45 @@ export function useSelectProduct({
 
     if (isReadyBodyProduct) {
 
-      addToCart({
-        ...p,
+  const name = addToCart({
+    ...p,
 
-        size: t("products.ready"),
+    size: t("products.ready"),
 
-        containerType:
-          p.category
-            ?.toLowerCase()
-            ?.includes("cream")
+    containerType:
+      p.category
+        ?.toLowerCase()
+        ?.includes("cream")
 
-            ? t("products.cream")
+        ? t("products.cream")
 
-            : t("products.makhmaria"),
+        : t("products.makhmaria"),
 
-        containerName:
-          p.category
-            ?.toLowerCase()
-            ?.includes("cream")
+    containerName:
+      p.category
+        ?.toLowerCase()
+        ?.includes("cream")
 
-            ? t("products.cream")
+        ? t("products.cream")
 
-            : t("products.makhmaria"),
+        : t("products.makhmaria"),
 
-        containerId: null,
+    containerId: null,
 
-        oilQty: 0
-      });
+    oilQty: 0
+  });
 
-      return;
-    }
+  if (name) {
+
+    setToastText(
+      `${name} ${t("cart.added")}`
+    );
+
+    setShowToast(true);
+  }
+
+  return;
+}
 
     setSelectedProduct(p);
 

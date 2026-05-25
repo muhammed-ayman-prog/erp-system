@@ -18,6 +18,7 @@ import {
   CartesianGrid
 } from "recharts";
 import { useTranslate } from "../useTranslate";
+import { useAuth } from "../store/useAuth";
 export default function CustomerProfile() {
   const { t, tt, lang } = useTranslate();
   const { id } = useParams();
@@ -28,8 +29,13 @@ export default function CustomerProfile() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [openIndex, setOpenIndex] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
+
+  if (user?.role !== "owner") {
+    return;
+  }
 
   const customerRef = doc(db, "customers", id);
 
@@ -74,7 +80,7 @@ export default function CustomerProfile() {
     unsubSales();
   };
 
-}, [id]);
+}, [id, user]);
   const filteredSales = sales.filter(s => {
   const date = new Date(s.createdAt.seconds * 1000);
 

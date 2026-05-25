@@ -46,6 +46,8 @@ export const translations = {
       email: "Email",
       password: "Password",
       disabled: "Disabled",
+      "disable": "Disable",
+      "activate": "Activate"    
       
     },
     
@@ -392,6 +394,8 @@ greetings: {
       email: "البريد الإلكتروني",
       password: "كلمة المرور",
       disabled: "معطل",
+      "disable": "تعطيل",
+      "activate": "تفعيل"
 
     },
 

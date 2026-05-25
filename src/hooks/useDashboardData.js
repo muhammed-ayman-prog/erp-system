@@ -6,7 +6,9 @@ import {
 import {
   collection,
   onSnapshot,
-  getDocs
+  getDocs,
+  query,
+  where
 } from "firebase/firestore";
 
 import { db } from "../firebase";
@@ -30,8 +32,11 @@ import calculateDeadStock from
 "../utils/calculateDeadStock";
 import calculateFastMoving from
 "../utils/calculateFastMoving";
+import { useAuth } from "../store/useAuth";
+import { useApp } from "../store/useApp";
 export default function useDashboardData(range) {
-
+const { user } = useAuth();
+const { selectedBranch } = useApp();
   const [activity, setActivity] =
     useState([]);
 
@@ -71,7 +76,20 @@ export default function useDashboardData(range) {
     const init = async () => {
 
       unsubscribe = onSnapshot(
-        collection(db, "sales"),
+        user?.role === "owner" &&
+selectedBranch === "all"
+
+? collection(db, "sales")
+
+: query(
+    collection(db, "sales"),
+
+    where(
+      "branchId",
+      "==",
+      selectedBranch
+    )
+  ),
 
         async (snap) => {
 

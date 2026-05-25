@@ -15,7 +15,12 @@
   import React from "react";
   import { useNavigate }
   from "react-router-dom";
+  import { useAuth } from "../store/useAuth";
+import { useApp } from "../store/useApp";
+import { where } from "firebase/firestore";
   export default function Logs() {
+    const { user } = useAuth();
+    const { selectedBranch } = useApp();
     const [lastDoc, setLastDoc] =
     useState(null);
 
@@ -42,18 +47,29 @@
       useRef(null);
     useEffect(() => {
 
-    const q = query(
+    const q =
+  user?.role === "owner" &&
+  selectedBranch === "all"
 
-      collection(db, "logs"),
+    ? query(
+        collection(db, "logs"),
+        orderBy("createdAt", "desc"),
+        limit(50)
+      )
 
-      orderBy(
-        "createdAt",
-        "desc"
-      ),
+    : query(
+        collection(db, "logs"),
 
-      limit(50)
+        where(
+          "branchId",
+          "==",
+          selectedBranch
+        ),
 
-    );
+        orderBy("createdAt", "desc"),
+
+        limit(50)
+      );
 
     const unsubscribe =
       onSnapshot(q, (snap) => {
@@ -116,7 +132,10 @@
 
 };
 
-  }, []);
+  }, [
+  selectedBranch,
+  user
+]);
 
   const formatTimeAgo = (
     timestamp
@@ -435,9 +454,35 @@
         "firebase/firestore"
       );
 
-      const nextQuery = query(
+      const nextQuery =
+
+  user?.role === "owner" &&
+  selectedBranch === "all"
+
+    ? query(
 
         collection(db, "logs"),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        ),
+
+        startAfter(lastDoc),
+
+        limit(50)
+
+      )
+
+    : query(
+
+        collection(db, "logs"),
+
+        where(
+          "branchId",
+          "==",
+          selectedBranch
+        ),
 
         orderBy(
           "createdAt",

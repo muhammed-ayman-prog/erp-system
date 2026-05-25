@@ -12,9 +12,8 @@ export default function UsersTable({
   isRTL,
   isMobile,
   canEditUsers,
-  canDeleteUsers,
   setEditingUser,
-  handleDelete,
+  toggleStatus,
 }) {
   return (
     <AppCard>
@@ -208,8 +207,7 @@ export default function UsersTable({
                         gap: "8px",
                       }}
                     >
-                      {canEditUsers &&
-                        !isOwnerUser && (
+                      {canEditUsers && (
                           <AppButton
                             style={{
                               width:
@@ -229,27 +227,29 @@ export default function UsersTable({
                           </AppButton>
                         )}
 
-                      {canDeleteUsers &&
+                      {canEditUsers &&
                         !isOwnerUser && (
-                          <AppButton
-                            variant="danger"
-                            style={{
-                              width:
-                                isMobile
-                                  ? "100%"
-                                  : "auto",
-                            }}
-                            onClick={() =>
-                              handleDelete(
-                                u.id
-                              )
-                            }
-                          >
-                            {t(
-                              "common.delete"
-                            )}
-                          </AppButton>
-                        )}
+                        <AppButton
+                          variant={
+                            u.status === "active"
+                              ? "danger"
+                              : "secondary"
+                          }
+                          style={{
+                            width:
+                              isMobile
+                                ? "100%"
+                                : "auto"
+                          }}
+                          onClick={() =>
+                            toggleStatus(u)
+                          }
+                        >
+                          {u.status === "active"
+                            ? t("common.disable")
+                            : t("common.activate")}
+                        </AppButton>
+                      )}
                     </div>
                   </td>
                 </tr>

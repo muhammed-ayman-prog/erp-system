@@ -2,18 +2,41 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import { useTranslate } from "../useTranslate";
+import { useAuth } from "../store/useAuth";
+import { useApp } from "../store/useApp";
+import { where } from "firebase/firestore";
 export default function Returns() {
+  const { user } = useAuth();
+  const { selectedBranch } = useApp();
   const { t, tt, lang } = useTranslate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReturns = async () => {
+      setLoading(true);
+      setData([]);
       try {
-        const q = query(
-          collection(db, "returns"),
-          orderBy("createdAt", "desc")
-        );
+        const q =
+  user?.role === "owner" &&
+  selectedBranch === "all"
+
+    ? query(
+        collection(db, "returns"),
+        orderBy("createdAt", "desc")
+      )
+
+    : query(
+        collection(db, "returns"),
+
+        where(
+          "branchId",
+          "==",
+          selectedBranch
+        ),
+
+        orderBy("createdAt", "desc")
+      );
 
         const snap = await getDocs(q);
 
@@ -31,7 +54,10 @@ export default function Returns() {
     };
 
     fetchReturns();
-  }, []);
+  }, [
+  selectedBranch,
+  user
+]);
 
   const formatDate = (ts) => {
     if (!ts) return "-";

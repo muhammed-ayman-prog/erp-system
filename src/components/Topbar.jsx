@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
 import { Menu } from "lucide-react"; // 🔥 icon
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
 import { Globe } from "lucide-react";
 import { useTranslate } from "../useTranslate";
-import { Search } from "lucide-react";
-const branchMap = {
-  "Abbas Akkad 1": "abbasAkkad1",
-  "Abbas Akkad 2": "abbasAkkad2",
-  "Abbas Akkad 3": "abbasAkkad3",
-  "City Stars": "cityStars",
-  "El Obour": "elObour",
-  "El Rehab": "elRehab"
-};
+import { useNavigate }
+from "react-router-dom";
 import Notifications from "../components/Notifications";
 export default function Topbar({
   openMobile,
@@ -65,11 +57,6 @@ useEffect(() => {
   }, []);
   const { setLang } = useApp();
   const [openLang, setOpenLang] = useState(false);
-  const [searchOpen, setSearchOpen] =
-  useState(false);
-
-const [search, setSearch] =
-  useState("");
   const langRef = useRef();
   useEffect(() => {
   const handleClick = (e) => {
@@ -80,83 +67,14 @@ const [search, setSearch] =
   document.addEventListener("mousedown", handleClick);
   return () => document.removeEventListener("mousedown", handleClick);
 }, []);
-useEffect(() => {
-
-  const handleKeyDown = (e) => {
-    
-    if (e.key === "Escape") {
-
-      e.preventDefault();
-
-      setSearchOpen(false);
-
-      setSearch("");
-
-    }
-    if (
-      (e.ctrlKey || e.metaKey) &&
-e.shiftKey &&
-e.key.toLowerCase() === "f"
-    ) {
-
-      e.preventDefault();
-
-      setSearchOpen(true);
-
-    }
-
-  };
-
-  window.addEventListener(
-    "keydown",
-    handleKeyDown
-  );
-
-  return () =>
-    window.removeEventListener(
-      "keydown",
-      handleKeyDown
-    );
-
-}, []);
-const pages = [
-  {
-    name: t("navigation.sales"),
-    path: "/sales"
-  },
-  {
-    name: t("navigation.inventory"),
-    path: "/inventory"
-  },
-  {
-    name: t("navigation.expenses"),
-    path: "/expenses"
-  },
-  {
-    name: t("navigation.reports"),
-    path: "/reports"
-  },
-  {
-    name: t("navigation.customers"),
-    path: "/customers"
-  },
-  {
-    name: t("navigation.branches"),
-    path: "/branches"
-  },
-  {
-    name: t("navigation.users"),
-    path: "/users"
-  }
-];
-
-const filteredPages =
-  pages.filter((p) =>
-    p.name
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+const accessibleBranches =
+  user?.role === "owner"
+    ? branches
+    : branches.filter((b) =>
+        user?.branchIds?.includes(b.id)
+      );
   return (
+
     <div
       style={{
         direction:
@@ -289,7 +207,7 @@ const filteredPages =
       <select
         value={selectedBranch || "all"}
         onChange={(e) => setSelectedBranch(e.target.value)}
-        disabled={user?.role !== "admin"}
+        disabled={accessibleBranches.length <= 1}
         style={{
           padding: "8px 14px",
           borderRadius: "999px",
@@ -301,11 +219,11 @@ const filteredPages =
           width: isMobile ? "100%" : "auto" // 🔥 ده الجديد
         }}
       >
-        {user?.role === "admin" && (
+        {user?.role === "owner" && (
           <option value="all">🌍 All Branches</option>
         )}
 
-        {[...(branches || [])]
+        {[...(accessibleBranches || [])]
   .sort((a, b) => {
     const indexA = branchOrder.indexOf(a.name);
     const indexB = branchOrder.indexOf(b.name);
@@ -317,72 +235,12 @@ const filteredPages =
   })
   .map((b) => (
     <option key={b.id} value={b.id}>
-      {t(`branches.${branchMap[b.name]}`) || b.name}
-    </option>
+  {b.name}
+</option>
   ))}
       </select>
 
-      {/* 🔍 Search */}
-
-<div
-
-  onClick={() => setSearchOpen(true)}
-
-  style={{
-
-    flex: isMobile ? "100%" : 1,
-
-    maxWidth: isMobile ? "100%" : "320px",
-
-    height: "40px",
-
-    borderRadius: "999px",
-
-    border:
-      `1px solid ${theme.colors.border}`,
-
-    background:
-      theme.colors.card,
-
-    display: "flex",
-
-    alignItems: "center",
-
-    gap: "10px",
-
-    padding: "0 14px",
-
-    cursor: "pointer",
-
-    color: "#64748b"
-  }}
->
-
-  <Search size={16} />
-
-  <span
-    style={{
-      fontSize: "14px"
-    }}
-  >
-    {t("common.search")}
-  </span>
-
-  <div
-    style={{
-      marginInlineStart: "auto",
-      fontSize: "11px",
-      opacity: 0.6
-    }}
-  >
-    {!isMobile && (
-  <div>
-    Ctrl + Shift + F
-  </div>
-)}
-  </div>
-
-</div>
+      
       {/* 🔹 Right */}
       <div
       style={{
@@ -587,187 +445,7 @@ onMouseLeave={(e) =>
           )}
         </div>
       </div>
-      {/* 🔍 Search Modal */}
-
-{searchOpen && (
-
-  <div
-
-    onClick={() => {
-
-      setSearchOpen(false);
-
-      setSearch("");
-
-    }}
-
-    style={{
-
-      position: "fixed",
-
-      inset: 0,
-
-      background:
-        "rgba(0,0,0,0.35)",
-
-      backdropFilter: "blur(8px)",
-
-      zIndex: 999999,
-
-      display: "flex",
-
-      justifyContent: "center",
-
-      alignItems: "flex-start",
-
-      paddingTop: isMobile ? "80px" : "120px"
-    }}
-  >
-
-    <div
-
-      onClick={(e) =>
-        e.stopPropagation()
-      }
-
-      style={{
-
-        width: "95%",
-
-        maxWidth: "620px",
-
-        background:
-          theme.colors.card,
-
-        borderRadius: "24px",
-
-        overflow: "hidden",
-
-        boxShadow:
-          "0 25px 80px rgba(0,0,0,0.2)"
-      }}
-    >
-
-      <input
-      onKeyDown={(e) => {
-
-  if (e.key === "Escape") {
-
-    e.preventDefault();
-
-    setSearchOpen(false);
-
-    setSearch("");
-
-  }
-
-}}
-
-        autoFocus
-
-        value={search}
-
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-
-        placeholder={t("common.search")}
-
-        style={{
-
-          width: "100%",
-
-          border: "none",
-
-          outline: "none",
-
-          background: "transparent",
-
-          padding: "22px",
-
-          fontSize: "18px",
-
-          color: theme.colors.text,
-
-          borderBottom:
-            `1px solid ${theme.colors.border}`
-        }}
-      />
-
-      <div
-        style={{
-          maxHeight: "400px",
-          overflowY: "auto"
-        }}
-      >
-        {filteredPages.length === 0 && (
-
-          <div
-            style={{
-              padding: "30px",
-              textAlign: "center",
-              color: "#94a3b8"
-            }}
-          >
-
-            {t("operations.noResults")}
-
-          </div>
-
-        )}
-        {filteredPages.map((page) => (
-
-          <div
-
-            key={page.path}
-
-            onClick={() => {
-
-              navigate(page.path);
-
-              setSearchOpen(false);
-
-              setSearch("");
-
-            }}
-
-            style={{
-
-              padding: "18px 22px",
-
-              cursor: "pointer",
-
-              borderBottom:
-                `1px solid ${theme.colors.border}`,
-
-              transition:
-  "all 0.2s ease"
-            }}
-
-            onMouseEnter={(e) =>
-              e.currentTarget.style.background =
-                theme.colors.secondary
-            }
-
-            onMouseLeave={(e) =>
-              e.currentTarget.style.background =
-                "transparent"
-            }
-          >
-
-            {page.name}
-
-          </div>
-
-        ))}
-
-      </div>
-
-    </div>
-
-  </div>
-
-)}
+    
     </div>
   );
 }

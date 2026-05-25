@@ -10,7 +10,7 @@ from "../store/useAuth";
 import {
   hasPermission
 }
-from "../utils/Permissions";
+from "../utils/permissions";
 
 export default function ProtectedRoute({
   permissions = []

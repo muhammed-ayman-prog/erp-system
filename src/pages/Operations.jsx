@@ -28,6 +28,7 @@ import EditProductModal from
 "../components/operations/EditProductModal";
 import ProductHistoryModal from
 "../components/operations/ProductHistoryModal";
+import { useAuth } from "../store/useAuth";
 const COLORS = {
   primary: "#3b82f6",
   success: "#10b981",
@@ -37,32 +38,10 @@ const COLORS = {
   gray: "#f3f4f6"
 };
 export default function Operations() {
+  const { user } = useAuth();
   const [selectedActivity, setSelectedActivity] = useState(null);
   const { t, tt, lang } = useTranslate();
   const [products, setProducts] = useState([]);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-
-  try {
-
-    const stored = JSON.parse(
-      localStorage.getItem("user")
-    );
-
-    if (stored) {
-      setUser(stored);
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-    setUser(null);
-
-  }
-
-}, []);
   const [activeAction, setActiveAction] = useState(null);
   const [transferLoading, setTransferLoading] = useState(false);
   const [adjustLoading, setAdjustLoading] = useState(false);

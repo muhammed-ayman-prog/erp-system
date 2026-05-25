@@ -35,6 +35,14 @@ import {
 
 } from "lucide-react";
 import { useTranslate } from "../useTranslate";
+import {
+  hasPermission
+} from "../utils/permissions";
+
+import {
+  PERMISSIONS
+} from "../constants/permissions";
+
 export default function Home() {
   const { t, tt, lang } = useTranslate();
   const navigate = useNavigate();
@@ -86,120 +94,184 @@ const [todayOrders, setTodayOrders] =
     : t("greetings.evening");
 useEffect(() => {
 
+  if (!user || !selectedBranch)
+    return;
+
   const todayStart = new Date();
 
-todayStart.setHours(0, 0, 0, 0);
+  todayStart.setHours(
+    0,
+    0,
+    0,
+    0
+  );
 
-const todayEnd = new Date();
+  const todayEnd = new Date();
 
-todayEnd.setHours(23, 59, 59, 999);
+  todayEnd.setHours(
+    23,
+    59,
+    59,
+    999
+  );
 
-let salesQuery = query(
+  const salesQuery =
 
-  collection(db, "sales"),
+    user?.role === "owner" &&
+    selectedBranch === "all"
 
-  where(
-    "createdAt",
-    ">=",
-    todayStart
-  ),
+      ? query(
 
-  where(
-    "createdAt",
-    "<=",
-    todayEnd
-  )
+          collection(
+            db,
+            "sales"
+          ),
 
-);
+          where(
+            "createdAt",
+            ">=",
+            todayStart
+          ),
 
-const unsubscribe = onSnapshot(
+          where(
+            "createdAt",
+            "<=",
+            todayEnd
+          )
 
-  salesQuery,
+        )
 
-  (snap) => {
+      : query(
 
-    let total = 0;
+          collection(
+            db,
+            "sales"
+          ),
 
-    let orders = 0;
+          where(
+            "branchId",
+            "==",
+            selectedBranch
+          ),
 
-    snap.docs.forEach((doc) => {
+          where(
+            "createdAt",
+            ">=",
+            todayStart
+          ),
 
-      const data = doc.data();
+          where(
+            "createdAt",
+            "<=",
+            todayEnd
+          )
 
-      if (
+        );
 
-        selectedBranch === "all" ||
+  const unsubscribe =
+    onSnapshot(
 
-        data.branchId ===
-          selectedBranch
+      salesQuery,
 
-      ) {
+      (snap) => {
 
-        total +=
-          Number(data.total || 0);
+        let total = 0;
 
-        orders += 1;
+        let orders = 0;
+
+        snap.docs.forEach(
+          (doc) => {
+
+            const data =
+              doc.data();
+
+            total += Number(
+              data.total || 0
+            );
+
+            orders += 1;
+
+          }
+        );
+
+        setTodaySales(total);
+
+        setTodayOrders(orders);
 
       }
 
-    });
+    );
 
-    setTodaySales(total);
+  return () =>
+    unsubscribe();
 
-    setTodayOrders(orders);
+}, [
+  selectedBranch,
+  user
+]);
+const quickActions = [
 
-  }
-
-);
-
-  return () => unsubscribe();
-
-}, [selectedBranch]);
-  const quickActions = [
-
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.SALES_VIEW
+  ) && {
     title: t("navigation.sales"),
     icon: ShoppingCart,
     path: "/sales",
     color: "#10b981"
   },
 
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.INVENTORY_VIEW
+  ) && {
     title: t("inventory.title"),
     icon: Boxes,
     path: "/inventory",
     color: "#3b82f6"
   },
 
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.RETURNS_VIEW
+  ) && {
     title: t("navigation.returns"),
     icon: RefreshCw,
     path: "/returns",
     color: "#f59e0b"
   },
 
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.EXPENSES_VIEW
+  ) && {
     title: t("navigation.expenses"),
     icon: Receipt,
     path: "/expenses",
     color: "#ef4444"
   },
 
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.CUSTOMERS_VIEW
+  ) && {
     title: t("navigation.customers"),
     icon: Users2,
     path: "/customers",
     color: "#8b5cf6"
   },
 
-  {
+  hasPermission(
+    user,
+    PERMISSIONS.REPORTS_VIEW
+  ) && {
     title: t("navigation.reports"),
     icon: BarChart3,
     path: "/reports",
     color: "#06b6d4"
   }
 
-];
+].filter(Boolean);
 const particles = useMemo(
   () =>
     [...Array(12)].map(() => ({

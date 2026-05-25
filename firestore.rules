@@ -1,0 +1,573 @@
+  rules_version = '2';
+
+  service cloud.firestore {
+
+    match /databases/{database}/documents {
+
+      // =====================================
+      // HELPERS
+      // =====================================
+
+      function isLoggedIn() {
+        return request.auth != null;
+      }
+
+      function getUser() {
+        return get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data;
+      }
+
+      function isOwner() {
+        return getUser().role == "owner";
+      }
+
+      function isSupervisor() {
+        return getUser().role == "supervisor";
+      }
+
+      function isBranchManager() {
+        return getUser().role == "branch_manager";
+      }
+
+      function isAssistantManager() {
+        return getUser().role == "assistant_manager";
+      }
+
+      function isSales() {
+        return getUser().role == "sales";
+      }
+
+      function hasBranchAccess(branchId) {
+
+        return isOwner() ||
+
+          branchId in getUser().branchIds;
+      }
+
+    // =====================================
+  // USERS
+  // =====================================
+
+  match /users/{userId} {
+
+    allow read: if
+      request.auth != null &&
+      (
+        request.auth.uid == userId ||
+        isOwner()
+      );
+
+    allow create: if isOwner();
+
+    allow update: if isOwner();
+
+    allow delete: if false;
+  }
+
+      // =====================================
+      // PRODUCTS
+      // =====================================
+
+      match /products/{productId} {
+
+        allow read:
+          if isLoggedIn();
+
+        allow create, update:
+          if isLoggedIn() &&
+          isOwner();
+
+        allow delete:
+          if false;
+      }
+
+      // =====================================
+      // PRICING
+      // =====================================
+
+      match /pricing/{docId} {
+
+        allow read:
+          if isLoggedIn();
+
+        allow write:
+          if isLoggedIn() &&
+          isOwner();
+      }
+
+      // =====================================
+      // INVENTORY
+      // =====================================
+
+      match /inventory/{docId} {
+
+        allow read:
+        if isLoggedIn() &&
+        hasBranchAccess(
+          resource.data.branchId
+        );
+
+        allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+        allow delete:
+          if false;
+      }
+
+      // =====================================
+      // STOCK
+      // =====================================
+
+      match /stock/{docId} {
+
+        allow read:
+        if isLoggedIn() &&
+        hasBranchAccess(
+          resource.data.branchId
+        );
+
+        allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+        allow delete:
+          if false;
+      }
+
+      // =====================================
+      // SALES
+      // =====================================
+
+      match /sales/{saleId} {
+
+        allow read:
+          if isLoggedIn() &&
+          hasBranchAccess(
+            resource.data.branchId
+          );
+
+        allow create:
+          if isLoggedIn() &&
+          hasBranchAccess(
+            request.resource.data.branchId
+          );
+
+        allow update:
+          if isLoggedIn() &&
+          (
+            isOwner() ||
+            isSupervisor() ||
+            isBranchManager() ||
+            isAssistantManager()
+          ) &&
+          hasBranchAccess(
+            resource.data.branchId
+          );
+
+        allow delete:
+          if false;
+              }
+
+      // =====================================
+      // RETURNS
+      // =====================================
+
+      match /returns/{returnId} {
+
+        allow read:
+          if isLoggedIn() &&
+          hasBranchAccess(
+            resource.data.branchId
+          );
+
+        allow create:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager() ||
+      isAssistantManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+        allow update, delete:
+          if false;
+      }
+
+      // =====================================
+      // CUSTOMERS
+      // =====================================
+
+      match /customers/{customerId} {
+
+        allow read:
+          if isLoggedIn();
+
+        allow create, update:
+          if request.auth != null &&
+          get(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.role == "owner";
+
+        allow delete:
+          if false;
+      }
+
+      // =====================================
+      // REPORTS
+      // =====================================
+
+      match /reports/{reportId} {
+
+        allow read:
+        if isLoggedIn() &&
+        hasBranchAccess(
+          resource.data.branchId
+        );
+
+        allow write:
+          if false;
+      }
+  // =====================================
+  // PURCHASES
+  // =====================================
+
+  match /purchases/{purchaseId} {
+
+    allow read:
+      if isLoggedIn() &&
+      hasBranchAccess(
+        resource.data.branchId
+      );
+
+    allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+  // =====================================
+  // TRANSFERS
+  // =====================================
+
+  match /transfers/{transferId} {
+
+    allow read:
+    if isLoggedIn() &&
+    (
+      hasBranchAccess(
+        resource.data.fromBranch
+      ) ||
+
+      hasBranchAccess(
+        resource.data.toBranch
+      )
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    (
+      hasBranchAccess(
+        request.resource.data.fromBranch
+      ) ||
+
+      hasBranchAccess(
+        request.resource.data.toBranch
+      )
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // ADJUSTMENTS
+  // =====================================
+
+  match /adjustments/{adjustmentId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // PRODUCT LOGS
+  // =====================================
+
+  match /productLogs/{logId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow update, delete:
+      if false;
+  }
+      // =====================================
+      // EXPENSES
+      // =====================================
+
+      match /expenses/{expenseId} {
+
+        allow read:
+          if isLoggedIn() &&
+          hasBranchAccess(
+            resource.data.branchId
+          );
+
+        allow create:
+          if isLoggedIn() &&
+          hasBranchAccess(
+            request.resource.data.branchId
+          );
+
+        allow update:
+          if isLoggedIn() &&
+          (
+            isOwner() ||
+            isSupervisor() ||
+            isBranchManager()
+          );
+
+        allow delete:
+          if false;
+      }
+      // =====================================
+  // WASTE
+  // =====================================
+
+  match /waste/{wasteId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // BONUSES
+  // =====================================
+
+  match /bonuses/{bonusId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor()
+    ) &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // LOANS
+  // =====================================
+
+  match /loans/{loanId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // RETURNED STOCK
+  // =====================================
+  match /returned_items/{docId} {
+
+    allow read:
+      if isLoggedIn() &&
+      hasBranchAccess(
+        resource.data.branchId
+      );
+
+    allow create:
+      if isLoggedIn() &&
+      (
+        isOwner() ||
+        isSupervisor() ||
+        isBranchManager() ||
+        isAssistantManager()
+      ) &&
+      hasBranchAccess(
+        request.resource.data.branchId
+      );
+
+    allow update:
+      if isLoggedIn() &&
+      (
+        isOwner() ||
+        isSupervisor() ||
+        isBranchManager()
+      ) &&
+      hasBranchAccess(
+        resource.data.branchId
+      );
+
+    allow delete:
+      if false;
+  }
+  match /returned_stock/{docId} {
+
+    allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+    allow create, update:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+    allow delete:
+      if false;
+  }
+
+  // =====================================
+  // LOGS
+  // =====================================
+
+  match /logs/{logId} {
+
+    allow read:
+      if isLoggedIn() &&
+      isOwner();
+
+    allow create:
+      if isLoggedIn();
+
+    allow update, delete:
+      if false;
+  }
+  // =====================================
+      // COUNTERS
+      // =====================================
+  match /counters/{document=**} {
+
+    allow read:
+      if isLoggedIn();
+
+    allow update:
+      if isLoggedIn();
+
+    allow create:
+      if isOwner();
+
+    allow delete:
+      if false;
+  }
+
+      // =====================================
+      // BRANCHES
+      // =====================================
+
+      match /branches/{branchId} {
+
+        allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(branchId);
+
+        allow create, update:
+    if isLoggedIn() &&
+    isOwner();
+
+  allow delete:
+    if false;
+      }
+    }
+  }

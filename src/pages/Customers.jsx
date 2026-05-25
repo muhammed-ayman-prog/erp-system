@@ -3,20 +3,44 @@ import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
-  onSnapshot
+  onSnapshot,
+  query,
+  where
 } from "firebase/firestore";
-
-
+import { useApp } from "../store/useApp";
+import { useAuth } from "../store/useAuth";
 export default function Customers() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [loading, setLoading] = useState(true);
-
+  const { selectedBranch } = useApp();
+  const { user } = useAuth();
+  if (user?.role !== "owner") {
+  return null;
+}
   useEffect(() => {
+
+  if (!selectedBranch) return;
+
+  const q =
+    selectedBranch === "all"
+
+      ? collection(db, "customers")
+
+      : query(
+          collection(db, "customers"),
+
+          where(
+            "branchId",
+            "==",
+            selectedBranch
+          )
+        );
+
   const unsub = onSnapshot(
-    collection(db, "customers"),
+    q,
     (snapshot) => {
 
       const data = snapshot.docs.map(doc => ({
@@ -30,7 +54,7 @@ export default function Customers() {
   );
 
   return () => unsub();
-}, []);
+}, [selectedBranch, user]);
 
   const filteredCustomers = customers
   .filter(c =>

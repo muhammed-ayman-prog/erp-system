@@ -9,9 +9,9 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../../../firebase";
-
+import { useAuth } from "../../../store/useAuth";
 export function useProducts(selectedBranch) {
-
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const productsMap = useMemo(() => {
 
@@ -88,7 +88,10 @@ useEffect(() => {
     if (!selectedBranch) return;
 
     // ALL
-    if (selectedBranch === "all") {
+    if (
+  selectedBranch === "all" &&
+  user?.role === "owner"
+) {
 
       const unsub = onSnapshot(
         collection(db, "inventory"),
@@ -147,7 +150,7 @@ useEffect(() => {
 
     return () => unsub();
 
-  }, [selectedBranch]);
+  }, [selectedBranch, user]);
 
   // 🔥 Branches
   useEffect(() => {

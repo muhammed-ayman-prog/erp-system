@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebase";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+  query,
+  where
+} from "firebase/firestore";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, BarChart, Bar,
@@ -15,8 +23,10 @@ import { useTranslate } from "../useTranslate";
 import { exportToExcel, exportToPDF } from "../utils/exportReports";
 import logo from "../assets/logo.png";
 import { useAuth } from "../store/useAuth";
+import { useApp } from "../store/useApp";
 export default function Reports() {
   const { user } = useAuth();
+  const { selectedBranch } = useApp();
   const { t, tt, lang } = useTranslate();
   const [resetting, setResetting] = useState(false);
   const [drillData, setDrillData] = useState([]);
@@ -26,13 +36,28 @@ export default function Reports() {
   const today = new Date().toISOString().split("T")[0];
 
   const [range, setRange] = useState({ from: today, to: today });
-  const [branch, setBranch] = useState("all");
   const [raw, setRaw] = useState([]);
 
   // 🔹 fetch
   useEffect(() => {
     const fetch = async () => {
-      const snap = await getDocs(collection(db, "stock"));
+      const stockQuery =
+        user?.role === "owner" &&
+        selectedBranch === "all"
+
+          ? collection(db, "stock")
+
+          : query(
+              collection(db, "stock"),
+              where(
+                "branchName",
+                "==",
+                selectedBranch
+              )
+            );
+
+      const snap =
+  await getDocs(stockQuery);
       const rows = [];
 
       snap.forEach(doc => {
@@ -55,17 +80,22 @@ export default function Reports() {
     };
 
     fetch();
-  }, []);
+  }, [selectedBranch, user]);
 
   // 🔹 filter
   const filtered = useMemo(() => {
     return raw.filter(r => {
       if (range.from && r.day < range.from) return false;
       if (range.to && r.day > range.to) return false;
-      if (branch !== "all" && r.branch !== branch) return false;
+      if (
+        selectedBranch !== "all" &&
+        r.branch !== selectedBranch
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [raw, range, branch]);
+  }, [raw, range, selectedBranch]);
 
   // 🔹 aggregates
   const { sales, invoices, salesPerDay, salesByBranch, topProducts } = useMemo(() => {
@@ -100,24 +130,19 @@ export default function Reports() {
     };
   }, [filtered]);
 
-  const branches = useMemo(
-    () => Array.from(new Set(raw.map(r => r.branch))),
-    [raw]
-  );
-
   // 🔥 EXPORT
   const handleExcel = () => {
     exportToExcel([
       { sheet: "Branches", data: salesByBranch },
       { sheet: "Products", data: topProducts },
       { sheet: "Daily", data: salesPerDay }
-    ], `Report_${range.from}_${range.to}_${branch}`);
+    ], `Report_${range.from}_${range.to}_${selectedBranch}`);
   };
 
   const handlePDF = () => {
     exportToPDF(
       salesByBranch,
-      `Report_${range.from}_${range.to}_${branch}`,
+      `Report_${range.from}_${range.to}_${selectedBranch}`,
       { logo }
     );
   };
@@ -223,10 +248,6 @@ const handleResetSystem = async () => {
 
         <div style={filterItem}>
           <Building2 size={16} />
-          <select value={branch} onChange={e => setBranch(e.target.value)}>
-            <option value="all">All</option>
-            {branches.map(b => <option key={b}>{b}</option>)}
-          </select>
         </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
@@ -239,8 +260,10 @@ const handleResetSystem = async () => {
   </button>
 
   {/* 🔥 RESET BUTTON */}
+  {user?.role === "owner" && (
+
   <button
-  disabled={resetting}
+    disabled={resetting}
   style={{
     ...btn,
     background: "#fee2e2",
@@ -251,6 +274,8 @@ const handleResetSystem = async () => {
 >
   {resetting ? "⏳ جاري التصفير..." : "🧨 Reset"}
 </button>
+
+)}
 </div>
       </motion.div>
 

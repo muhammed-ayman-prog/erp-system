@@ -72,22 +72,38 @@
   const last = inputRefs.current[items.length - 1];
   if (last) last.focus();
 }, [items.length]);
-    useEffect(() => {
+useEffect(() => {
+
   if (!user) return;
-  if (user.role === "admin" && !selectedBranch) return;
+
+  if (
+    user.role === "owner" &&
+    !selectedBranch
+  ) {
+    return;
+  }
 
   const branchToUse =
-    user.role === "admin"
+    user.role === "owner"
       ? selectedBranch
-      : user.branchId;
+      : user.branchIds?.[0];
+
+  if (!branchToUse) {
+    return;
+  }
 
   let q;
 
-if (branchToUse === "all") {
+if (
+  branchToUse === "all" &&
+  user?.role === "owner"
+) {
+
   q = query(
     collection(db, "purchases"),
     orderBy("createdAt", "desc")
   );
+
 } else {
   q = query(
     collection(db, "purchases"),
@@ -114,23 +130,26 @@ useEffect(() => {
   if (!user) return;
 
   const branchToUse =
-  user.role === "admin"
+  user.role === "owner"
     ? selectedBranch
-    : user.branchId;
+    : user.branchIds?.[0];
 
 if (!branchToUse) return;
 
 const q =
-  branchToUse === "all"
-    ? query(
-        collection(db, "stock"),
-        orderBy("createdAt", "desc")
-      )
-    : query(
-        collection(db, "stock"),
-        where("branchId", "==", branchToUse),
-        orderBy("createdAt", "desc")
-      );
+  user?.role === "owner" &&
+branchToUse === "all"
+
+  ? query(
+      collection(db, "stock"),
+      orderBy("createdAt", "desc")
+    )
+
+  : query(
+      collection(db, "stock"),
+      where("branchId", "==", branchToUse),
+      orderBy("createdAt", "desc")
+    );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({
@@ -148,9 +167,9 @@ const q =
     const handlePurchase = async () => {
 
   const branchToUse =
-    user.role === "admin"
+    user.role === "owner"
       ? selectedBranch
-      : user.branchId;
+      : user.branchIds?.[0];
 
   if (!branchToUse || branchToUse === "all") {
     alert(t("stockEntry.selectBranch"));
@@ -374,7 +393,7 @@ return (
   width: "100%"
 }}>
 
-  {user?.role === "admin" && !selectedBranch && (
+  {user?.role === "owner" && !selectedBranch && (
   <p style={{
     marginBottom: "15px",
     color: theme.colors.muted

@@ -134,7 +134,15 @@ export const PERMISSIONS = {
     "reports.export",
 
 
+// =========================
+// SYSTEM 
+// =========================
 
+OPERATIONS_VIEW:
+  "operations.view",
+
+LOGS_VIEW:
+  "logs.view",
   // =========================
   // EXPENSES
   // =========================

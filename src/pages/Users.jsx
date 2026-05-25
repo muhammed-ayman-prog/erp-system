@@ -3,12 +3,9 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../store/useAuth";
 import {
-  getUsersService,
-  getBranchesService,
   createUserService,
   updateUserService,
   toggleUserStatusService,
-  deleteUserService
 } from "../features/users/services/users.service";
 import { usePermission }
 from "../hooks/usePermission";
@@ -21,14 +18,11 @@ from "../hooks/useResponsive";
 import AppButton
 from "../components/ui/AppButton";
 
-import AppCard
-from "../components/ui/AppCard";
-
-import AppModal
-from "../components/ui/AppModal";
-
 import UsersFilters
 from "../features/users/components/UsersFilters";
+
+import useUsersData
+from "../features/users/hooks/useUsersData";
 
 import PageHeader
 from "../components/ui/layout/PageHeader";
@@ -40,19 +34,19 @@ import CreateUserModal
 from "../features/users/modals/CreateUserModal";
 import EditUserModal
 from "../features/users/modals/EditUserModal";
+import {
+  getRoleLabels,
+} from "../features/users/utils/roleLabels";
 export default function Users() {
   
   const { user } = useAuth();
   const { t, lang } = useTranslate(); 
   const isRTL =
   lang === "ar";
-  const [users, setUsers] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [search, setSearch] = useState("");
+ const [search, setSearch] = useState("");
   const [filterBranch, setFilterBranch] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [loading, setLoading] = useState(false);
   const { isMobile } =
   useResponsive();
   const canCreateUsers =
@@ -65,10 +59,7 @@ const canEditUsers =
     PERMISSIONS.USERS_EDIT
   );
 
-const canDeleteUsers =
-  usePermission(
-    PERMISSIONS.USERS_DELETE
-  );
+
 
 
   useEffect(() => {
@@ -102,33 +93,13 @@ const canDeleteUsers =
   });
 
   // 🔥 Fetch
-  const fetchData = async () => {
-  try {
-    setLoading(true);
-
-    const [usersData, branchesData] =
-      await Promise.all([
-        getUsersService(),
-        getBranchesService(),
-      ]);
-
-    setUsers(usersData);
-    setBranches(branchesData);
-
-  } catch (err) {
-    console.error(err);
-    alert("Error loading data ❌");
-
-  } finally {
-    setLoading(false);
-  }
-};
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   
+const {
+  users,
+  branches,
+  loading,
+  fetchData,
+} = useUsersData(); 
   // 🔐 Create
   const handleCreateUser = async () => {
   if (!canCreateUsers) return;
@@ -181,38 +152,7 @@ if (
     alert(err.message || err?.details || "حصل خطأ ❌");
   }
 };
-
-
-  // ❌ Delete
-  const handleDelete = async (id) => {
-  if (!canDeleteUsers) return;
-  try {
-    if (user?.uid === id) {
-      alert("مش ينفع تمسح نفسك ❌");
-      return;
-    }
-
-    if (users.find(x => x.id === id)?.role === "owner") {
-      alert("مينفعش تمسح Owner ❌");
-      return;
-    }
-
-    if (!window.confirm("متأكد؟")) return;
-
-   await deleteUserService(id);
-    
-
-    
-    alert("Deleted ✅");
-
-    fetchData();
-
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
-const toggleStatus = async (u) => {
+ const toggleStatus = async (u) => {
 if (!canEditUsers) return;
   try {
     await toggleUserStatusService(
@@ -274,23 +214,8 @@ if (!canEditUsers) return;
 
 );
     }, [users, search, filterBranch]);
-  const roleLabels = {
-
-  owner:
-    t("roles.owner"),
-
-  supervisor:
-    t("roles.supervisor"),
-
-  branch_manager:
-    t("roles.branchManager"),
-
-  assistant_manager:
-    t("roles.assistantManager"),
-
-  sales:
-    t("roles.sales")
-};
+ const roleLabels =
+  getRoleLabels(t);
   return (
     <div
   style={{
@@ -306,21 +231,18 @@ if (!canEditUsers) return;
       <PageHeader
   title={`${t("users.title")} 👥`}
   subtitle={t("users.subtitle")}
->
-
-  {canCreateUsers && (
-
-    <AppButton
-      onClick={() => {
-        setShowModal(true);
-      }}
-    >
-      + {t("users.addUser")}
-    </AppButton>
-
-  )}
-
-</PageHeader>
+  actions={
+    canCreateUsers && (
+      <AppButton
+        onClick={() => {
+          setShowModal(true);
+        }}
+      >
+        + {t("users.addUser")}
+      </AppButton>
+    )
+  }
+/>
 
       {/* Loading */}
       {loading && (
@@ -346,9 +268,8 @@ if (!canEditUsers) return;
   isRTL={isRTL}
   isMobile={isMobile}
   canEditUsers={canEditUsers}
-  canDeleteUsers={canDeleteUsers}
   setEditingUser={setEditingUser}
-  handleDelete={handleDelete}
+  toggleStatus={toggleStatus}
 />
 
   {/* Create User Modal  */}

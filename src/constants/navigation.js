@@ -107,7 +107,7 @@ export const NAVIGATION_ITEMS = [
         icon: Repeat,
 
         permission:
-          PERMISSIONS.INVENTORY_TRANSFER
+        PERMISSIONS.OPERATIONS_VIEW
       },
 
       {
@@ -159,8 +159,7 @@ export const NAVIGATION_ITEMS = [
 
         icon: Users2,
 
-        permission:
-          PERMISSIONS.CUSTOMERS_VIEW
+        ownerOnly: true
       },
 
       {
@@ -193,19 +192,8 @@ export const NAVIGATION_ITEMS = [
         icon: FileText,
 
         permission:
-          PERMISSIONS.REPORTS_VIEW
+          PERMISSIONS.LOGS_VIEW
       },
-
-      {
-        label: "Settings",
-
-        path: "/settings",
-
-        icon: Settings,
-
-        permission:
-          PERMISSIONS.SETTINGS_VIEW
-      }
     ]
   }
 ];

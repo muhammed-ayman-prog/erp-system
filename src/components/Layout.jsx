@@ -128,7 +128,12 @@ right:
     items:
       section.items.filter(
         (item) => {
-
+          if (
+            item.ownerOnly &&
+            user?.role !== "owner"
+          ) {
+            return false;
+          }
           if (
             !item.permission
           ) {

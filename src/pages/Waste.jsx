@@ -31,19 +31,35 @@ export default function Waste() {
   const [toastText, setToastText] = useState("");
 
   const branchToUse =
-    user?.role === "admin" ? selectedBranch : user?.branchId;
+    user?.role === "owner"
+  ? selectedBranch
+  : user?.branchIds?.[0];
 
   // 🟢 Fetch Products
   
 
   // 🟢 Realtime Stock
   useEffect(() => {
-    if (!branchToUse || branchToUse === "all") return;
+    if (!branchToUse) return;
 
-    const q = query(
-      collection(db, "stock"),
-      where("branchId", "==", branchToUse)
-    );
+    const q =
+
+  user?.role === "owner" &&
+  branchToUse === "all"
+
+    ? query(
+        collection(db, "inventory")
+      )
+
+    : query(
+        collection(db, "inventory"),
+
+        where(
+          "branchId",
+          "==",
+          branchToUse
+        )
+      );
 
     const unsub = onSnapshot(q, (snap) => {
       const map = {};
@@ -62,16 +78,30 @@ export default function Waste() {
     });
 
     return () => unsub();
-  }, [branchToUse]);
+  }, [branchToUse, user?.role]);
 
   // 🟢 Realtime Waste History
   useEffect(() => {
-    if (!branchToUse || branchToUse === "all") return;
+    if (!branchToUse) return;
 
-    const q = query(
-      collection(db, "stock"),
-      where("branchId", "==", branchToUse)
-    );
+    const q =
+
+  user?.role === "owner" &&
+  branchToUse === "all"
+
+    ? query(
+        collection(db, "stock")
+      )
+
+    : query(
+        collection(db, "stock"),
+
+        where(
+          "branchId",
+          "==",
+          branchToUse
+        )
+      );
 
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs
@@ -87,7 +117,7 @@ export default function Waste() {
     });
 
     return () => unsub();
-  }, [branchToUse]);
+  }, [branchToUse, user?.role]);
 
   // 🟢 Fetch Products (once)
   useEffect(() => {
@@ -125,10 +155,15 @@ export default function Waste() {
   // 🔥 Submit Waste
   const handleWaste = async () => {
   if (!branchToUse || branchToUse === "all") {
-    setToastText(t("branches.select"));
-    setShowToast(true);
-    return;
-  }
+
+  setToastText(
+    "اختر فرع محدد أولًا"
+  );
+
+  setShowToast(true);
+
+  return;
+}
 
   const validItems = items.filter(
     (i) => i.productId && Number(i.quantity) > 0
