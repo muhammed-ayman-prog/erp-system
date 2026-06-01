@@ -1,8 +1,10 @@
+import { useTranslate } from "../../../useTranslate";
 export default function
 CriticalItemModal({
   selectedCriticalItem,
   setSelectedCriticalItem
 }) {
+  const { t } = useTranslate();
 
   if (!selectedCriticalItem)
     return null;
@@ -40,6 +42,9 @@ CriticalItemModal({
             alignItems: "center",
             marginBottom: 15
           }}>
+            <h4>
+              {t("dashboard.branchStock")}
+            </h4>
             <h3>
               {selectedCriticalItem.name}
             </h3>

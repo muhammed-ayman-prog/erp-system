@@ -4,13 +4,13 @@ from "react";
 import { motion }
 from "framer-motion";
 
-import { card }
-from "./styles";
-
+import { card } from "../styles";
+import { useTranslate } from "../../../useTranslate";
 export default function
 FastMovingCard({
   items
 }) {
+const { t } = useTranslate();
 const [open, setOpen] =
   useState(false);
   if (
@@ -41,16 +41,37 @@ const [open, setOpen] =
         }
 
         style={{
-          marginBottom: 12,
+
           display: "flex",
+
+          alignItems: "center",
+
           justifyContent:
             "space-between",
 
-          cursor: "pointer"
+          gap: 6,
+
+          marginBottom: 14,
+
+          cursor: "pointer",
+
+          position: "sticky",
+
+          top: 0,
+
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(6px)",
+
+          zIndex: 10,
+
+          paddingBottom: 10,
+
+          borderBottom:
+            "1px solid #f3f4f6"
         }}
       >
         <span>
-          🚀 Fast Moving
+          🚀 {t("dashboard.fastMoving")}
         </span>
 
         <span>
@@ -63,7 +84,7 @@ const [open, setOpen] =
         color: "#6b7280",
         textAlign: "center"
       }}>
-        No sales data
+        {t("dashboard.noSales")}
       </div>
 
     </motion.div>
@@ -102,16 +123,38 @@ const [open, setOpen] =
         }
 
         style={{
-          marginBottom: 12,
+
           display: "flex",
+
+          alignItems: "center",
+
           justifyContent:
             "space-between",
 
-          cursor: "pointer"
+          gap: 6,
+
+          marginBottom: 14,
+
+          cursor: "pointer",
+
+          position: "sticky",
+
+          top: 0,
+
+          background: "rgba(255,255,255,0.9)",
+
+          backdropFilter: "blur(6px)",
+
+          zIndex: 10,
+
+          paddingBottom: 10,
+
+          borderBottom:
+            "1px solid #f3f4f6"
         }}
       >
         <span>
-          🚀 Fast Moving
+          🚀 {t("dashboard.fastMoving")}
         </span>
 
         <span>

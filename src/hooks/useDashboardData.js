@@ -68,14 +68,35 @@ const { selectedBranch } = useApp();
   useState([]);
   const [fastMoving, setFastMoving] =
   useState([]);
+  const [loading, setLoading] =
+  useState(true);
 
   useEffect(() => {
-
+    
     let unsubscribe;
-
+    let mounted = true;
     const init = async () => {
+    try {
+  setLoading(true);
 
-      unsubscribe = onSnapshot(
+  if (!user) {
+    if (mounted) {
+      setLoading(false);
+    }
+    return;
+  }
+
+  if (
+    user?.role !== "owner" &&
+    !selectedBranch
+  ) {
+    if (mounted) {
+      setLoading(false);
+    }
+    return;
+  }
+
+  unsubscribe = onSnapshot(
         user?.role === "owner" &&
 selectedBranch === "all"
 
@@ -92,9 +113,33 @@ selectedBranch === "all"
   ),
 
         async (snap) => {
-
+        try {    
           const salesDocs =
             snap.docs;
+            const returnsSnap =
+              await getDocs(
+
+                user?.role === "owner" &&
+                selectedBranch === "all"
+
+                ? collection(db, "returns")
+
+                : query(
+
+                    collection(db, "returns"),
+
+                    where(
+                      "branchId",
+                      "==",
+                      selectedBranch
+                    )
+
+                  )
+
+              );
+
+            const returnDocs =
+              returnsSnap.docs;
           const inventorySnap =
           await getDocs(
             collection(db, "inventory")
@@ -107,29 +152,16 @@ selectedBranch === "all"
 
           let invoices = 0;
 
-          const latestActivity =
-            [...salesDocs]
+          const salesActivity =
 
-            .sort((a, b) =>
-              (
-                b.data()
-                .createdAt?.seconds || 0
-              ) -
-              (
-                a.data()
-                .createdAt?.seconds || 0
-              )
-            )
+            salesDocs.map(doc => {
 
-            .slice(0, 10)
-
-            .map(doc => {
-
-              const d =
-                doc.data();
+              const d = doc.data();
 
               return {
+
                 type: "sale",
+
                 amount:
                   d.total || 0,
 
@@ -140,13 +172,72 @@ selectedBranch === "all"
 
                 date:
                   d.createdAt || null
+
               };
 
             });
 
-          setActivity(
-            latestActivity
-          );
+          const returnsActivity =
+
+            returnDocs.map(doc => {
+
+              const d = doc.data();
+
+              return {
+
+                type:
+
+                  d.returnType ===
+                  "partial"
+
+                  ? "partialReturn"
+
+                  : "return",
+
+                amount:
+                  d.totalRefund || 0,
+
+                branch:
+                  branchNames[
+                    d.branchId
+                  ] || "Unknown",
+
+                date:
+                  d.createdAt || null
+
+              };
+
+            });
+
+          const latestActivity =
+
+            [
+              ...salesActivity,
+
+              ...returnsActivity
+            ]
+
+            .sort((a, b) =>
+
+              (
+                b.date?.seconds || 0
+              ) -
+
+              (
+                a.date?.seconds || 0
+              )
+
+            )
+
+            .slice(0, 15);
+
+          if (mounted) {
+
+            setActivity(
+              latestActivity
+            );
+
+          }
 
           let totalSales = 0;
 
@@ -433,90 +524,140 @@ selectedBranch === "all"
             );
 
 
-          setDeadStock(
-            deadStockData
-          );
+          if (mounted) {
+            setDeadStock(
+              deadStockData
+            );
+          }
           const fastMovingData =
           calculateFastMoving(
             salesDocs,
           );
 
-        setFastMoving(
-          fastMovingData
-        );
+        if (mounted) {
+          setFastMoving(
+            fastMovingData
+          );
+        }
 
-          setData({
+          if (mounted) {
 
-            totalSales,
+  setData({
 
-            invoices,
+    totalSales,
 
-            totalProfit,
+    invoices,
 
-            profitByBranch,
+    totalProfit,
 
-            avgMargin,
+    profitByBranch,
 
-            salesPerDay,
+    avgMargin,
 
-            salesByBranch,
+    salesPerDay,
 
-            bestBranch:
-              best,
+    salesByBranch,
 
-            worstBranch:
-              sortedBranches
-                .length > 1
+    bestBranch:
+      best,
 
-              ? sortedBranches[
-                  sortedBranches
-                  .length - 1
-                ]
+    worstBranch:
+      sortedBranches
+        .length > 1
 
-              : null,
+      ? sortedBranches[
+          sortedBranches
+          .length - 1
+        ]
 
-            alerts: {
-              low,
-              out
-            },
+      : null,
 
-            growth,
+    alerts: {
+      low,
+      out
+    },
 
-            todaySales,
+    growth,
 
-            bestPercent,
+    todaySales,
 
-            avgOrder,
+    bestPercent,
 
-            topProducts,
+    avgOrder,
 
-            topOils,
+    topProducts,
 
-            profitableOils,
+    topOils,
 
-            criticalStock
+    profitableOils,
 
-          });
+    criticalStock
+
+  });
+
+}
+
+setTimeout(() => {
+
+  if (mounted) {
+    setLoading(false);
+  }
+
+}, 250);
+
+        } catch (err) {
+
+          console.error(
+            "Dashboard Snapshot Error:",
+            err
+          );
+
+          if (mounted) {
+            setLoading(false);
+          }
 
         }
 
-      );
+      }
 
-    };
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Dashboard Init Error:",
+      err
+    );
+
+    if (mounted) {
+      setLoading(false);
+    }
+
+  }
+
+};
+    
 
     init();
 
-    return () =>
+    return () => {
+
+      mounted = false;
+
       unsubscribe &&
       unsubscribe();
 
-  }, [range]);
+    };
+
+  }, [range, selectedBranch, user]);
+  
 
  return {
   data,
   activity,
   deadStock,
-  fastMoving
+  fastMoving,
+  loading
 };
 
 }

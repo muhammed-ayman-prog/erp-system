@@ -457,11 +457,16 @@
     refundedQty: 0,
 
     seller:
-      seller || {
-        name: user?.name || "—",
-        role: "seller"
-      },
-    enteredBy: user?.name || "—",
+
+      seller ||
+
+      user?.name ||
+
+      "Unknown Seller",
+    enteredBy:
+      user?.name ||
+      "Unknown User",
+      
     enteredById:
       user?.uid || null
   });

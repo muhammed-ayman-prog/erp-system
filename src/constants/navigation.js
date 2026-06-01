@@ -4,7 +4,6 @@ import {
   Boxes,
   BarChart3,
   Users,
-  Settings,
   Receipt,
   RefreshCw,
   DollarSign,
@@ -23,12 +22,12 @@ import {
 export const NAVIGATION_ITEMS = [
 
   {
-    section: "Main",
+    section: "sidebar.main",
 
     items: [
 
       {
-        label: "Dashboard",
+        label: "sidebar.dashboard",
 
         path: "/dashboard",
 
@@ -36,7 +35,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Sales",
+        label: "sidebar.sales",
 
         path: "/sales",
 
@@ -48,15 +47,13 @@ export const NAVIGATION_ITEMS = [
     ]
   },
 
-
-
   {
-    section: "Operations",
+    section: "sidebar.operations",
 
     items: [
 
       {
-        label: "Expenses",
+        label: "sidebar.expenses",
 
         path: "/expenses",
 
@@ -67,7 +64,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Returns",
+        label: "sidebar.returns",
 
         path: "/returns",
 
@@ -78,7 +75,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Inventory",
+        label: "sidebar.inventory",
 
         path: "/inventory",
 
@@ -89,7 +86,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Purchases",
+        label: "sidebar.purchases",
 
         path: "/purchases",
 
@@ -100,18 +97,18 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Operations",
+        label: "sidebar.operationsPage",
 
         path: "/operations",
 
         icon: Repeat,
 
         permission:
-        PERMISSIONS.OPERATIONS_VIEW
+          PERMISSIONS.OPERATIONS_VIEW
       },
 
       {
-        label: "Waste",
+        label: "sidebar.waste",
 
         path: "/waste",
 
@@ -123,15 +120,13 @@ export const NAVIGATION_ITEMS = [
     ]
   },
 
-
-
   {
-    section: "Management",
+    section: "sidebar.management",
 
     items: [
 
       {
-        label: "Pricing",
+        label: "sidebar.pricing",
 
         path: "/pricing",
 
@@ -142,7 +137,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Reports",
+        label: "sidebar.reports",
 
         path: "/reports",
 
@@ -153,7 +148,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Customers",
+        label: "sidebar.customers",
 
         path: "/customers",
 
@@ -163,7 +158,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Branches",
+        label: "sidebar.branches",
 
         path: "/branches",
 
@@ -174,7 +169,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Users",
+        label: "sidebar.users",
 
         path: "/users",
 
@@ -185,7 +180,7 @@ export const NAVIGATION_ITEMS = [
       },
 
       {
-        label: "Logs",
+        label: "sidebar.logs",
 
         path: "/logs",
 

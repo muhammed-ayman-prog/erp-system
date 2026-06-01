@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { card } from "./styles";
+import { card } from "../styles";
+import { useTranslate } from "../../../useTranslate";
 function TopOilsCard({ oils }) {
+  const { t } = useTranslate();
   if (!oils || oils.length === 0) return null;
 
   const totalML = oils.reduce(
@@ -15,7 +17,7 @@ function TopOilsCard({ oils }) {
         alignItems: "center",
         gap: 6
       }}>
-        🛢 Most Consumed Oils
+        🛢 {t("dashboard.mostConsumedOils")}
       </h4>
 
       {oils.map((oil, i) => {

@@ -167,12 +167,12 @@ const [editCategory, setEditCategory] = useState("عام");
   branchToUse === "all"
 
     ? query(
-        collection(db, "bonus"),
+        collection(db, "bonuses"),
         orderBy("createdAt", "desc")
       )
 
     : query(
-        collection(db, "bonus"),
+        collection(db, "bonuses"),
 
         where(
           "branchId",
@@ -262,7 +262,7 @@ const handleAddBonus = async () => {
   return;
 }
 
-await addDoc(collection(db, "bonus"), {
+await addDoc(collection(db, "bonuses"), {
   employeeName,
   amount: Number(bonusAmount),
   note: bonusNote,
@@ -734,7 +734,7 @@ const handleUpdateBonus = async () => {
   try {
 
     await updateDoc(
-      doc(db, "bonus", editingBonus.id),
+      doc(db, "bonuses", editingBonus.id),
       {
         employeeName: editEmployeeName,
         amount: Number(editAmount),

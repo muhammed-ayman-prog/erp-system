@@ -8,6 +8,7 @@ import { useTranslate } from "../useTranslate";
 import { useNavigate }
 from "react-router-dom";
 import Notifications from "../components/Notifications";
+
 export default function Topbar({
   openMobile,
   branches,
@@ -15,6 +16,15 @@ export default function Topbar({
   setSelectedBranch
 }) {
  const { t, tt, lang } = useTranslate();
+ const branchTranslations = {
+  "Abbas Akkad 1": t("branchNames.abbasAkkad1"),
+  "Abbas Akkad 2": t("branchNames.abbasAkkad2"),
+  "Abbas Akkad 3": t("branchNames.abbasAkkad3"),
+  "City Stars": t("branchNames.cityStars"),
+  "City Stars 2": t("branchNames.cityStars2"),
+  "El Obour": t("branchNames.elObour"),
+  "El Rehab": t("branchNames.elRehab"),
+};
   const branchOrder = [
   "Abbas Akkad 1",
   "Abbas Akkad 2",
@@ -183,7 +193,7 @@ const accessibleBranches =
           lineHeight: 1.1
         }}
       >
-        A Perfume Story
+        {t("topbar.appName")}
       </div>
 
       <div
@@ -193,7 +203,7 @@ const accessibleBranches =
           marginTop: "2px"
         }}
       >
-        ERP System
+        {t("topbar.erp")}
       </div>
 
     </div>
@@ -220,7 +230,7 @@ const accessibleBranches =
         }}
       >
         {user?.role === "owner" && (
-          <option value="all">🌍 All Branches</option>
+          <option value="all">🌍 {t("topbar.allBranches")}</option>
         )}
 
         {[...(accessibleBranches || [])]
@@ -235,7 +245,7 @@ const accessibleBranches =
   })
   .map((b) => (
     <option key={b.id} value={b.id}>
-  {b.name}
+  {branchTranslations[b.name] || b.name}
 </option>
   ))}
       </select>
@@ -289,21 +299,34 @@ const accessibleBranches =
     {openLang && (
       <div
         style={{
-          position: isMobile ? "fixed" : "absolute",
-          top: isMobile ? "auto" : "45px",
-          bottom: isMobile ? "20px" : "auto",
-          left: isMobile ? "50%" : "auto",
-          [lang === "ar" ? "left" : "right"]:
-          isMobile ? "auto" : 0,
-          transform: isMobile ? "translateX(-50%)" : "none",
-          width: isMobile ? "90%" : "140px",
-          background: theme.colors.card,
-          borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-          padding: "6px",
-          border: `1px solid ${theme.colors.border}`,
-          zIndex: 9999
-        }}
+  position: "absolute",
+
+  top: "45px",
+
+  ...(lang === "ar"
+    ? { right: 0 }
+    : { left: 0 }),
+
+  width:
+    isMobile
+      ? "100px"
+      : "140px",
+
+  background:
+    theme.colors.card,
+
+  borderRadius: "12px",
+
+  boxShadow:
+    "0 10px 25px rgba(0,0,0,0.1)",
+
+  padding: "6px",
+
+  border:
+    `1px solid ${theme.colors.border}`,
+
+  zIndex: 9999
+}}
       >
 
         <div
@@ -327,7 +350,7 @@ onMouseLeave={(e) =>
     lang === "en" ? theme.colors.secondary : "transparent")
 }
         >
-          English {lang === "en" && "✓"}
+          {t("topbar.english")} {lang === "en" && "✓"}
         </div>
 
         <div
@@ -351,7 +374,7 @@ onMouseLeave={(e) =>
     lang === "en" ? theme.colors.secondary : "transparent")
 }
         >
-          العربية {lang === "ar" && "✓"}
+          {t("topbar.arabic")} {lang === "ar" && "✓"}
         </div>
 
       </div>
@@ -374,7 +397,7 @@ onMouseLeave={(e) =>
         >
           {!isMobile && (
         <span style={{ fontSize: "13px", fontWeight: "500" }}>
-          {user?.name?.split(" ")[0] || "User"}
+          {user?.name?.split(" ")[0] || t("common.user")}
         </span>
       )}
 
@@ -418,7 +441,7 @@ onMouseLeave={(e) =>
                 }
                 onClick={() => navigate("/settings")}
               >
-                ⚙️ Settings
+                ⚙️ {t("topbar.settings")}
               </div>
 
               <div
@@ -439,7 +462,7 @@ onMouseLeave={(e) =>
                   navigate("/login");
                 }}
               >
-                🚪 Logout
+                🚪 {t("topbar.logout")}
               </div>
             </div>
           )}

@@ -28,8 +28,7 @@ const {
   const isCheckoutDisabled =
     loadingCheckout ||
     cart.length === 0 ||
-    !user ||
-    !paymentMethod;
+    !paymentMethod
 
   return (
     <>

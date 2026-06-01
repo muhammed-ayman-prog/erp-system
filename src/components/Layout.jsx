@@ -161,7 +161,7 @@ right:
         opacity: 0.6, 
         margin: "10px 0 5px" 
       }}>
-        {section.section}
+        {t(section.section)}
       </div>
     )}
 
@@ -211,7 +211,7 @@ flexDirection:
   }} />
 )}
             
-            {item.label}
+            {t(item.label)}
           </Link>
           
         );

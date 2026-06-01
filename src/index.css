@@ -487,15 +487,30 @@
   opacity: 0.05;
   width: 250px;
 }
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+input,
+button,
+select,
+textarea {
+  font-size: 16px;
+}
 @keyframes skeleton-loading {
 
   0% {
     background-position:
-      100% 50%;
+      200% 0;
   }
 
   100% {
     background-position:
-      0 50%;
+      -200% 0;
   }
+
 }

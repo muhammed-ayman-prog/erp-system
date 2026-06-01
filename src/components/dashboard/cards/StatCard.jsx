@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { card } from "./styles";
+import { card } from "../styles";
 
 function StatCard({ icon, title, value }) {
   return (

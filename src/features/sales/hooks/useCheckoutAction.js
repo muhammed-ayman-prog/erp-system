@@ -36,7 +36,7 @@ export function useCheckoutAction({
 
     return handleCheckout({
       ...params,
-
+      
       playCheckoutSound,
 
       customerName,

@@ -321,7 +321,9 @@ if (containerType === "box") {
   return 0;
 };  
 
-const handleCheckout = async (params) => {
+const handleCheckout = async (
+  params = {}
+) => {
   const {
     customerName,
     customerPhone,
@@ -343,12 +345,34 @@ const handleCheckout = async (params) => {
     setCustomerPhone,
   } = params;
   const sellerName =
+  
+  
 
   typeof salesName === "string"
 
     ? salesName
 
     : salesName?.name || "";
+    console.log({
+
+  paymentMethod,
+
+  cartLength:
+    cart.length,
+
+  selectedBranch,
+
+  customerPhone,
+
+  customerName,
+
+  salesName,
+
+  sellerName,
+
+  user
+
+});
 if (!paymentMethod) {
   showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
   return;
@@ -381,10 +405,12 @@ if (!sellerName.trim()) {
   );
   return;
 }
+
   setLoadingCheckout(true);
 
   try {
     const invoiceNumber = await processCheckout({
+      
       cart,
       branchToUse: selectedBranch,
       total,
@@ -392,7 +418,7 @@ if (!sellerName.trim()) {
       customerName,
       customerPhone,
 
-      seller: salesName,
+      seller: sellerName,
 
       user
     });

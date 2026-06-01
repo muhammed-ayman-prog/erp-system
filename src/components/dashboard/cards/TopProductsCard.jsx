@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { card } from "./styles";
+import { card } from "../styles";
+import { useTranslate } from "../../../useTranslate";
 function TopProductsCard({ products, totalSales }) {
+  const { t } = useTranslate();
   if (!products || products.length === 0) return null;
   const totalProfit = products.reduce(
   (sum, p) => sum + p.total,
@@ -9,7 +11,7 @@ function TopProductsCard({ products, totalSales }) {
   return (
     <motion.div style={card} whileHover={{ scale: 1.02 }}>
       <h4 style={{ display: "flex", alignItems: "center", gap: 6 }}>
-  🔥 Most Profitable Products
+  🔥 {t("dashboard.mostProfitableProducts")}
 </h4>
 
       {products.map((p, i) => {

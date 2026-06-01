@@ -31,9 +31,7 @@ export default function useCartActions({
       console.log("❌ NO SELLER");
       return;
     }
-    handleCheckout({
-      seller: selectedSeller
-    });
+    handleCheckout();
   }
 
   return {

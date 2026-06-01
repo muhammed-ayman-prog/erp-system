@@ -1,6 +1,120 @@
 export const translations = {
   en: {
+    sidebar: {
+      main: "Main",
+      operations: "Operations",
+      management: "Management",
+
+      dashboard: "Dashboard",
+      sales: "Sales",
+      expenses: "Expenses",
+      returns: "Returns",
+      inventory: "Inventory",
+      purchases: "Purchases",
+      waste: "Waste",
+      pricing: "Pricing",
+      reports: "Reports",
+      customers: "Customers",
+      branches: "Branches",
+      users: "Users",
+      logs: "Logs",
+      operationsPage: "Operations",
+    },
+    topbar: {
+      appName: "A Perfume Story",
+      erp: "Management System",
+      allBranches: "All Branches",
+      english: "English",
+      arabic: "Arabic",
+      settings: "Settings",
+      logout: "Logout"
+    },
+    branchNames: {
+      abbasAkkad1: "Abbas Akkad 1",
+      abbasAkkad2: "Abbas Akkad 2",
+      abbasAkkad3: "Abbas Akkad 3",
+      cityStars: "City Stars",
+      cityStars2: "City Stars 2",
+      elObour: "El Obour",
+      elRehab: "El Rehab"
+    },
+    dashboard: {
+      title: "Dashboard",
+
+      alerts: "Alerts",
+
+      noSales: "No sales data in selected period",
+
+      profit: "Profit",
+
+      avgMargin: "Avg Margin",
+
+      today: "Today",
+
+      avgOrder: "Avg Order",
+
+      growth: "Growth",
+
+      branchPerformance: "Branch Performance",
+
+      profitableBranches: "Most Profitable Branches",
+
+      noBranchData: "No branch data",
+      sales: "Sales",
+
+      invoices: "Invoices",
+
+      todaySales: "Today's Sales",
+      fastMoving: "Fast Moving",
+
+      deadStock: "Dead Stock",
+
+      recentActivity: "Recent Activity",
+      neverSold: "Never Sold",
+      criticalStock: "Critical Stock",
+      criticalOils: "Critical Oils",
+
+      criticalContainers: "Critical Containers",
+
+      criticalOriginals: "Critical Originals",
+
+      criticalProducts: "Critical Body Products",
+      noActivity:
+        "No recent activity",
+      "bestBranch": "Best Branch",
+      "ofTotalSales": "of total sales",
+
+      "branches": "branches",
+
+      "threshold": "Threshold",
+      "outOfStock": "Out Of Stock",
+      "critical": "Critical",
+      "low": "Low",
+
+      "mostProfitableProducts": "Most Profitable Products",
+
+      "mostConsumedOils": "Most Consumed Oils",
+
+      "mostProfitableOils": "Most Profitable Oils",
+
+      "branchStock": "Branch Stock"
+        
+      
+    },
+    activity: {
+
+      sale: "Sale",
+
+      return: "Return",
+
+      partialReturn: "Partial Return",
+      
+
+},
+
     common: {
+      user: "User",
+      days: "days",
       save: "Save",
       cancel: "Cancel",
       delete: "Delete",
@@ -47,7 +161,8 @@ export const translations = {
       password: "Password",
       disabled: "Disabled",
       "disable": "Disable",
-      "activate": "Activate"    
+      "activate": "Activate",
+      "currency": "EGP"   
       
     },
     
@@ -223,7 +338,12 @@ export const translations = {
       addStock: "Add Stock",
       lowStock: "Low Stock",
       outOfStock: "Out of Stock",
-      productsAvailable: "Products Available"
+      productsAvailable: "Products Available",
+      "oil": "Oil",
+      "container": "Container",
+      "product": "Product",
+      "original": "Original",
+
     },
 
     reports: {
@@ -270,12 +390,20 @@ export const translations = {
       permissions: "Permissions",
     },
 
-    "roles": {
-      "owner": "Owner",
-      "supervisor": "Supervisor",
-      "branchManager": "Branch Manager",
-      "assistantManager": "Assistant Manager",
-      "sales": "Sales"
+    roles: {
+      seller: "Seller",
+
+      owner: "Owner",
+
+      supervisor: "Supervisor",
+
+      branchManager:
+        "Branch Manager",
+
+      assistantManager:
+        "Assistant Manager",
+
+      sales: "Sales"
     },
 
     branches: {
@@ -349,7 +477,119 @@ greetings: {
   },
 
   ar: {
+    sidebar: {
+      main: "الرئيسية",
+      operations: "العمليات",
+      management: "الإدارة",
+
+      dashboard: "الشاشة الرئيسية ",
+      sales: "المبيعات",
+      expenses: "المصروفات",
+      returns: "المرتجعات",
+      inventory: "المخزون",
+      purchases: "المشتريات",
+      waste: "الهالك",
+      pricing: "التسعير",
+      reports: "التقارير",
+      customers: "العملاء",
+      branches: "الفروع",
+      users: "المستخدمين",
+      logs: "السجلات",
+      operationsPage: "العمليات",
+    },
+    topbar: {
+      appName: "A Perfume Story",
+      erp: "إدارة الفروع والمبيعات ",
+      allBranches: "كل الفروع",
+      english: "English",
+      arabic: "العربية",
+      settings: "الإعدادات",
+      logout: "تسجيل الخروج"
+    },
+    branchNames: {
+      abbasAkkad1: "عباس العقاد 1",
+      abbasAkkad2: "عباس العقاد 2",
+      abbasAkkad3: "عباس العقاد 3",
+      cityStars: "سيتي ستارز",
+      cityStars2: "سيتي ستارز 2",
+      elObour: "العبور",
+      elRehab: "الرحاب"
+    },
+    dashboard: {
+      title: "الرئيسية",
+      alerts: "التنبيهات",
+
+      noSales: "لا توجد مبيعات في الفترة المحددة",
+
+      profit: "الأرباح",
+
+      avgMargin: "متوسط الهامش",
+
+      today: "اليوم",
+
+      avgOrder: "متوسط الطلب",
+
+      growth: "النمو",
+
+
+      branchPerformance: "أداء الفروع",
+
+      profitableBranches: "أكثر الفروع ربحًا",
+
+      noBranchData: "لا توجد بيانات فروع",
+      sales: "المبيعات",
+
+      invoices: "الفواتير",
+
+      todaySales: "مبيعات اليوم",
+      fastMoving: "الأكثر حركة",
+
+      deadStock: "الراكد",
+
+      recentActivity: "آخر النشاطات",
+      neverSold: "لم يتم بيعه",
+      criticalStock: "المخزون الحرج",
+      criticalOils: "الزيوت الحرجة",
+
+      criticalContainers: "العبوات الحرجة",
+
+      criticalOriginals: "الأوريجنال الحرجة",
+
+      criticalProducts: "منتجات الجسم الحرجة",
+      noActivity:
+        "لا توجد نشاطات حديثة",
+      "bestBranch": "أفضل فرع",
+    "ofTotalSales": "من إجمالي المبيعات",
+
+    "branches": "فروع",
+
+    "threshold": "الحد الأدنى",
+    "outOfStock": "نفذ",
+    "critical": "حرج",
+    "low": "منخفض",
+
+    "mostProfitableProducts": "أعلى المنتجات ربحًا",
+
+    "mostConsumedOils": "الأكثر استهلاكًا",
+
+    "mostProfitableOils": "أعلى الزيوت ربحًا",
+
+    "branchStock": "مخزون الفروع"
+      
+    },
+    activity: {
+
+      sale: "بيع",
+
+      return: "مرتجع",
+
+      partialReturn: "مرتجع جزئي",
+      
+
+    },
     common: {
+      user: "مستخدم",
+      days: "أيام",
       save: "حفظ",
       delete: "حذف",
       edit: "تعديل",
@@ -395,7 +635,8 @@ greetings: {
       password: "كلمة المرور",
       disabled: "معطل",
       "disable": "تعطيل",
-      "activate": "تفعيل"
+      "activate": "تفعيل",
+      "currency": "EGP"
 
     },
 
@@ -583,7 +824,11 @@ greetings: {
       addStock: "إضافة مخزون",
       lowStock: "كمية قليلة",
       outOfStock: "غير متوفر",
-      productsAvailable: "منتج متاح"
+      productsAvailable: "منتج متاح",
+      "oil": "زيت",
+      "container": "عبوة",
+      "product": "منتج",
+      "original": "أوريجنال"
     },
 
     reports: {
@@ -621,12 +866,21 @@ greetings: {
       permissions: "الصلاحيات",
     },
 
-    "roles": {
-      "owner": "مالك النظام",
-      "supervisor": "مشرف",
-      "branchManager": "مدير فرع",
-      "assistantManager": "مساعد مدير",
-      "sales": "موظف مبيعات"
+    roles: {
+
+      seller: "بائع",
+
+      owner: "مالك النظام",
+
+      supervisor: "مشرف",
+
+      branchManager:
+        "مدير فرع",
+
+      assistantManager:
+        "مساعد مدير",
+
+      sales: "موظف مبيعات"
     },
 
     branches: {

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { card } from "./styles";
+import { card } from "../styles";
+import { useTranslate } from "../../../useTranslate";
 function ProfitableOilsCard({ oils }) {
+  const { t } = useTranslate();
   if (!oils || oils.length === 0) return null;
 
   const totalProfit = oils.reduce(
@@ -15,7 +17,7 @@ function ProfitableOilsCard({ oils }) {
         alignItems: "center",
         gap: 6
       }}>
-        💰 Most Profitable Oils
+        💰 {t("dashboard.mostProfitableOils")}
       </h4>
 
       {oils.map((oil, i) => {

@@ -1,6 +1,8 @@
 export const page = {
-  padding: 20,
-  background: "#f8fafc"
+  padding:
+    window.innerWidth < 768
+      ? 10
+      : 20
 };
 
 export const topBar = {

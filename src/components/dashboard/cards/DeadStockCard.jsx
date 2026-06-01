@@ -4,13 +4,13 @@ from "react";
 import { motion }
 from "framer-motion";
 
-import { card }
-from "./styles";
-
+import { card } from "../styles";
+import { useTranslate } from "../../../useTranslate";
 export default function
 DeadStockCard({
   items
 }) {
+  const { t } = useTranslate();
 const [open, setOpen] =
   useState(false);
   if (
@@ -45,16 +45,37 @@ const [open, setOpen] =
         }
 
         style={{
-          marginBottom: 12,
+
           display: "flex",
+
+          alignItems: "center",
+
           justifyContent:
             "space-between",
 
-          cursor: "pointer"
+          gap: 6,
+
+          marginBottom: 14,
+
+          cursor: "pointer",
+
+          position: "sticky",
+
+          top: 0,
+
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(6px)",
+
+          zIndex: 10,
+
+          paddingBottom: 10,
+
+          borderBottom:
+            "1px solid #f3f4f6"
         }}
       >
         <span>
-          💤 Dead Stock
+          💤 {t("dashboard.deadStock")}
         </span>
 
         <span>
@@ -91,8 +112,8 @@ const [open, setOpen] =
               fontWeight: "600"
             }}>
               {item.days === "Never"
-                ? "Never sold"
-                : `${item.days} days`}
+                ? t("dashboard.neverSold")
+                : `${item.days} ${t("common.days")}`}
             </span>
 
           </div>
@@ -102,7 +123,7 @@ const [open, setOpen] =
             color: "#6b7280",
             marginTop: 4
           }}>
-            Qty:
+            {t("common.qty")}:
             {" "}
             {item.qty}
           </div>
