@@ -6,9 +6,13 @@ import "./index.css";
 
 import { registerSW } from "virtual:pwa-register";
 
+import { useAuth } from "./store/useAuth";
+
 registerSW({
   immediate: true,
 });
+
+useAuth.getState().initAuth();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
