@@ -10,61 +10,66 @@ export default defineConfig({
 
     VitePWA({
 
-      registerType: "autoUpdate",
+  registerType: "autoUpdate",
 
+  includeAssets: [
+    "favicon.svg",
+    "pwa-192.png",
+    "pwa-512.png"
+  ],
 
-      workbox: {
-  clientsClaim: true,
-  skipWaiting: true,
+  workbox: {
+    clientsClaim: true,
+    skipWaiting: true,
 
-  maximumFileSizeToCacheInBytes:
-    5 * 1024 * 1024
-},
+    maximumFileSizeToCacheInBytes:
+      5 * 1024 * 1024
+  },
 
-      manifest: {
+  manifest: {
 
-        name: "A Perfume Story",
+    name: "A Perfume Story",
 
-        short_name: "APS",
+    short_name: "APS",
 
-        description:
-          "Management & Inventory System",
+    description:
+      "Management & Inventory System",
 
-        theme_color: "#111827",
+    theme_color: "#111827",
 
-        background_color: "#f8fafc",
+    background_color: "#f8fafc",
 
-        display: "standalone",
+    display: "standalone",
 
-        orientation: "portrait",
+    orientation: "portrait",
 
-        scope: "/",
+    scope: "/",
 
-        start_url: "/",
+    start_url: "/",
 
-        icons: [
+    icons: [
 
-          {
-            src: "/pwa-192.png",
+      {
+        src: "/pwa-192.png",
 
-            sizes: "192x192",
+        sizes: "192x192",
 
-            type: "image/png"
-          },
+        type: "image/png"
+      },
 
-          {
-            src: "/pwa-512.png",
+      {
+        src: "/pwa-512.png",
 
-            sizes: "512x512",
+        sizes: "512x512",
 
-            type: "image/png"
-          }
-
-        ]
-
+        type: "image/png"
       }
 
-    })
+    ]
+
+  }
+
+})
 
   ]
 
