@@ -120,10 +120,10 @@ if (confirmText !== "RESET ALL") {
   display: "flex",
   justifyContent: "center",
   alignItems: "flex-start",
-  paddingTop: "40px"
+  padding: "20px 14px"
 }}>
 
-  <div style={{ width: "100%", maxWidth: "500px" }}>
+  <div style={{ width: "100%", maxWidth: "420px" }}>
 
     <h2 style={{ marginBottom: "20px" }}>
       Settings ⚙️
@@ -320,6 +320,17 @@ if (confirmText !== "RESET ALL") {
 </button>
 
     </div>
+    <div style={{
+  marginTop: "14px",
+  textAlign: "center",
+  fontSize: "11px",
+  color: "#94a3b8"
+}}>
+
+  APS v
+  {import.meta.env.VITE_APP_VERSION}
+
+</div>
 
   </div>
 
