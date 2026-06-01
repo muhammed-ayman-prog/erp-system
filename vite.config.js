@@ -27,6 +27,21 @@ export default defineConfig({
   },
 
   manifest: {
+    id: "/",
+    screenshots: [
+  {
+    src: "/mobile-shot.png",
+    sizes: "540x720",
+    type: "image/png"
+  },
+
+  {
+    src: "/desktop-shot.png",
+    sizes: "1280x720",
+    type: "image/png",
+    form_factor: "wide"
+  }
+],
 
     name: "A Perfume Story",
 
