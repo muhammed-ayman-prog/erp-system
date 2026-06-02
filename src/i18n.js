@@ -19,6 +19,13 @@ export const translations = {
       users: "Users",
       logs: "Logs",
       operationsPage: "Operations",
+      finance: "Finance",
+
+      dailyClosing:
+        "Daily Closing",
+
+      dailyClosingHistory:
+        "Closing History",
     },
     topbar: {
       appName: "A Perfume Story",
@@ -61,7 +68,7 @@ export const translations = {
 
       noBranchData: "No branch data",
       sales: "Sales",
-
+      "orders": "Orders",
       invoices: "Invoices",
 
       todaySales: "Today's Sales",
@@ -498,7 +505,139 @@ greetings: {
   afternoon: "Good Afternoon",
   evening: "Good Evening",
   welcome: "Welcome back"
-}
+},
+dailyClosing: {
+  title: "Daily Closing",
+  subtitle: "Daily financial summary",
+
+  totalSales: "Total Sales",
+  invoices: "Invoices",
+  refunds: "Refunds",
+  expenses: "Expenses",
+  expectedCash: "Expected Cash",
+
+  reconciliation: "Cash Reconciliation",
+
+  cashSales: "Cash Sales",
+
+  refundsTable: "Refunds",
+
+  expensesTable: "Expenses",
+
+  product: "Product",
+
+  amount: "Amount",
+
+  time: "Time",
+
+  note: "Note",
+
+  category: "Category",
+
+  noData: "No data found today",
+
+  invoice: "Invoice",
+
+  qty: "Qty",
+  actualCash:
+  "Actual Cash",
+
+difference:
+  "Difference",
+
+matched:
+  "Cash Matched",
+
+cashOver:
+  "Cash Over",
+
+cashShortage:
+  "Cash Shortage",
+
+saveClosing:
+  "Save Closing",
+
+saving:
+  "Saving...",
+
+alreadyClosed:
+  "Already Closed",
+
+dailyAlreadyClosed:
+  "Daily already closed",
+
+dailyClosingSaved:
+  "Daily closing saved",
+
+somethingWentWrong:
+  "Something went wrong",
+
+notes:
+  "Notes",
+
+writeNotes:
+  "Write notes...",
+
+closeDailyCash:
+  "Close Daily Cash",
+
+enterActualCash:
+  "Enter actual cash amount",
+
+loans:
+  "Loans",
+
+bonuses:
+  "Bonuses",
+
+cash:
+  "Cash",
+
+visa:
+  "Visa",
+
+instapay:
+  "Instapay",
+
+branch:
+  "Branch",
+
+createdAt:
+  "Created At",
+
+user:
+  "User",
+
+status:
+  "Status",
+
+expected:
+  "Expected",
+
+actual:
+  "Actual",
+
+search:
+  "Search...",
+
+reviewClosings:
+  "Review all branch closings",
+
+closings:
+  "Closings",
+
+matchedCount:
+  "Matched",
+
+shortages:
+  "Shortages",
+
+historyTitle:
+  "Daily Closing History",
+
+completed:
+  "Daily closing already completed"
+},
     
   },
 
@@ -522,6 +661,13 @@ greetings: {
       users: "المستخدمين",
       logs: "السجلات",
       operationsPage: "العمليات",
+      finance: "المالية",
+
+      dailyClosing:
+        "التقفيل اليومي",
+
+      dailyClosingHistory:
+        "سجل التقفيل",
     },
     topbar: {
       appName: "A Perfume Story",
@@ -568,8 +714,8 @@ greetings: {
       invoices: "الفواتير",
 
       todaySales: "مبيعات اليوم",
-      fastMoving: "الأكثر حركة",
-
+      fastMoving: "الأكثر مبيعًا",
+      "orders": "مرة",
       deadStock: "الراكد",
 
       recentActivity: "آخر النشاطات",
@@ -1000,6 +1146,142 @@ greetings: {
   afternoon: "مساء الخير",
   evening: "مساء الخير",
   welcome: "أهلاً بعودتك"
-}
+},
+dailyClosing: {
+  title: "الجرد اليومي",
+  subtitle: "ملخص مالي يومي",
+
+  totalSales: "إجمالي المبيعات",
+
+  invoices: "الفواتير",
+
+  refunds: "المرتجعات",
+
+  expenses: "المصروفات",
+
+  expectedCash: "النقدية المتوقعة",
+
+  reconciliation: "تسوية الكاش",
+
+  cashSales: "المبيعات النقدية",
+
+  refundsTable: "المرتجعات",
+
+  expensesTable: "المصروفات",
+
+  product: "المنتج",
+
+  amount: "المبلغ",
+
+  time: "الوقت",
+
+  note: "ملاحظات",
+
+  category: "التصنيف",
+
+  noData: "لا توجد بيانات اليوم",
+
+  invoice: "الفاتورة",
+
+  qty: "الكمية",
+  actualCash:
+  "الكاش الفعلي",
+
+difference:
+  "الفرق",
+
+matched:
+  "الكاش مطابق",
+
+cashOver:
+  "زيادة في الكاش",
+
+cashShortage:
+  "عجز في الكاش",
+
+saveClosing:
+  "حفظ اليومية",
+
+saving:
+  "جاري الحفظ...",
+
+alreadyClosed:
+  "تم الإغلاق",
+
+dailyAlreadyClosed:
+  "تم إغلاق اليومية بالفعل",
+
+dailyClosingSaved:
+  "تم حفظ اليومية",
+
+somethingWentWrong:
+  "حدث خطأ",
+
+notes:
+  "ملاحظات",
+
+writeNotes:
+  "اكتب أي ملاحظات...",
+
+closeDailyCash:
+  "إغلاق اليومية",
+
+enterActualCash:
+  "أدخل النقدية الفعلية الموجودة",
+
+loans:
+  "السلف",
+
+bonuses:
+  "الحوافز",
+
+cash:
+  "كاش",
+
+visa:
+  "فيزا",
+
+instapay:
+  "انستاباي",
+
+branch:
+  "الفرع",
+
+createdAt:
+  "وقت الحفظ",
+
+user:
+  "المستخدم",
+
+status:
+  "الحالة",
+
+expected:
+  "المتوقع",
+
+actual:
+  "الفعلي",
+
+search:
+  "بحث...",
+
+reviewClosings:
+  "مراجعة جميع يوميات الفروع",
+
+closings:
+  "اليوميات",
+
+matchedCount:
+  "مطابق",
+
+shortages:
+  "العجز",
+
+historyTitle:
+  "سجل التقفيل اليومي",
+
+completed:
+  "تم إغلاق اليومية لهذا اليوم"
+},
   }
 };

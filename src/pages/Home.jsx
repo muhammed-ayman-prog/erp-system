@@ -10,7 +10,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
-import { branchNames } from "../constants/branches";
+import {
+  getBranchNames
+} from "../constants/branches";
 import {
 collection,
 onSnapshot,
@@ -65,6 +67,10 @@ useEffect(() => {
   const { user } = useAuth();
 
   const { selectedBranch } = useApp();
+  const [
+  branchNames,
+  setBranchNames
+] = useState({});
   const [todaySales, setTodaySales] =
   useState(0);
 
@@ -209,6 +215,20 @@ useEffect(() => {
   selectedBranch,
   user
 ]);
+useEffect(() => {
+
+  async function loadBranches() {
+
+    const data =
+      await getBranchNames();
+
+    setBranchNames(data);
+
+  }
+
+  loadBranches();
+
+}, []);
 const quickActions = [
 
   hasPermission(

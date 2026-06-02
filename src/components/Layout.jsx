@@ -168,7 +168,18 @@ right:
     {/* العناصر */}
     {section.items
       .map((item, i) => {
-        const isActive = location.pathname.startsWith(item.path)
+        const isActive =
+
+  location.pathname ===
+    item.path ||
+
+  (
+    item.path !== "/dashboard" &&
+
+    location.pathname.startsWith(
+      item.path + "/"
+    )
+  );
         return (
           <Link
   className={isActive ? "active-link" : ""}

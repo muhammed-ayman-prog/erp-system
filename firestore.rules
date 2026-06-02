@@ -569,5 +569,37 @@
   allow delete:
     if false;
       }
+  // =====================================
+// DAILY CLOSINGS
+// =====================================
+
+match /dailyClosings/{closingId} {
+
+  allow read:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+  allow create:
+    if isLoggedIn() &&
+    hasBranchAccess(
+      request.resource.data.branchId
+    );
+
+  allow update:
+    if isLoggedIn() &&
+    (
+      isOwner() ||
+      isSupervisor() ||
+      isBranchManager()
+    ) &&
+    hasBranchAccess(
+      resource.data.branchId
+    );
+
+  allow delete:
+    if false;
+}
     }
   }

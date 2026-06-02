@@ -2,11 +2,11 @@
     collection,
     getDocs
     } from "firebase/firestore";
+    import {
+    getBranchNames
+    } from "../../constants/branches";
     export default async function
-    calculateCriticalStock(
-    db,
-    branchNames
-    ) {
+    calculateCriticalStock(db) {
 
     let low = 0;
             let out = 0;
@@ -25,6 +25,8 @@
             productMeta[doc.id] = doc.data();
             });
             const criticalMap = {};
+            const branchNames =
+            await getBranchNames();
             inventorySnap.forEach(doc => {
     
     
@@ -32,6 +34,10 @@
     
         const meta =
         productMeta[item.productId] || {};
+        // 🚫 Ignore archived products
+        if (meta.isArchived) {
+        return;
+        }
     
         const qty = item.quantity || 0;
         const productName =
@@ -105,13 +111,15 @@
         category: meta.category || "",
     
         branches: [
-        branchNames[item.branchId] || "Unknown"
+        branchNames[item.branchId]
+?.name || "Unknown"
         ],
     
         branchDetails: [
         {
             branch:
-            branchNames[item.branchId] || "Unknown",
+            branchNames[item.branchId]
+?.name || "Unknown",
     
             qty
         }
@@ -126,12 +134,14 @@
         );
     
         criticalMap[key].branches.push(
-        branchNames[item.branchId] || "Unknown"
+        branchNames[item.branchId]
+?.name || "Unknown"
         );
     
         criticalMap[key].branchDetails.push({
         branch:
-            branchNames[item.branchId] || "Unknown",
+        branchNames[item.branchId]
+?.name || "Unknown",
     
         qty
         });

@@ -1,39 +1,92 @@
-export default function
-calculateDeadStock(
-  productsDocs,
+export default function calculateDeadStock(
+  salesDocs,
   inventoryDocs,
-  salesDocs
+  productsDocs,
+  selectedBranch = null
 ) {
 
-  const soldMap = {};
+  const DEAD_DAYS = 30;
 
-  // 🧾 آخر بيع لكل منتج
+  const inventoryMap = {};
+  const productMeta = {};
+  const lastSaleMap = {};
+
+  // =========================
+  // Products Meta
+  // =========================
+
+  productsDocs.forEach(doc => {
+
+    productMeta[doc.id] =
+      doc.data();
+
+  });
+
+  // =========================
+  // Inventory
+  // =========================
+
+  inventoryDocs.forEach(doc => {
+
+    const item = doc.data();
+
+    // ✅ Branch filter
+    if (
+      selectedBranch &&
+      item.branchId !== selectedBranch
+    ) {
+      return;
+    }
+
+    inventoryMap[item.productId] =
+
+      (
+        inventoryMap[item.productId] || 0
+      ) + (item.quantity || 0);
+
+  });
+
+  // =========================
+  // Last Sale Tracking
+  // =========================
+
   salesDocs.forEach(doc => {
 
-    const d = doc.data();
+    const sale = doc.data();
 
-    if (!d.items) return;
+    // ✅ Branch filter
+    if (
+      selectedBranch &&
+      sale.branchId !== selectedBranch
+    ) {
+      return;
+    }
 
-    const createdAt =
-      d.createdAt?.seconds
-        ? d.createdAt.seconds * 1000
-        : Date.now();
+    const saleDate =
 
-    d.items.forEach(item => {
+      sale.createdAt?.toDate?.() ||
 
-      const id =
+      new Date(sale.createdAt);
+
+    if (!sale.items) return;
+
+    sale.items.forEach(item => {
+
+      const productId =
         item.productId;
 
-      if (!id) return;
+      if (!productId) return;
+
+      const currentLastSale =
+        lastSaleMap[productId];
 
       if (
-        !soldMap[id] ||
-        createdAt >
-        soldMap[id]
+        !currentLastSale ||
+        saleDate > currentLastSale
       ) {
 
-        soldMap[id] =
-          createdAt;
+        lastSaleMap[productId] =
+          saleDate;
 
       }
 
@@ -41,91 +94,101 @@ calculateDeadStock(
 
   });
 
+  // =========================
+  // Build Dead Stock
+  // =========================
+
   const deadStock = [];
 
-  productsDocs.forEach(doc => {
+  Object.entries(
+    inventoryMap
+  ).forEach(([productId, qty]) => {
 
-    const product =
-      doc.data();
+    // ✅ Ignore zero stock
+    if (qty <= 0) return;
 
-    const productId =
-      doc.id;
+    const meta =
+      productMeta[productId] || {};
 
-    // 📦 إجمالي الكمية
-    const totalQty =
-      inventoryDocs
-        .filter(inv =>
-          inv.data().productId ===
-          productId
-        )
-
-        .reduce(
-          (sum, inv) =>
-            sum +
-            (
-              inv.data().quantity || 0
-            ),
-
-          0
-        );
-
-    // مفيش stock
-    if (totalQty <= 0) return;
+    // ✅ Ignore archived
+    if (meta.isArchived) {
+      return;
+    }
 
     const lastSale =
-      soldMap[productId];
+      lastSaleMap[productId];
 
-    // عمره ما اتباع
+    // ✅ Never sold
     if (!lastSale) {
 
       deadStock.push({
-        name: product.name,
-        days: "Never",
-        qty: totalQty
+
+        name:
+          meta.name ||
+          productId,
+
+        qty,
+
+        days: "Never"
+
       });
 
       return;
-
     }
 
-    const daysSinceSale =
-      Math.floor(
-        (
-          Date.now()
-          - lastSale
-        ) /
-        (
-          1000 * 60 * 60 * 24
-        )
-      );
+    const diffDays = Math.floor(
 
-    // 🔥 أكثر من 14 يوم
-    if (daysSinceSale >= 14) {
+      (
+        Date.now() -
+        lastSale.getTime()
+      )
 
-      deadStock.push({
-        name: product.name,
-        days: daysSinceSale,
-        qty: totalQty
-      });
+      /
 
+      (
+        1000 * 60 * 60 * 24
+      )
+
+    );
+
+    // ✅ Skip active products
+    if (diffDays < DEAD_DAYS) {
+      return;
     }
+
+    deadStock.push({
+
+      name:
+        meta.name ||
+        productId,
+
+      qty,
+
+      days: diffDays
+
+    });
 
   });
 
-  return deadStock
+  // =========================
+  // Sort
+  // =========================
 
-    .sort((a, b) => {
+  deadStock.sort((a, b) => {
 
-      if (a.days === "Never")
-        return -1;
+    // Never sold first
+    if (a.days === "Never") {
+      return -1;
+    }
 
-      if (b.days === "Never")
-        return 1;
+    if (b.days === "Never") {
+      return 1;
+    }
 
-      return b.days - a.days;
+    return b.days - a.days;
 
-    })
+  });
 
-    .slice(0, 10);
+  return deadStock.slice(0, 20);
 
 }

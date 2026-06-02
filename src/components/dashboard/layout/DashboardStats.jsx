@@ -10,9 +10,6 @@ import TopProductsCard from
 import TopOilsCard from
 "../cards/TopOilsCard";
 
-import ProfitableOilsCard from
-"../cards/ProfitableOilsCard";
-
 import CriticalStockCard from
 "../cards/CriticalStockCard";
 
@@ -64,25 +61,27 @@ function DashboardStats({
         value={data.invoices}
       />
 
-      <StatCard
-        title={t("dashboard.profit")}
-        value={data.totalProfit}
-      />
+      {/*
+<StatCard
+  title={t("dashboard.profit")}
+  value={data.totalProfit}
+/>
 
-      <StatCard
-        title={t("dashboard.avgMargin")}
-        value={`${(data.avgMargin || 0).toFixed(1)}%`}
-      />
+<StatCard
+  title={t("dashboard.avgMargin")}
+  value={`${(data.avgMargin || 0).toFixed(1)}%`}
+/>
 
-      <StatCard
-        title={t("dashboard.todaySales")}
-        value={data.todaySales}
-      />
+<StatCard
+  title={t("dashboard.todaySales")}
+  value={data.todaySales}
+/>
 
-      <StatCard
-        title={t("dashboard.avgOrder")}
-        value={data.avgOrder}
-      />
+<StatCard
+  title={t("dashboard.avgOrder")}
+  value={data.avgOrder}
+/>
+*/}
 
       <BestBranchCard
         branch={data.bestBranch}
@@ -167,10 +166,6 @@ function DashboardStats({
 
       <TopOilsCard
         oils={data.topOils}
-      />
-
-      <ProfitableOilsCard
-        oils={data.profitableOils}
       />
 
       <DeadStockCard

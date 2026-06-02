@@ -12,18 +12,13 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../firebase";
-
-import { branchNames }
-from "../constants/branches";
-
 import calculateTopProducts from
 "../utils/dashboard/calculateTopProducts";
 
 import calculateTopOils from
 "../utils/dashboard/calculateTopOils";
 
-import calculateProfitableOils from
-"../utils/dashboard/calculateProfitableOils";
+
 
 import calculateCriticalStock from
 "../utils/dashboard/calculateCriticalStock";
@@ -32,6 +27,9 @@ import calculateDeadStock from
 "../utils/calculateDeadStock";
 import calculateFastMoving from
 "../utils/calculateFastMoving";
+import {
+  getBranchNames
+} from "../constants/branches";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 export default function useDashboardData(range) {
@@ -44,11 +42,6 @@ const { selectedBranch } = useApp();
     useState({
       totalSales: 0,
       invoices: 0,
-      totalProfit: 0,
-      profitByBranch: [],
-      avgMargin: 0,
-      growth: 0,
-      todaySales: 0,
       salesPerDay: [],
       salesByBranch: [],
       bestBranch: null,
@@ -58,7 +51,6 @@ const { selectedBranch } = useApp();
       topOils: [],
       profitableOils: [],
       criticalStock: [],
-      avgOrder: 0,
       alerts: {
         low: 0,
         out: 0
@@ -77,6 +69,8 @@ const { selectedBranch } = useApp();
     let mounted = true;
     const init = async () => {
     try {
+  const dynamicBranchNames =
+    await getBranchNames();
   setLoading(true);
 
   if (!user) {
@@ -166,9 +160,18 @@ selectedBranch === "all"
                   d.total || 0,
 
                 branch:
-                  branchNames[
-                    d.branchId
-                  ] || "Unknown",
+
+  d.branchName &&
+
+d.branchName !== "Unknown" &&
+
+d.branchName.length > 5
+
+  ? d.branchName
+
+  : dynamicBranchNames[
+      d.branchId
+    ]?.name || "Unknown",
 
                 date:
                   d.createdAt || null
@@ -198,9 +201,18 @@ selectedBranch === "all"
                   d.totalRefund || 0,
 
                 branch:
-                  branchNames[
-                    d.branchId
-                  ] || "Unknown",
+
+  d.branchName &&
+
+d.branchName !== "Unknown" &&
+
+d.branchName.length > 5
+
+  ? d.branchName
+
+  : dynamicBranchNames[
+      d.branchId
+    ]?.name || "Unknown",
 
                 date:
                   d.createdAt || null
@@ -241,16 +253,13 @@ selectedBranch === "all"
 
           let totalSales = 0;
 
-          let totalProfit = 0;
 
-          let marginSum = 0;
 
           const dailyMap = {};
 
           const branchMap = {};
 
-          const branchProfitMap =
-            {};
+         
 
           salesDocs.forEach(doc => {
 
@@ -283,19 +292,11 @@ selectedBranch === "all"
             const total =
               d.total || 0;
 
-            const profit =
-              d.totalProfit || 0;
-
-            const margin =
-              d.overallMargin || 0;
-
             totalSales += total;
 
             invoices++;
 
-            totalProfit += profit;
-
-            marginSum += margin;
+            
 
             dailyMap[day] =
               (
@@ -303,23 +304,23 @@ selectedBranch === "all"
               ) + total;
 
             const branch =
-              branchNames[
-                d.branchId
-              ] || "Unknown";
+
+  d.branchName &&
+
+d.branchName !== "Unknown" &&
+
+d.branchName.length > 5
+
+  ? d.branchName
+
+  : dynamicBranchNames[
+      d.branchId
+    ]?.name || "Unknown";
 
             branchMap[branch] =
               (
                 branchMap[branch] || 0
               ) + total;
-
-            branchProfitMap[
-              branch
-            ] =
-              (
-                branchProfitMap[
-                  branch
-                ] || 0
-              ) + profit;
 
           });
 
@@ -353,23 +354,7 @@ selectedBranch === "all"
               })
             );
 
-          const profitByBranch =
-            Object.entries(
-              branchProfitMap
-            )
-
-            .map(
-              ([name, total]) => ({
-                name,
-                total
-              })
-            )
-
-            .sort(
-              (a, b) =>
-                b.total - a.total
-            );
-
+          
           const sortedBranches =
             [...salesByBranch]
 
@@ -377,79 +362,6 @@ selectedBranch === "all"
               (a, b) =>
                 b.total - a.total
             );
-
-          const todayDate =
-            new Date()
-            .toLocaleDateString(
-              "en-CA"
-            );
-
-          const yesterdayDate =
-            new Date();
-
-          yesterdayDate.setDate(
-            yesterdayDate.getDate()
-            - 1
-          );
-
-          const yesterdayStr =
-            yesterdayDate
-            .toLocaleDateString(
-              "en-CA"
-            );
-
-          let todaySales = 0;
-
-          let yesterdaySales = 0;
-
-          salesDocs.forEach(doc => {
-
-            const d =
-              doc.data();
-
-            const total =
-              d.total || 0;
-
-            const date =
-              new Date(
-                d.createdAt?.seconds
-                * 1000 ||
-                Date.now()
-              );
-
-            const day =
-              date
-              .toLocaleDateString(
-                "en-CA"
-              );
-
-            if (
-              day === todayDate
-            ) {
-              todaySales += total;
-            }
-
-            if (
-              day === yesterdayStr
-            ) {
-              yesterdaySales += total;
-            }
-
-          });
-
-          const growth =
-            yesterdaySales === 0
-
-            ? 0
-
-            : (
-              (
-                todaySales
-                - yesterdaySales
-              )
-
-              / yesterdaySales
-            ) * 100;
 
           const best =
             sortedBranches[0]
@@ -482,46 +394,37 @@ selectedBranch === "all"
               range
             );
 
-          const profitableOils =
-            calculateProfitableOils(
-              salesDocs,
-              range
-            );
+          
 
-          const avgOrder =
-            invoices > 0
-            ? totalSales / invoices
-            : 0;
+          
 
           salesByBranch.sort(
             (a, b) =>
               b.total - a.total
           );
 
-          const avgMargin =
-            invoices > 0
-            ? marginSum / invoices
-            : 0;
+          
 
           const {
             criticalStock,
             low,
             out
           } =
-          await calculateCriticalStock(
-            db,
-            branchNames
-          );
+          await calculateCriticalStock(db);
           const deadStockData =
-            calculateDeadStock(
+  calculateDeadStock(
 
-              productsSnap.docs,
+    salesDocs,
 
-              inventorySnap.docs,
+    inventorySnap.docs,
 
-              salesDocs
+    productsSnap.docs,
 
-            );
+    selectedBranch === "all"
+      ? null
+      : selectedBranch
+
+  );
 
 
           if (mounted) {
@@ -548,11 +451,8 @@ selectedBranch === "all"
 
     invoices,
 
-    totalProfit,
 
-    profitByBranch,
 
-    avgMargin,
 
     salesPerDay,
 
@@ -577,19 +477,15 @@ selectedBranch === "all"
       out
     },
 
-    growth,
 
-    todaySales,
 
     bestPercent,
 
-    avgOrder,
 
     topProducts,
 
     topOils,
 
-    profitableOils,
 
     criticalStock
 

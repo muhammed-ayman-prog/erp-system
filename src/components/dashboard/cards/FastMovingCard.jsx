@@ -195,7 +195,7 @@ const [open, setOpen] =
               <span style={{
                 fontWeight: "600"
               }}>
-                {item.qty}
+                {item.qty} {t("dashboard.orders")}
               </span>
 
             </div>

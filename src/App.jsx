@@ -7,7 +7,7 @@ import { useAuth } from "./store/useAuth";
 
 import Login from "./pages/Login";
 import SalesPage from "./features/sales/pages/SalesPage";;
-
+import DailyClosing from "./pages/DailyClosing";
 import Branches from "./pages/Branches";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
@@ -16,6 +16,8 @@ import Expenses from "./pages/Expenses";
 import Waste from "./pages/Waste";
 import Returns from "./pages/Returns";
 import Layout from "./components/Layout";
+import DailyClosingHistory
+from "./pages/DailyClosingHistory";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import {
   PERMISSIONS
@@ -103,7 +105,27 @@ function App() {
               <Route element={<ProtectedRoute permissions={[PERMISSIONS.SALES_VIEW]} />}>
                 <Route path="/sales" element={<SalesPage />} />
               </Route>
-
+              {/* Daily Closing */}
+              <Route
+                element={
+                  <ProtectedRoute
+                    permissions={[
+                      PERMISSIONS.REPORTS_VIEW
+                    ]}
+                  />
+                }
+              >
+                <Route
+                  path="/daily-closing"
+                  element={<DailyClosing />}
+                />
+                <Route
+                  path="/daily-closing-history"
+                  element={
+                    <DailyClosingHistory />
+                  }
+                />
+              </Route>
               {/* Expenses */}
               <Route element={<ProtectedRoute permissions={[PERMISSIONS.EXPENSES_VIEW]} />}>
                 <Route path="/expenses" element={<Expenses />} />

@@ -18,13 +18,11 @@ calculateFastMoving(
         item.name ||
         "Unknown";
 
-      const qty =
-        item.qty || 0;
-
+      // ✅ Count orders
       soldMap[name] =
         (
           soldMap[name] || 0
-        ) + qty;
+        ) + 1;
 
     });
 

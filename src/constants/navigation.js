@@ -12,7 +12,9 @@ import {
   Repeat,
   PackagePlus,
   Trash2,
-  Users2
+  Users2,
+  BadgeDollarSign,
+  CalendarDays
 } from "lucide-react";
 
 import {
@@ -21,174 +23,275 @@ import {
 
 export const NAVIGATION_ITEMS = [
 
+  // ======================================================
+  // MAIN
+  // ======================================================
+
   {
     section: "sidebar.main",
 
     items: [
 
       {
-        label: "sidebar.dashboard",
+        label:
+          "sidebar.dashboard",
 
-        path: "/dashboard",
+        path:
+          "/dashboard",
 
-        icon: Home
+        icon:
+          Home
       },
 
       {
-        label: "sidebar.sales",
+        label:
+          "sidebar.sales",
 
-        path: "/sales",
+        path:
+          "/sales",
 
-        icon: ShoppingCart,
+        icon:
+          ShoppingCart,
 
         permission:
           PERMISSIONS.SALES_CREATE
       }
+
     ]
   },
 
+  // ======================================================
+  // OPERATIONS
+  // ======================================================
+
   {
-    section: "sidebar.operations",
+    section:
+      "sidebar.operations",
 
     items: [
 
       {
-        label: "sidebar.expenses",
+        label:
+          "sidebar.expenses",
 
-        path: "/expenses",
+        path:
+          "/expenses",
 
-        icon: Receipt,
+        icon:
+          Receipt,
 
         permission:
           PERMISSIONS.EXPENSES_VIEW
       },
 
       {
-        label: "sidebar.returns",
+        label:
+          "sidebar.returns",
 
-        path: "/returns",
+        path:
+          "/returns",
 
-        icon: RefreshCw,
+        icon:
+          RefreshCw,
 
         permission:
           PERMISSIONS.RETURNS_VIEW
       },
 
       {
-        label: "sidebar.inventory",
+        label:
+          "sidebar.inventory",
 
-        path: "/inventory",
+        path:
+          "/inventory",
 
-        icon: Boxes,
-
-        permission:
-          PERMISSIONS.INVENTORY_VIEW
-      },
-
-      {
-        label: "sidebar.purchases",
-
-        path: "/purchases",
-
-        icon: PackagePlus,
+        icon:
+          Boxes,
 
         permission:
           PERMISSIONS.INVENTORY_VIEW
       },
 
       {
-        label: "sidebar.operationsPage",
+        label:
+          "sidebar.purchases",
 
-        path: "/operations",
+        path:
+          "/purchases",
 
-        icon: Repeat,
+        icon:
+          PackagePlus,
+
+        permission:
+          PERMISSIONS.INVENTORY_VIEW
+      },
+
+      {
+        label:
+          "sidebar.operationsPage",
+
+        path:
+          "/operations",
+
+        icon:
+          Repeat,
 
         permission:
           PERMISSIONS.OPERATIONS_VIEW
       },
 
       {
-        label: "sidebar.waste",
+        label:
+          "sidebar.waste",
 
-        path: "/waste",
+        path:
+          "/waste",
 
-        icon: Trash2,
+        icon:
+          Trash2,
 
         permission:
           PERMISSIONS.INVENTORY_ADJUST
       }
+
     ]
   },
 
+  // ======================================================
+  // FINANCE
+  // ======================================================
+
   {
-    section: "sidebar.management",
+    section:
+      "sidebar.finance",
 
     items: [
 
       {
-        label: "sidebar.pricing",
+        label:
+          "sidebar.dailyClosing",
 
-        path: "/pricing",
+        path:
+          "/daily-closing",
 
-        icon: DollarSign,
-
-        permission:
-          PERMISSIONS.PRICING_VIEW
-      },
-
-      {
-        label: "sidebar.reports",
-
-        path: "/reports",
-
-        icon: BarChart3,
+        icon:
+          BadgeDollarSign,
 
         permission:
           PERMISSIONS.REPORTS_VIEW
       },
 
       {
-        label: "sidebar.customers",
+        label:
+          "sidebar.dailyClosingHistory",
 
-        path: "/customers",
+        path:
+          "/daily-closing-history",
 
-        icon: Users2,
+        icon:
+          CalendarDays,
+
+        permission:
+          PERMISSIONS.REPORTS_VIEW
+      }
+
+    ]
+  },
+
+  // ======================================================
+  // MANAGEMENT
+  // ======================================================
+
+  {
+    section:
+      "sidebar.management",
+
+    items: [
+
+      {
+        label:
+          "sidebar.pricing",
+
+        path:
+          "/pricing",
+
+        icon:
+          DollarSign,
+
+        permission:
+          PERMISSIONS.PRICING_VIEW
+      },
+
+      {
+        label:
+          "sidebar.reports",
+
+        path:
+          "/reports",
+
+        icon:
+          BarChart3,
+
+        permission:
+          PERMISSIONS.REPORTS_VIEW
+      },
+
+      {
+        label:
+          "sidebar.customers",
+
+        path:
+          "/customers",
+
+        icon:
+          Users2,
 
         ownerOnly: true
       },
 
       {
-        label: "sidebar.branches",
+        label:
+          "sidebar.branches",
 
-        path: "/branches",
+        path:
+          "/branches",
 
-        icon: Building2,
+        icon:
+          Building2,
 
         permission:
           PERMISSIONS.SETTINGS_VIEW
       },
 
       {
-        label: "sidebar.users",
+        label:
+          "sidebar.users",
 
-        path: "/users",
+        path:
+          "/users",
 
-        icon: Users,
+        icon:
+          Users,
 
         permission:
           PERMISSIONS.USERS_VIEW
       },
 
       {
-        label: "sidebar.logs",
+        label:
+          "sidebar.logs",
 
-        path: "/logs",
+        path:
+          "/logs",
 
-        icon: FileText,
+        icon:
+          FileText,
 
         permission:
           PERMISSIONS.LOGS_VIEW
-      },
+      }
+
     ]
   }
+
 ];
