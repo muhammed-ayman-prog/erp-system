@@ -5,7 +5,8 @@ import {
   query,
   where,
   doc,
-  onSnapshot
+  onSnapshot,
+  updateDoc
 } from "firebase/firestore";
 import { db } from "../firebase";
 import {
@@ -19,9 +20,65 @@ import {
 } from "recharts";
 import { useTranslate } from "../useTranslate";
 import { useAuth } from "../store/useAuth";
+import toast from "react-hot-toast";
 export default function CustomerProfile() {
   const { t, tt, lang } = useTranslate();
   const { id } = useParams();
+  const saveCustomerNotes = async () => {
+
+  try {
+
+    await updateDoc(
+      doc(db, "customers", id),
+      {
+        notes: customer.notes || "",
+        tags: customer.tags || []
+      }
+    );
+
+    toast.success(t("common.success"));
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast.error(t("common.error"));
+
+  }
+};
+const addTag = () => {
+
+  if (!tagInput.trim()) return;
+
+  const exists = (
+    customer.tags || []
+  ).includes(tagInput.trim());
+
+  if (exists) return;
+
+  setCustomer(prev => ({
+    ...prev,
+
+    tags: [
+      ...(prev.tags || []),
+
+      tagInput.trim()
+    ]
+  }));
+
+  setTagInput("");
+};
+
+const removeTag = (tag) => {
+
+  setCustomer(prev => ({
+    ...prev,
+
+    tags: (
+      prev.tags || []
+    ).filter(t => t !== tag)
+  }));
+};
 
   const [customer, setCustomer] = useState(null);
   const [sales, setSales] = useState([]);
@@ -29,6 +86,7 @@ export default function CustomerProfile() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [openIndex, setOpenIndex] = useState(null);
+  const [tagInput, setTagInput] = useState("");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -82,21 +140,30 @@ export default function CustomerProfile() {
 
 }, [id, user]);
   const filteredSales = sales.filter(s => {
-  const date = new Date(s.createdAt.seconds * 1000);
+  if (!s.createdAt?.seconds) return false;
+
+const date = new Date(
+  s.createdAt.seconds * 1000
+);
 
   if (fromDate && date < new Date(fromDate)) return false;
-  if (toDate && date > new Date(toDate)) return false;
+  if (toDate) {
+  const end = new Date(toDate);
+  end.setHours(23, 59, 59, 999);
+
+  if (date > end) return false;
+}
 
   return true;
 });
-  const totalSpent = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
+  
   
   if (loading)
     return <div className="card" style={{
   padding: "30px",
   textAlign: "center"
 }}>
-  <p>{t("common.loading")}...</p>
+  <p>{t("common.loading")}</p>
 </div>
 
   if (!customer)
@@ -118,34 +185,60 @@ const topProducts = Object.entries(productStats)
   .slice(0, 5);
   const chartData = filteredSales.map(s => ({
   date: new Date(s.createdAt.seconds * 1000).toLocaleDateString(),
-  total: s.total
+  net:
+(s.total || 0) -
+(s.refundedAmount || 0)
 }));
-const avgSpend = totalSpent / (filteredSales.length || 1);
+// 💰 Gross Revenue
+const grossRevenue = filteredSales.reduce(
+  (sum, s) =>
+    sum + (s.total || 0),
+  0
+);
+
+// ↩️ Total Refunded
+const refundedAmount = filteredSales.reduce(
+  (sum, s) =>
+    sum + (s.refundedAmount || 0),
+  0
+);
+
+// ✅ Net Spending
+const netSpent =
+  grossRevenue - refundedAmount;
+
+// 📊 Average Order
+const avgSpend =
+  netSpent / (filteredSales.length || 1);
 
 
 
-let customerType = "New 🆕";
+let customerType =
+`${t("customer.new")} 🆕`;
 
 if (
-  totalSpent >= 50000 &&
-  filteredSales.length >= 25
+  netSpent >= 50000 &&
+  (customer.ordersCount || 0) >= 25
 ) {
 
-  customerType = "Elite 👑";
+  customerType =
+`${t("customer.elite")} 👑`;
 
 } else if (
-  totalSpent >= 15000 &&
-  filteredSales.length >= 10
+  netSpent >= 15000 &&
+  (customer.ordersCount || 0) >= 10
 ) {
 
-  customerType = "VIP 💎";
+  customerType =
+`${t("customer.vip")} 💎`;
 
 } else if (
-  filteredSales.length >= 5 ||
-  totalSpent >= 6000
+  (customer.ordersCount || 0) >= 5 ||
+  netSpent >= 6000
 ) {
 
-  customerType = "Loyal 🔁";
+  customerType =
+`${t("customer.loyal")} 🔁`;
 
 }
 
@@ -165,14 +258,180 @@ const lastVisitDays = customer.lastPurchase
   marginBottom: "5px",
   display: "flex",
   alignItems: "center",
-  gap: "8px"
+  gap: "8px",
+  flexWrap: "wrap"
 }}>
   👤 {customer.name || t("customer.noName")}
 </h2>
         <p style={{ color: "#64748b", fontSize: "14px" }}>
           {customer.phone}
         </p>
+        <a
+          href={`https://wa.me/${
+            (customer.phone || "")
+              .replace(/\D/g, "")
+              .replace(/^0/, "20")
+          }`}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: "inline-block",
+
+            marginTop: "12px",
+
+            padding: "10px 14px",
+
+            borderRadius: "12px",
+
+            background: "#25D366",
+
+            color: "#fff",
+
+            textDecoration: "none",
+
+            fontWeight: "600"
+          }}
+        >
+          📲 {t("customer.whatsapp")}
+        </a>
       </div>
+      <div className="card" style={{ marginBottom: "20px" }}>
+
+  <h3 style={{ marginBottom: "10px" }}>
+    📝 {t("customer.notesTags")}
+  </h3>
+
+  <textarea
+    value={customer.notes || ""}
+    onChange={(e) =>
+      setCustomer(prev => ({
+        ...prev,
+        notes: e.target.value
+      }))
+    }
+    placeholder={t("customer.addCustomerNotes")}
+    style={{
+      width: "100%",
+      minHeight: "90px",
+      padding: "12px",
+      borderRadius: "12px",
+      border: "1px solid var(--border)",
+      marginBottom: "10px"
+    }}
+  />
+
+  {/* ➕ Add Tag */}
+<div style={{
+ display: "flex",
+  gap: "10px",
+  marginBottom: "12px",
+  flexWrap: "wrap"
+}}>
+
+  <input
+    type="text"
+    placeholder={t("customer.addTag")}
+    value={tagInput}
+    onChange={(e) =>
+      setTagInput(e.target.value)
+    }
+    style={{
+      flex: 1,
+      padding: "10px",
+      borderRadius: "10px",
+      border: "1px solid var(--border)",
+      minWidth: "220px"
+    }}
+  />
+
+  <button
+    onClick={addTag}
+    style={{
+      padding: "10px 14px",
+      borderRadius: "10px",
+      border: "none",
+      background: "#0f172a",
+      color: "#fff",
+      cursor: "pointer"
+    }}
+  >
+    {t("common.add")}
+  </button>
+
+</div>
+
+{/* 🏷️ Tags */}
+<div style={{
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap"
+}}>
+
+  {(customer.tags || []).map(tag => (
+
+    <div
+      key={tag}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+
+        padding: "6px 12px",
+
+        borderRadius: "999px",
+
+        background: "#e2e8f0",
+
+        fontSize: "12px"
+      }}
+    >
+
+      <span>{tag}</span>
+
+      <button
+        onClick={() => removeTag(tag)}
+        style={{
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          color: "red",
+          fontWeight: "bold"
+        }}
+      >
+        ×
+      </button>
+
+    </div>
+
+  ))}
+
+</div>
+
+{/* 💾 Save */}
+<button
+  onClick={saveCustomerNotes}
+  style={{
+    marginTop: "14px",
+
+    padding: "10px 16px",
+
+    borderRadius: "10px",
+
+    border: "none",
+
+    background: "#0f172a",
+
+    color: "#fff",
+
+    cursor: "pointer",
+
+    fontWeight: "600"
+  }}
+>
+  {t("customer.saveNotes")}
+</button>
+
+</div>
 
       {/* 📊 Stats */}
       <div className="card" style={{ marginBottom: "20px" }}>
@@ -185,7 +444,11 @@ const lastVisitDays = customer.lastPurchase
     <p style={{ color: "red" }}>⚠️ {t("customer.inactive")}</p>
   )}
 </div>
-     <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+     <div style={{ display: "flex",
+      gap: "10px",
+      marginBottom: "15px",
+      flexWrap: "wrap"
+  }}>
   <input
     type="date"
     value={fromDate}
@@ -201,7 +464,8 @@ const lastVisitDays = customer.lastPurchase
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns:
+          "repeat(auto-fit, minmax(240px, 1fr))",
           gap: "15px",
           marginBottom: "20px"
         }}
@@ -209,11 +473,11 @@ const lastVisitDays = customer.lastPurchase
         {/* 💰 Total */}
         <div className="card">
           <p style={{ color: "#64748b", fontSize: "13px" }}>
-            {t("customer.totalSpent")}
+            {t("customer.grossRevenue")}
           </p>
 
           <h2 style={{ color: "#0f172a", fontWeight: "bold" }}>
-            {totalSpent.toLocaleString()} EGP
+            {grossRevenue.toLocaleString()} EGP
           </h2>
         </div>
 
@@ -227,7 +491,43 @@ const lastVisitDays = customer.lastPurchase
             {filteredSales.length}
           </h2>
         </div>
+        {/* ↩️ Refunded */}
+        <div className="card">
 
+          <p style={{
+            color: "#64748b",
+            fontSize: "13px"
+          }}>
+            {t("customer.refunded")}
+          </p>
+
+          <h2 style={{
+            color: "#dc2626",
+            fontWeight: "bold"
+          }}>
+            {refundedAmount.toLocaleString()} EGP
+          </h2>
+
+        </div>
+
+        {/* 💵 Net */}
+        <div className="card">
+
+          <p style={{
+            color: "#64748b",
+            fontSize: "13px"
+          }}>
+            {t("customer.netSpending")}
+          </p>
+
+          <h2 style={{
+            color: "#16a34a",
+            fontWeight: "bold"
+          }}>
+            {netSpent.toLocaleString()} EGP
+          </h2>
+
+        </div>
         {/* 📅 Last Visit */}
         <div className="card">
           <p style={{ color: "#64748b", fontSize: "13px" }}>
@@ -259,6 +559,8 @@ const lastVisitDays = customer.lastPurchase
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
           padding: "8px 0",
           marginBottom: "6px"
         }}
@@ -285,7 +587,7 @@ const lastVisitDays = customer.lastPurchase
 
     <Line
       type="monotone"
-      dataKey="total"
+      dataKey="net"
       strokeWidth={2}
       dot={true}
     />
@@ -342,6 +644,7 @@ const lastVisitDays = customer.lastPurchase
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
+  flexWrap: "wrap",
   marginBottom: "10px",
   gap: "10px"
 }}>
@@ -352,7 +655,7 @@ const lastVisitDays = customer.lastPurchase
       fontSize: "15px",
       color: "var(--text-primary)"
     }}>
-      {s.invoiceNumber || "NO-INVOICE"}
+      {s.invoiceNumber || t("common.notAvailable")}
     </div>
 
     <div style={{
@@ -360,7 +663,7 @@ const lastVisitDays = customer.lastPurchase
       color: "#64748b",
       marginTop: "3px"
     }}>
-      🏢 {s.branchName || "Unknown Branch"}
+      🏢 {s.branchName || t("common.unknown")}
     </div>
 
     <div style={{
@@ -368,7 +671,7 @@ const lastVisitDays = customer.lastPurchase
       color: "#64748b",
       marginTop: "3px"
     }}>
-      👨‍💼 {s.salesName || "Unknown"}
+      👨‍💼 {s.salesName || t("common.unknown")}
     </div>
   </div>
 
@@ -377,7 +680,10 @@ const lastVisitDays = customer.lastPurchase
       color: "var(--text-primary)",
       fontSize: "16px"
     }}>
-      {s.total} EGP
+      {(
+        (s.total || 0) -
+        (s.refundedAmount || 0)
+      ).toLocaleString()} EGP
     </b>
 
     <div style={{
@@ -395,9 +701,10 @@ const lastVisitDays = customer.lastPurchase
 
     {/* 📦 Items */}
     <div style={{ fontSize: "12px", color: "#64748b" }}>
-  {s.paymentMethod}
+  {t(`payment.${t(`payment.${s.paymentMethod}`)}`)}
 </div>
-{s.refundedQty > 0 && (
+
+{s.refundedAmount > 0 && (
   <span style={{
     display: "inline-block",
     marginTop: "8px",
@@ -408,7 +715,8 @@ const lastVisitDays = customer.lastPurchase
     color: "#b91c1c",
     fontWeight: "600"
   }}>
-    Partial Refund
+    ↩️ Refunded:
+    {s.refundedAmount.toLocaleString()} EGP
   </span>
 )}
     {openIndex === i && (

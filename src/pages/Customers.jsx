@@ -9,7 +9,9 @@ import {
 } from "firebase/firestore";
 import { useApp } from "../store/useApp";
 import { useAuth } from "../store/useAuth";
+import { useTranslate } from "../useTranslate";
 export default function Customers() {
+  const { t, lang } = useTranslate();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
@@ -22,22 +24,8 @@ export default function Customers() {
 }
   useEffect(() => {
 
-  if (!selectedBranch) return;
 
-  const q =
-    selectedBranch === "all"
-
-      ? collection(db, "customers")
-
-      : query(
-          collection(db, "customers"),
-
-          where(
-            "branchId",
-            "==",
-            selectedBranch
-          )
-        );
+  const q = collection(db, "customers");
 
   const unsub = onSnapshot(
     q,
@@ -54,7 +42,7 @@ export default function Customers() {
   );
 
   return () => unsub();
-}, [selectedBranch, user]);
+}, [user]);
 
   const filteredCustomers = customers
   .filter(c =>
@@ -89,12 +77,20 @@ export default function Customers() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "20px"
+        marginBottom: "20px",
+        gap: "12px",
+        flexWrap: "wrap"
       }}>
-        <h2>Customers 👥</h2>
+        <h2>
+  {t("customer.title")} 👥
+</h2>
 
         <div className="card" style={{ padding: "10px 15px" }}>
-          <b>{customers.length}</b> Customers
+          <>
+  <b>{customers.length}</b>
+  {" "}
+  {t("customer.title")}
+</>
         </div>
       </div>
 
@@ -102,18 +98,20 @@ export default function Customers() {
       <div style={{
         display: "flex",
         gap: "10px",
-        marginBottom: "20px"
+        marginBottom: "20px",
+        flexWrap: "wrap"
       }}>
         <input
           type="text"
-          placeholder="Search by name or phone..."
+          placeholder={t("customer.searchCustomers")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
             flex: 1,
             padding: "12px",
             borderRadius: "12px",
-            border: "1px solid var(--border)"
+            border: "1px solid var(--border)",
+            minWidth: "220px"
           }}
         />
 
@@ -123,27 +121,35 @@ export default function Customers() {
           style={{
             padding: "12px",
             borderRadius: "12px",
-            border: "1px solid var(--border)"
+            border: "1px solid var(--border)",
+            minWidth: "180px"
           }}
         >
           <option value="name">A-Z</option>
-          <option value="spent">Most Spending</option>
-          <option value="orders">Most Orders</option>
-          <option value="visit">Latest Visit</option>
+          <option value="spent">
+  {t("customer.mostSpending")}
+</option>
+          <option value="orders">
+  {t("customer.mostOrders")}
+</option>
+          <option value="visit">
+  {t("customer.latestVisit")}
+</option>
         </select>
       </div>
 
       {/* 📦 Content */}
       {loading ? (
-        <p>Loading...</p>
+        <p>{t("common.loading")}</p>
       ) : filteredCustomers.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: "30px" }}>
-          <p>مفيش عملاء لسه 😅</p>
+          <p>{t("common.noData")} 😅</p>
         </div>
       ) : (
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(280px, 1fr))",
           gap: "15px"
         }}>
           
@@ -177,7 +183,7 @@ export default function Customers() {
     fontSize: "16px",
     margin: 0
   }}>
-    {c.name || "Unknown"}
+    {c.name || t("common.unknown")}
   </h3>
 
   {(c.totalSpent || 0) >= 50000 &&
@@ -189,7 +195,7 @@ export default function Customers() {
     borderRadius: "999px",
     background: "#ede9fe"
   }}>
-    Elite 👑
+    {t("customer.elite")} 👑
   </span>
 
 ) : (c.totalSpent || 0) >= 15000 &&
@@ -201,7 +207,7 @@ export default function Customers() {
     borderRadius: "999px",
     background: "#fef3c7"
   }}>
-    VIP 💎
+    {t("customer.vip")} 💎
   </span>
 
 ) : (c.ordersCount || 0) >= 5 ||
@@ -213,7 +219,7 @@ export default function Customers() {
     borderRadius: "999px",
     background: "#dbeafe"
   }}>
-    Loyal 🔁
+    {t("customer.loyal")} 🔁
   </span>
 
 ) : (
@@ -224,7 +230,7 @@ export default function Customers() {
     borderRadius: "999px",
     background: "#e2e8f0"
   }}>
-    New 🆕
+    {t("customer.new")} 🆕
   </span>
 
 )}
@@ -249,16 +255,37 @@ export default function Customers() {
   justifyContent: "space-between",
   alignItems: "center"
 }}>
-    <span>💰 Spent</span>
-    <b>{(c.totalSpent || 0).toLocaleString()} EGP</b>
-  </div>
+  <span>
+  💰 {t("customer.totalSpent")}
+</span>
+
+  <b>
+    {(c.totalSpent || 0).toLocaleString()} EGP
+  </b>
+</div>
+
+<div style={{
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center"
+}}>
+  <span>
+  ↩️ {t("customer.refunded")}
+</span>
+
+  <b style={{ color: "#dc2626" }}>
+    {(c.totalRefunded || 0).toLocaleString()} EGP
+  </b>
+</div>
 
   <div style={{
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center"
 }}>
-    <span>🧾 Orders</span>
+    <span>
+  🧾 {t("customer.orders")}
+</span>
     <b>{c.ordersCount || 0}</b>
   </div>
 
@@ -267,7 +294,9 @@ export default function Customers() {
   justifyContent: "space-between",
   alignItems: "center"
 }}>
-    <span>📅 Last Visit</span>
+    <span>
+  📅 {t("customer.lastVisit")}
+</span>
 
     <b>
       {c.lastPurchase

@@ -353,9 +353,7 @@ const handleCheckout = async (
     ? salesName
 
     : salesName?.name || "";
-    console.log({
-
-  paymentMethod,
+   
 
   cartLength:
     cart.length,
@@ -372,7 +370,7 @@ const handleCheckout = async (
 
   user
 
-});
+;
 if (!paymentMethod) {
   showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
   return;

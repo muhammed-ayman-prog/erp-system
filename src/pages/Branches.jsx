@@ -8,7 +8,8 @@ import {
   query,
   onSnapshot,
   serverTimestamp,
-  where
+  where,
+  setDoc
 } from "firebase/firestore";
 
 import {
@@ -253,10 +254,15 @@ user?.role === "owner"
     if (saving) return;
 
     if (!form.name.trim()) {
-
       alert(
         t("branches.validation.nameRequired")
       );
+
+      return;
+    }
+
+    if (!form.code.trim()) {
+      alert("لازم تدخل كود الفرع");
 
       return;
     }
@@ -291,20 +297,22 @@ user?.role === "owner"
 
       } else {
 
-        await addDoc(
+        const branchRef = await addDoc(
           collection(db, "branches"),
           {
             ...form,
-
-            employees:
-              cleanedEmployees,
-
+            employees: cleanedEmployees,
             status: "active",
-
             isArchived: false,
+            createdAt: serverTimestamp()
+          }
+        );
 
-            createdAt:
-              serverTimestamp()
+        // create invoice counter
+        await setDoc(
+          doc(db, "counters", branchRef.id),
+          {
+            lastNumber: 0
           }
         );
 
@@ -748,6 +756,8 @@ const salesByBranch = useMemo(() => {
             setForm(prev => ({
               ...prev,
               code: e.target.value
+                .toUpperCase()
+                .replace(/\s+/g, "")
             }))
           }
         />

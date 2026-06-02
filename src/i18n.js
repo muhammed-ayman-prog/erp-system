@@ -162,7 +162,13 @@ export const translations = {
       disabled: "Disabled",
       "disable": "Disable",
       "activate": "Activate",
-      "currency": "EGP"   
+      "currency": "EGP",
+      cash: "Cash",
+      visa: "Visa",
+      instapay: "Instapay",
+      available: "Available",
+      max: "Max",
+      ml: "ml",
       
     },
     
@@ -260,7 +266,23 @@ export const translations = {
       lastVisit: "Last Visit",
       purchases: "Purchases",
       noPurchases: "No purchases yet",
-      title: "Customers"
+      title: "Customers",
+      grossRevenue: "Gross Revenue",
+      refunded: "Refunded",
+      netSpending: "Net Spending",
+      whatsapp: "WhatsApp",
+      notesTags: "Notes & Tags",
+      addTag: "Add Tag",
+      saveNotes: "Save Notes",
+      searchCustomers: "Search by name or phone...",
+      mostSpending: "Most Spending",
+      mostOrders: "Most Orders",
+      latestVisit: "Latest Visit",
+      new: "New",
+      loyal: "Loyal",
+      vip: "VIP",
+      elite: "Elite",
+      addCustomerNotes: "Add customer notes...",
     },
 
     products: {
@@ -326,6 +348,10 @@ export const translations = {
       selectQty: "Select quantity",
       "salesName": "Seller",
       "enteredBy": "Entered by",
+      maxRefundExceeded: "Quantity exceeds available amount",
+      returnedItems: "Returned Items",
+      refundSuccess: "Refund completed successfully",
+      cancelSuccess: "Invoice cancelled successfully",
       "filter": {
         "sales": "Filter by sales"
       },
@@ -636,7 +662,13 @@ greetings: {
       disabled: "معطل",
       "disable": "تعطيل",
       "activate": "تفعيل",
-      "currency": "EGP"
+      "currency": "EGP",
+      cash: "كاش",
+      visa: "فيزا",
+      instapay: "انستاباي",
+      available: "متاح",
+      max: "الحد الأقصى",
+      ml: "مل",
 
     },
 
@@ -747,7 +779,23 @@ greetings: {
       lastVisit: "آخر زيارة",
       purchases: "المشتريات",
       noPurchases: "لا توجد مشتريات",
-      title: "اسم العميل"
+      title: "اسم العميل",
+      grossRevenue: "إجمالي المبيعات",
+      refunded: "المرتجعات",
+      netSpending: "الصافي",
+      whatsapp: "واتساب",
+      notesTags: "الملاحظات والتصنيفات",
+      addTag: "إضافة تصنيف",
+      saveNotes: "حفظ الملاحظات",
+      searchCustomers: "ابحث بالاسم أو الرقم...",
+      mostSpending: "الأعلى إنفاقًا",
+      mostOrders: "الأكثر طلبًا",
+      latestVisit: "أحدث زيارة",
+      new: "جديد",
+      loyal: "عميل دائم",
+      vip: "VIP",
+      elite: "VIP مميز",
+      addCustomerNotes: "أضف ملاحظات عن العميل...",
     },
 
     products: {
@@ -812,6 +860,10 @@ greetings: {
       selectQty: "اختار كمية",
       "salesName": "اسم البائع",
       "enteredBy": "تم بواسطة",
+      maxRefundExceeded: "الكمية أكبر من المتاح",
+      returnedItems: "المنتجات المرتجعة",
+      refundSuccess: "تم الاسترجاع بنجاح",
+      cancelSuccess: "تم إلغاء الفاتورة بنجاح",
       "filter": {
         "sales": "فلترة بالبائع"
       },
@@ -890,7 +942,7 @@ greetings: {
       cityStars: "سيتي ستارز",
       elObour: "العبور",
       elRehab: "الرحاب",
-      title: "الفروع",
+      title: "الفرع",
       all: "كل الفروع",
       single: "الفرع",
       select: "اختار فرع الأول",

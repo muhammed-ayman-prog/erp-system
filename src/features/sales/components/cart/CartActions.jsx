@@ -17,6 +17,7 @@ const {
   theme,
   t,
   user,
+  loading,
   checkoutState
 } = useSalesContext();
 
@@ -25,10 +26,12 @@ const {
   loadingCheckout
 } = checkoutState;
 
-  const isCheckoutDisabled =
-    loadingCheckout ||
-    cart.length === 0 ||
-    !paymentMethod
+ const isCheckoutDisabled =
+  loading ||
+  !user ||
+  loadingCheckout ||
+  cart.length === 0 ||
+  !paymentMethod
 
   return (
     <>
@@ -65,9 +68,19 @@ const {
 
       {/* Checkout */}
       <button
-        onClick={handleCheckoutClick}
+        onClick={() => {
 
-        disabled={isCheckoutDisabled}
+
+  if (loading || !user) {
+    return;
+  }
+
+  handleCheckoutClick();
+}}
+
+        disabled={
+  isCheckoutDisabled || !user
+}
 
         style={{
           width: "100%",

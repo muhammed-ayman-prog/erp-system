@@ -50,6 +50,8 @@ import {
 import {
   SalesProvider
 } from "../context/SalesContext";
+import { useAuth }
+from "../../../store/useAuth";
 import {
   CartProvider
 } from "../context/CartContext";
@@ -100,7 +102,6 @@ export default function SalesPage() {
 };
   
   
-  const [user, setUser] = useState(null);
   const { selectedBranch } = useApp();
   const {
   productsWithStock,
@@ -114,12 +115,10 @@ const selectedBranchData =
     branch => branch.id === selectedBranch
   ) || null;
   const [discount, setDiscount] = useState(0);
-  useEffect(() => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-if (storedUser) {
-  setUser(storedUser);
-}
-}, []);
+  const {
+  user,
+  loading
+} = useAuth();
 const [selectedProduct, setSelectedProduct] = useState(null);
   // ✅ ده متغير عادي
 const isMusk = useMemo(() => {
@@ -363,6 +362,7 @@ const salesContextValue = useMemo(() => ({
   setSelectedSeller,
   handleCheckoutAction,
   user,
+  loading,
   inventoryMap,
   addToCart,
   getPrice,
@@ -379,6 +379,7 @@ const salesContextValue = useMemo(() => ({
   checkoutState,
   handleCheckoutAction,
   user,
+  loading,
   inventoryMap,
   addToCart,
   getPrice

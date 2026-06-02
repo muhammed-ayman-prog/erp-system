@@ -9,6 +9,7 @@
     increment,
     getDoc,
     getDocs,
+    updateDoc,
     serverTimestamp,
     where,
     writeBatch
@@ -31,9 +32,39 @@
     "El Obour": "elObour",
     "El Rehab": "elRehab"
   };
-
+  const branchNameMap = {
+  "City Stars": "cityStars",
+  "City Stars 2": "cityStars2",
+  "Abbas Akkad 1": "abbasAkkad1",
+  "Abbas Akkad 2": "abbasAkkad2",
+  "Abbas Akkad 3": "abbasAkkad3",
+  "El Obour": "elObour",
+  "El Rehab": "elRehab"
+};
   export default function Invoices() {
-    const { t, tt, lang } = useTranslate();
+    const { t, lang } = useTranslate();
+    const [isMobile, setIsMobile] = useState(
+  typeof window !== "undefined"
+    ? window.innerWidth < 900
+    : false
+);
+
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 900);
+  };
+
+  handleResize();
+
+  window.addEventListener("resize", handleResize);
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+}, []);
+    const [showDetails, setShowDetails] = useState(true);
     const navigate = useNavigate();
     const { id } =
     useParams();
@@ -233,6 +264,23 @@
 
     return () => clearTimeout(t);
   }, [search]);
+  useEffect(() => {
+
+  const close = () =>
+    setDropdownOpen(false);
+
+  window.addEventListener(
+    "click",
+    close
+  );
+
+  return () =>
+    window.removeEventListener(
+      "click",
+      close
+    );
+
+}, []);
     // 🔍 Filter
     const searchKey = (debouncedSearch || "").toLowerCase();
     const salesKey = (salesFilter || "").toLowerCase();
@@ -255,7 +303,12 @@
 
       if (date) {
         if (fromDate && date < new Date(fromDate)) ok = false;
-        if (toDate && date > new Date(toDate)) ok = false;
+        if (toDate) {
+  const end = new Date(toDate);
+  end.setHours(23, 59, 59, 999);
+
+  if (date > end) ok = false;
+}
       }
 
       return match && matchSales && ok;
@@ -289,8 +342,9 @@
         if (net < 0) net = 0;
 
         total += net;
-        const method = (i.paymentMethod || "").toLowerCase();
-
+        const method =
+        (i.paymentMethod || "cash")
+        .toLowerCase();
         if (method === "cash") cash += net;
         if (method === "visa") visa += net;
         if (method === "instapay") instapay += net;
@@ -337,11 +391,15 @@
         ) || 0;
 
     const fullyRefunded =
-      refundedQty >= totalProducts &&
-      refundedMl >= totalMl;
+      isFullyRefunded(
+        refundedQty,
+        refundedMl,
+        totalProducts,
+        totalMl
+      );
 
     if (fullyRefunded) {
-      toast.error("Invoice already refunded");
+      toast.error(t("invoices.refunded"));
       return;
     }
 
@@ -416,11 +474,15 @@
     batch.update(invRef, {
       quantity: increment(remaining)
     });
-    const isReadyProduct =
-  item.containerType === "Original" ||
-  item.containerType === "Ready" ||
-  item.containerType === "Cream" ||
-  item.containerType === "مخمرية";
+const type =
+  (item.containerType || "")
+    .toLowerCase();
+
+const isReadyProduct =
+  type === "original" ||
+  type === "ready" ||
+  type === "cream" ||
+  type === "مخمرية";
 
 if (
   !isReadyProduct &&
@@ -470,11 +532,30 @@ batch.update(oilRef, {
 
 
       await batch.commit();
-      toast.success("Invoice cancelled"); 
+      // 👤 Update customer stats
+if (inv.customerId) {
+
+  const customerRef = doc(
+    db,
+    "customers",
+    inv.customerId
+  );
+
+  await updateDoc(customerRef, {
+
+    totalSpent: increment(
+      -(
+  (inv.total || 0) -
+  (inv.refundedAmount || 0)
+)
+    ),
+  });
+}
+      toast.success(t("invoices.cancelSuccess"));
 
     } catch (err) {
       console.error(err);
-      toast.error("Error cancelling invoice");
+      toast.error(t("common.error"));
     } finally {
       setCancelling(false);
     }
@@ -489,32 +570,55 @@ batch.update(oilRef, {
       setAction("");
     };
     const handlePrint = () => {
-    const content = document.getElementById("invoice-print");
-    if (!content) return;
 
-    const win = window.open("", "", "width=800,height=600");
-    if (!win) return;
-    win.document.write(`
-      <html>
-        <head>
-          <title>Invoice</title>
-          <style>
-            body {
-              font-family: Arial;
-              padding: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          ${content.innerHTML}
-        </body>
-      </html>
-    `);
+  const content =
+    document.getElementById(
+      "invoice-print"
+    );
 
-    win.document.close();
-    win.focus();
-    win.print();
-  };
+  if (!content) return;
+
+  const win = window.open(
+    "",
+    "",
+    "width=800,height=600,noopener,noreferrer"
+  );
+
+  if (!win) return;
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Invoice</title>
+
+        <style>
+          body {
+            font-family: Arial;
+            padding: 20px;
+          }
+
+          button {
+            display: none !important;
+          }
+        </style>
+      </head>
+
+      <body></body>
+    </html>
+  `);
+
+  const clone =
+    content.cloneNode(true);
+
+  win.document.body.appendChild(clone);
+
+  win.document.close();
+
+  win.focus();
+
+  win.print();
+  win.onafterprint = () => win.close();
+};
 
 
   const handleRefundQty = (item, qty) => {
@@ -537,12 +641,26 @@ batch.update(oilRef, {
       return [...prev, { ...item, qty: q }];
     });
   };
+  const isFullyRefunded = (
+  refundedQty,
+  refundedMl,
+  totalProducts,
+  totalMl
+) => {
+
+  const productsDone =
+    totalProducts === 0 ||
+    refundedQty >= totalProducts;
+
+  const oilsDone =
+    totalMl === 0 ||
+    refundedMl >= totalMl;
+
+  return productsDone && oilsDone;
+
+};
   const handlePartialRefund = async () => {
     if (loading) return;
-    if (selectedInvoice.status === "cancelled") {
-    toast.error("❌ الفاتورة ملغية");
-    return;
-  }
     if (!selectedInvoice || !selectedInvoice.items) return;
 
   const refunded =
@@ -577,8 +695,12 @@ const totalMl =
     ) || 0;
 
 const fullyRefunded =
-  refunded >= totalProducts &&
-  refundedMl >= totalMl;
+  isFullyRefunded(
+    refunded,
+    refundedMl,
+    totalProducts,
+    totalMl
+  );
   if (fullyRefunded) {
     toast.error(t("invoices.closed"));
     return;
@@ -593,7 +715,7 @@ const fullyRefunded =
   );
 
   if (!freshSaleSnap.exists()) {
-    toast.error("Invoice not found");
+    toast.error(t("common.notFound"));
     setLoading(false);
     return;
   }
@@ -620,7 +742,7 @@ const fullyRefunded =
   const freshReturns = freshReturnsSnap.docs.map(d => d.data());
 
   if (freshInvoice.status === "cancelled") {
-    toast.error("Invoice already cancelled");
+    toast.error(t("invoices.cancelled"));
     setLoading(false);
     return;
   }
@@ -651,7 +773,7 @@ const fullyRefunded =
     
 
   if (requestedQty > maxAllowed) {
-      toast.error("❌ الكمية أكبر من المتاح");
+      toast.error(t("invoices.maxRefundExceeded"));
       setLoading(false);
       return;
     }
@@ -667,11 +789,15 @@ const fullyRefunded =
     let returnedRefs = [];
     let returnedRef = null;
     
-    const isReadyProduct =
-    item.containerType === "Original" ||
-    item.containerType === "Ready" ||
-    item.containerType === "Cream" ||
-    item.containerType === "مخمرية";
+  const type =
+  (item.containerType || "")
+    .toLowerCase();
+
+const isReadyProduct =
+  type === "original" ||
+  type === "ready" ||
+  type === "cream" ||
+  type === "مخمرية";
     const isOil =
     (item.containerType || "").toLowerCase().trim() === "oil";
 
@@ -777,10 +903,14 @@ const fullyRefunded =
 }, 0);
 
 const refundedMlNow = validItems.reduce((s, i) => {
+
   const isOil =
     (i.containerType || "").toLowerCase() === "oil";
 
-  return isOil ? s + i.qty : s;
+  return isOil
+    ? s + ((i.oilQty || 0) * (i.qty || 0))
+    : s;
+
 }, 0);
 
   const saleRef = doc(db, "sales", selectedInvoice.id);
@@ -854,7 +984,31 @@ batch.update(saleRef, {
 );
   // 🔥 مرة واحدة بس
   await batch.commit();
-  toast.success("Refund done successfully");
+  // 👤 Update customer stats
+if (
+  selectedInvoice.customerId &&
+  refundAmountNow > 0
+) {
+
+  const customerRef = doc(
+    db,
+    "customers",
+    selectedInvoice.customerId
+  );
+
+  await updateDoc(customerRef, {
+
+  totalSpent: increment(
+    -refundAmountNow
+  ),
+
+  totalRefunded: increment(
+    refundAmountNow
+  )
+
+});
+}
+  toast.success(t("invoices.refundSuccess"));
 
     // UI
     setShowRefundPopup(false);
@@ -895,14 +1049,39 @@ setPreviousReturns([]);
     (selectedInvoice?.refundedAmount || 0)
   );
     const liveReturns = previousReturns || [];
+    const formatDate = (value) => {
+
+  if (!value?.seconds) return "-";
+
+  return new Date(
+    value.seconds * 1000
+  ).toLocaleDateString();
+
+};
+
+const formatDateTime = (value) => {
+
+  if (!value?.seconds) return "-";
+
+  return new Date(
+    value.seconds * 1000
+  ).toLocaleString();
+
+};
+const modalBoxStyle = {
+  ...modalBox,
+  maxWidth: isMobile ? "92%" : "380px",
+};
     return (
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: isMobile ? 12 : 20 }}>
   <div
     style={{
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: "20px"
+      marginBottom: "20px",
+      gap: "12px",
+      flexWrap: "wrap"
     }}
   >
     {/* الشمال */}
@@ -921,6 +1100,7 @@ setPreviousReturns([]);
 
     {/* اليمين */}
     <button
+    type="button"
       onClick={() => navigate(-1)}
       style={{
         padding: "6px 12px",
@@ -941,14 +1121,15 @@ setPreviousReturns([]);
         <div style={{
           display: "flex",
           gap: "10px",
-          marginBottom: "15px"
+          marginBottom: "15px",
+          flexWrap: "wrap"
           }}>
           <input
     placeholder={t("invoices.search")}
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    style={{
-      width: "100%",
+        style={{
+      flex: 1,
       padding: "10px 14px",
       borderRadius: "10px",
       border: `1px solid ${theme.colors.border}`,
@@ -956,14 +1137,15 @@ setPreviousReturns([]);
       fontSize: "14px",
       transition: "0.2s",
       background: theme.colors.card,
+      minWidth: isMobile ? "100%" : "220px"
     }}
   />
   <input
     placeholder={t("invoices.filter.sales")}
     value={salesFilter}
     onChange={(e) => setSalesFilter(e.target.value)}
-    style={{
-      width: "100%",
+        style={{
+      flex: 1,
       padding: "10px 14px",
       borderRadius: "10px",
       border: `1px solid ${theme.colors.border}`,
@@ -971,6 +1153,7 @@ setPreviousReturns([]);
       fontSize: "14px",
       transition: "0.2s",
       background: theme.colors.card,
+      minWidth: isMobile ? "100%" : "220px"
     }}
   />
 
@@ -983,6 +1166,7 @@ setPreviousReturns([]);
               border: `1px solid ${theme.colors.border}`,
               transition: "0.2s",
               background: theme.colors.card,
+              minWidth: isMobile ? "100%" : "220px"
               }}
           />
             
@@ -995,16 +1179,21 @@ setPreviousReturns([]);
               border: `1px solid ${theme.colors.border}`,
               transition: "0.2s",
               background: theme.colors.card,
+              minWidth: isMobile ? "100%" : "220px"
               }}
           />
           </div>
 
         {/* 💰 CARDS */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <Card title={t("total")} value={totals.total} type="total" />
-          <Card title={t("cash")} value={totals.cash} type="cash" />
-          <Card title={t("visa")} value={totals.visa} type="visa" />
-          <Card title={t("instapay")} value={totals.instapay} type="instapay" />
+        <div style={{ display: "grid",
+          gridTemplateColumns:
+          "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 10
+          }}>
+          <Card title={t("cart.total")} value={totals.total} type="total" />
+          <Card title={t("common.cash")} value={totals.cash} type="cash" />
+          <Card title={t("common.visa")} value={totals.visa} type="visa" />
+          <Card title={t("common.instapay")} value={totals.instapay} type="instapay" />
         </div>
 
         <div style={{
@@ -1012,30 +1201,35 @@ setPreviousReturns([]);
           gap: 20,
           marginTop: 20,
           alignItems: "flex-start",
-          flexWrap: "wrap"
+          flexWrap: isMobile ? "wrap" : "nowrap"
         }}>
           {/* TABLE */}
           <div style={{
-    flex: 3,
-    maxHeight: "500px",
-    overflowY: "auto",
-    scrollbarWidth: "thin",
-    paddingRight: "4px",
-  }}>
+            flex: 3,
+            maxHeight: "500px",
+            overflowY: "auto",
+            overflowX: "auto",
+            minWidth: 0,
+            scrollbarWidth: "thin",
+            paddingRight: "4px",
+          }}>
             <table style={{
               width: "100%",
               borderCollapse: "separate",
-              borderSpacing: "0 8px"
+              borderSpacing: "0 8px",
+              minWidth: isMobile ? "720px" : "100%",
               }}>
               <thead style={{
-    textAlign: "left",
+  textAlign: "center",
     fontSize: "13px",
     fontWeight: "600",
     color: theme.colors.textSecondary,
     background: theme.colors.cardSoft,
-    position: "sticky",
+    position: isMobile ? "static" : "sticky",
     top: 0,
-    zIndex: 2
+    zIndex: 2,
+    
+    
   }}>
               <tr>
     <th style={{ padding: "10px" }}>{t("invoices.invoice")}</th>
@@ -1067,21 +1261,13 @@ setPreviousReturns([]);
     <tr>
       <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
         <div style={{ color: "#999" }}>
-          📭 مفيش فواتير بالفلتر ده
+          📭 {t("common.noData")}
         </div>
       </td>
     </tr>
   ) : (
     paginated.map(s => {
-    s.totalQty ||
-    s.items?.reduce(
-      (sum, i) =>
-        sum +
-        ((i.containerType || "").toLowerCase() === "oil"
-          ? i.oilQty * i.qty
-          : i.qty),
-      0
-    );
+    
 
   const refundedQty = s.refundedQty || 0;
 const refundedMl = s.refundedMl || 0;
@@ -1112,8 +1298,12 @@ const totalMl =
     ) || 0;
 
 const fullyRefunded =
-  refundedQty >= totalProducts &&
-  refundedMl >= totalMl;
+  isFullyRefunded(
+    refundedQty,
+    refundedMl,
+    totalProducts,
+    totalMl
+  );
 
 const statusStyle =
   s.status === "cancelled"
@@ -1147,39 +1337,41 @@ const statusStyle =
       boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
       borderRadius: "12px",
       overflow: "hidden",
-      opacity: s.status === "cancelled" ? 0.5 : 1,
+      opacity: s.status === "cancelled" ? 0.75 : 1,
     }}
     onMouseEnter={e => handleRowHover(e, false)}
   onMouseLeave={handleRowLeave}
   >
       {/* Invoice */}
-      <td style={{ padding: "14px 12px", fontWeight: "600" }}>
-    {s.invoiceNumber}
-  </td>
-
-      {/* Customer */}
       <td style={{
-    padding: "14px 12px",
-    fontSize: "14px"
-  }}>
-        {s.customerName || "-"}
-      </td>
+  padding: "14px 12px",
+  fontWeight: "600",
+  textAlign: "center"
+}}>
+  {s.invoiceNumber}
+</td>
 
-      {/* Date */}
-      <td style={{
-    padding: "14px 12px",
-    fontSize: "14px"
-  }}>
-        {s.createdAt?.seconds
-          ? new Date(s.createdAt.seconds * 1000).toLocaleDateString()
-          : "-"}
-      </td>
+<td style={{
+  padding: "14px 12px",
+  fontSize: "14px",
+  textAlign: "center"
+}}>
+  {s.customerName || "-"}
+</td>
 
-      {/* Payment */}
-      <td style={{
-    padding: "14px 12px",
-    fontSize: "14px"
-  }}>
+<td style={{
+  padding: "14px 12px",
+  fontSize: "14px",
+  textAlign: "center"
+}}>
+  {formatDate(s.createdAt)}
+</td>
+
+<td style={{
+  padding: "14px 12px",
+  fontSize: "14px",
+  textAlign: "center"
+}}>
         <span style={{
     padding: "4px 10px",
     borderRadius: "999px",
@@ -1187,20 +1379,25 @@ const statusStyle =
     fontSize: "12px",
     fontWeight: "500"
   }}>
-    {t((s.paymentMethod || "").toLowerCase())}
+    {t(`common.${(s.paymentMethod || "").toLowerCase()}`)}
   </span>
       </td>
 
       {/* Total */}
-      <td style={{ padding: "12px", fontWeight: "600" }}>
-        {s.total} EGP
+      <td style={{
+        padding: "12px",
+        fontWeight: "600",
+        textAlign: "center"
+      }}>
+        {s.total?.toLocaleString()} EGP
       </td>
           
       {/* Status */}
       <td style={{
-    padding: "14px 12px",
-    fontSize: "14px"
-  }}>
+        padding: "14px 12px",
+        fontSize: "14px",
+        textAlign: "center"
+      }}>
         <span
           style={{
             background: statusStyle.bg,
@@ -1240,6 +1437,7 @@ const statusStyle =
     alignItems: "center"
   }}>
     <button
+    type="button"
       disabled={page === 1}
       onClick={() => setPage(p => p - 1)}
       style={{
@@ -1258,6 +1456,7 @@ const statusStyle =
     </span>
 
     <button
+    type="button"
       disabled={page === totalPages}
       onClick={() => setPage(p => p + 1)}
       style={{
@@ -1276,11 +1475,13 @@ const statusStyle =
           {/* SIDE PANEL */}
           <div style={{
     flex: 2,
-    position: "sticky",
+    minWidth: 0,
+    width: isMobile ? "100%" : "auto",
+    position: isMobile ? "static" : "sticky",
     top: "20px",
     height: "fit-content",
     background: theme.colors.card,
-    padding: "20px",
+    padding: isMobile ? "14px" : "20px",
     borderRadius: "16px",
     boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
 
@@ -1292,9 +1493,34 @@ const statusStyle =
           
           {selectedInvoice && (
 
+<>
+{isMobile && (
+  <button
+    type="button"
+    onClick={() => setShowDetails(prev => !prev)}
+    style={{
+      width: "100%",
+      marginBottom: "10px",
+      padding: "10px",
+      borderRadius: "10px",
+      border: "none",
+      background: theme.colors.primary,
+      color: "#fff",
+      fontWeight: "600"
+    }}
+  >
+    {showDetails
+      ? t("common.hide")
+      : t("common.show")}
+  </button>
+)}
+{(!isMobile || showDetails) && (
             
-            
-              <div id="invoice-print">
+
+              <div
+                id="invoice-print"
+                style={{ position: "relative" }}
+              >
               <div style={{
     display: "flex",
     justifyContent: "space-between",
@@ -1311,19 +1537,19 @@ const statusStyle =
         color: theme.colors.textSecondary,
         marginTop: "4px"
       }}>
-        {selectedInvoice.createdAt?.seconds
-  ? new Date(
-      selectedInvoice.createdAt.seconds * 1000
-    ).toLocaleString()
-  : "-"}
+        {formatDateTime(selectedInvoice.createdAt)}
       </div>
     </div>
 
     {/* Actions */}
     <button
-      onClick={() => setDropdownOpen(prev => !prev)}
+    type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        setDropdownOpen(prev => !prev);
+      }}
       style={{
-        padding: "6px 12px",
+        padding: isMobile ? "10px 14px" : "6px 12px",
         borderRadius: "8px",
         border: "none",
         background: theme.colors.primary,
@@ -1340,36 +1566,46 @@ const statusStyle =
     {/* Dropdown */}
     {dropdownOpen && (
       <div
-    style={{
-      position: "absolute",
-      top: "40px",
-      right: "10px",
-      background: theme.colors.card,
-      border: `1px solid ${theme.colors.border}`,
-      borderRadius: "12px",
-      padding: "6px 0",
-      boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
-      overflow: "hidden",
-      zIndex: 1000,
-      minWidth: "150px"
-    }}
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        position: "absolute",
+        top: "40px",
+        right: "10px",
+        background: theme.colors.card,
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: "12px",
+        padding: "6px 0",
+        boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
+        overflow: "hidden",
+        zIndex: 1000,
+        minWidth: "150px"
+      }}
   >
+    
       
           {[
-    ...(selectedInvoice?.status !== "cancelled"
-      ? [{
-          key: "refund",
-          label: "Refund",
-          color: theme.colors.warning
-        }]
-      : []),
+  ...(selectedInvoice?.status !== "cancelled"
+    ? [{
+        key: "refund",
+        label: t("invoices.refund"),
+        color: theme.colors.warning
+      }]
+    : []),
 
-    {
-      key: "cancel",
-      label: "Cancel",
-      color: theme.colors.danger
-    }
-  ].map(a => (
+  ...(selectedInvoice?.status !== "cancelled"
+    ? [{
+        key: "cancel",
+        label: t("common.cancel"),
+        color: theme.colors.danger
+      }]
+    : []),
+
+  {
+    key: "print",
+    label: t("invoices.print"),
+    color: theme.colors.primary
+  }
+].map(a => (
     <div
     key={a.key}
     onMouseEnter={e => {
@@ -1379,20 +1615,39 @@ const statusStyle =
       e.currentTarget.style.background = "transparent";
     }}
       onClick={() => {
-    if (selectedInvoice.status === "cancelled" || cancelling) return;
-    if (cancelling) return;
-    if (a.key === "refund") {
-      setRefundItems([]);
-      setShowRefundPopup(true);
-    } 
-    
-    else {
-      setAction("cancel");
-      setShowConfirm(true);
-    }
 
-    setDropdownOpen(false);
-  }}
+  if (
+    a.key !== "print" &&
+    (
+      selectedInvoice.status === "cancelled" ||
+      cancelling
+    )
+  ) {
+    return;
+  }
+
+  if (a.key === "refund") {
+
+    setRefundItems([]);
+    setShowRefundPopup(true);
+
+  }
+
+  else if (a.key === "cancel") {
+
+    setAction("cancel");
+    setShowConfirm(true);
+
+  }
+
+  else if (a.key === "print") {
+
+    handlePrint();
+
+  }
+
+  setDropdownOpen(false);
+}}
       style={{
         padding: "10px 14px",
         cursor: "pointer",
@@ -1447,7 +1702,24 @@ const statusStyle =
         fontSize: "12px",
         fontWeight: "600"
       }}>
-        👨‍💼 {t("invoices.salesName")}: {selectedInvoice.salesName || "—"}
+        👨‍💼 {t("invoices.salesName")}: {
+
+  selectedInvoice.items?.find(
+    i => i.seller
+  )?.seller
+
+  ||
+
+  selectedInvoice.salesName
+
+  ||
+
+  (
+    lang === "ar"
+      ? "غير معروف"
+      : "Unknown"
+  )
+}
       </span>
 
       {selectedInvoice.enteredBy !== selectedInvoice.salesName && (
@@ -1457,7 +1729,31 @@ const statusStyle =
       background: "#ecfeff",
       fontSize: "12px"
     }}>
-      🖥️ {t("invoices.enteredBy")}: {selectedInvoice.enteredBy || "—"}
+      🖥️ {t("invoices.enteredBy")}: {
+
+  selectedInvoice.enteredBy &&
+  selectedInvoice.enteredBy !== "Unknown User"
+
+    ? selectedInvoice.enteredBy
+
+    : (
+        selectedInvoice.items?.find(
+          i => i.seller
+        )?.seller
+
+        ||
+
+        selectedInvoice.salesName
+
+        ||
+
+        (
+          lang === "ar"
+            ? "غير معروف"
+            : "Unknown"
+        )
+      )
+}
     </span>
   )}
 
@@ -1467,15 +1763,22 @@ const statusStyle =
     {/* 🏪 Branch */}
     <div>
       {t("branches.title")}: {
-        branchMap[branchName]
-          ? t(`branches.${branchMap[branchName]}`)
-          : branchName
-      }
+
+  branchNameMap[branchName]
+
+    ? t(
+        `branchNames.${branchNameMap[branchName]}`
+      )
+
+    : branchName
+}
     </div>
 
     {/* 💳 Payment */}
     <div>
-      {t("payment.method")}: {t((selectedInvoice.paymentMethod || "").toLowerCase())}
+      {t("payment.method")}: {
+  t(`common.${(selectedInvoice.paymentMethod || "cash").toLowerCase()}`)
+}
     
     </div>
     
@@ -1520,8 +1823,12 @@ const statusStyle =
       ) || 0;
 
   const fullyRefunded =
-    refunded >= totalProducts &&
-    refundedMl >= totalMl;
+  isFullyRefunded(
+    refunded,
+    refundedMl,
+    totalProducts,
+    totalMl
+  );
 
   return (
       <div style={{
@@ -1564,7 +1871,7 @@ const statusStyle =
                 borderRadius: "10px",
                 textAlign: "center"
               }}>
-                {netTotal} EGP
+                {netTotal.toLocaleString()} EGP
               </div>
 
               {/* 🧾 Items Table */}
@@ -1610,15 +1917,23 @@ const statusStyle =
       color: theme.colors.textSecondary,
       marginTop: "2px"
     }}>
-      {item.containerName ||
-  item.sizeLabel ||
-  [
-    item.containerType,
-    item.size
-  ]
-    .filter(Boolean)
-    .join(" • ")
-  }
+      {(item.containerType || "").toLowerCase() === "oil"
+  ? (
+      lang === "ar"
+        ? "زيت خام"
+        : "Pure Oil"
+    )
+  : (
+      item.containerName ||
+      item.sizeLabel ||
+      [
+        item.containerType,
+        item.size
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    )
+}
     </div>
 
     {/* 🛢 الزيت */}
@@ -1628,14 +1943,18 @@ const statusStyle =
         color: theme.colors.textSecondary,
         marginTop: "2px"
       }}>
-        {t("products.oil")}: {item.oilQty} ml
+        {t("products.oil")}: {item.oilQty} {t("common.ml")}
       </div>
     )}
   </div>
 
               <span style={{ flex: 1, textAlign: "center" }}>
                   {(item.containerType || "").toLowerCase() === "oil"
-                    ? `${item.oilQty * item.qty} ml`
+                    ? (
+                        lang === "ar"
+                          ? `${item.oilQty * item.qty} مل`
+                          : `${item.oilQty * item.qty} ml`
+                      )
                     : item.qty}
               </span>
 
@@ -1660,7 +1979,7 @@ const statusStyle =
     fontSize: "13px",
     color: "#92400e"
   }}>
-    🔁 Returned Items
+    🔁 {t("invoices.returnedItems")}
   </div>
 
       {previousReturns.map((r, i) => (
@@ -1727,7 +2046,7 @@ const statusStyle =
       fontSize: "14px"
     }}>
       <span>{t("cart.subtotal")}</span>
-      <span>{netTotal} EGP</span>
+      <span>{netTotal.toLocaleString()} EGP</span>
     </div>
 
     <div style={{
@@ -1747,13 +2066,14 @@ const statusStyle =
       fontSize: "15px"
     }}>
       <span>{t("cart.total")}</span>
-      <span>{netTotal} EGP</span>
+      <span>{netTotal.toLocaleString()} EGP</span>
     </div>
 
   </div>
 
               {/* Print */}
               <button
+              type="button"
               onClick={handlePrint}
               style={{
                   marginTop: "5px",
@@ -1775,6 +2095,8 @@ const statusStyle =
               </button>
               </div>
           )}
+        </>
+)}
           
           </div>
         </div>
@@ -1794,7 +2116,7 @@ const statusStyle =
         padding: "20px",
         borderRadius: "12px",
         width: "100%",
-        maxWidth: "500px",
+        maxWidth: isMobile ? "95%" : "500px",
         maxHeight: "80vh",
         overflowY: "auto",
         paddingRight: "6px",
@@ -1832,22 +2154,30 @@ const statusStyle =
       opacity: 0.7,
       marginTop: "2px"
     }}>
-      {item.containerName ||
-        item.sizeLabel ||
-        [
-          item.containerType,
-          item.size
-        ]
-          .filter(Boolean)
-          .join(" • ")
-      }
+      {(item.containerType || "").toLowerCase() === "oil"
+  ? (
+      lang === "ar"
+        ? "زيت خام"
+        : "Pure Oil"
+    )
+  : (
+      item.containerName ||
+      item.sizeLabel ||
+      [
+        item.containerType,
+        item.size
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    )
+}
     </div>
   </>
 
           <span style={{ fontSize: "12px", marginLeft: "6px" }}>
             {isOil
-              ? `${remaining} / ${remaining + alreadyRefunded} ml available`
-              : `${remaining} / ${remaining + alreadyRefunded} available`
+              ? `${remaining} / ${remaining + alreadyRefunded} ml ${t("common.available")}`
+              : `${remaining} / ${remaining + alreadyRefunded} ${t("common.available")}`
             }
           </span>
 
@@ -1860,6 +2190,7 @@ const statusStyle =
 
         <input
           type="number"
+          inputMode="numeric"
           style={{
     width: "100%",
     padding: "8px 10px",
@@ -1887,7 +2218,9 @@ const statusStyle =
 
     if (value > maxQty) {
       handleRefundQty(item, maxQty);
-    toast.error(`Max allowed is ${maxQty}`);
+    toast.error(
+  `${t("common.max")}: ${maxQty}`
+);
     value = maxQty;
   }
     
@@ -1895,13 +2228,20 @@ const statusStyle =
           disabled={remaining === 0}
           placeholder={
             isOil
-              ? "ml"
-              : "Qty"
+              ? t("common.ml")
+              : t("common.qty")
           }
           value={refundMap[getKey(item)] || ""}
-          onChange={(e) =>
-            handleRefundQty(item, e.target.value)
-          }
+          onChange={(e) => {
+
+          const value = Math.min(
+            remaining,
+            Number(e.target.value) || 0
+          );
+
+          handleRefundQty(item, value);
+
+        }}
         />
         <div style={{
     fontSize: "11px",
@@ -1909,14 +2249,16 @@ const statusStyle =
     marginTop: "4px"
   }}>
     {isOil
-    ? `Max: ${remaining} ml`
-    : `Max: ${remaining}`}
+      ? `${t("common.max")}: ${remaining} ml`
+      : `${t("common.max")}: ${remaining}`
+    }
   </div>
       </div>
     );
   })}
 
           <button
+          type="button"
             onClick={handlePartialRefund}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
@@ -1939,10 +2281,13 @@ const statusStyle =
               marginTop: "12px"
             }}
           >
-          {loading ? "⏳ Processing..." : t("invoices.confirmRefund")}
+          {loading
+? `⏳ ${t("common.loading")}`
+: t("invoices.confirmRefund")}
         </button>
 
         <button
+        type="button"
     onClick={() => {
       setShowRefundPopup(false);
       setRefundItems([]);
@@ -1979,7 +2324,7 @@ const statusStyle =
         {showConfirm && (
           createPortal(
           <div style={modalStyle}>
-            <div style={modalBox}>
+            <div style={modalBoxStyle}>
               <div style={{ marginBottom: "15px" }}>
     <h3 style={{ margin: 0 }}>{t("common.confirmAction")}</h3>
 
@@ -1992,6 +2337,7 @@ const statusStyle =
     </p>
   </div>
               <button
+              type="button"
     onClick={() => setShowConfirm(false)}
     style={{
       padding: "8px 12px",
@@ -2004,6 +2350,7 @@ const statusStyle =
   </button>
 
   <button
+  type="button"
     onClick={confirmAction}
     style={{
       padding: "8px 12px",
@@ -2080,7 +2427,9 @@ const statusStyle =
           <div style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center"
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap"
           }}>
             <span style={{
               fontSize: "12px",
@@ -2112,7 +2461,7 @@ const statusStyle =
             marginTop: "8px",
             color: s.color || theme.colors.text
           }}>
-            {value} EGP
+            {Number(value || 0).toLocaleString()} EGP
           </div>
         </div>
     );
@@ -2137,7 +2486,7 @@ const statusStyle =
     borderRadius: 12,
 
     width: "100%",
-    maxWidth: "380px",   // 👈 صغير وبروفشنال
+    maxWidth: "380px", 
 
     textAlign: "center",
     boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
