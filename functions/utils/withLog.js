@@ -1,88 +1,126 @@
 const { logAction } = require("./log");
-const { HttpsError } = require("firebase-functions/v2/https");
+const {
+  HttpsError
+} = require("firebase-functions/v2/https");
 
-function withLog(config, handler) {
-  return async (request) => {
-    const auth = request.auth;
+function withLog(
+  config,
+  handler
+) {
+  return async (
+    request
+  ) => {
+
+    const auth =
+      request.auth;
+
+    const data =
+      request.data;
+
     let byName = "";
 
-if (auth?.uid) {
+    if (auth?.uid) {
 
-  const admin =
-    require("firebase-admin");
+      const admin =
+        require(
+          "firebase-admin"
+        );
 
-  const userSnap =
-    await admin
-      .firestore()
-      .collection("users")
-      .doc(auth.uid)
-      .get();
+      const userSnap =
+        await admin
+          .firestore()
+          .collection(
+            "users"
+          )
+          .doc(
+            auth.uid
+          )
+          .get();
 
-  byName =
-    userSnap.data()?.name || "";
+      byName =
+        userSnap.data()
+          ?.name || "";
+    }
 
-}
-    const data = request.data;
     const {
-      action,
-      module = "System",
-      severity = "info"
-    } = config;
-    try {
-      // شغّل الفنكشن الأساسية
-      const result = await handler(request);
 
-      // 🧾 log success
+      action,
+
+      module =
+        "System",
+
+      severity =
+        "info"
+
+    } = config;
+
+    try {
+
+      const result =
+        await handler(
+          request
+        );
+
       await logAction({
 
-        action:
+        action,
 
-          action,
+        module,
 
-        module:
-
-          module,
-
-        severity:
-
-          severity,
+        severity,
 
         status:
-
           "success",
 
         by:
+          auth?.uid ||
+          "unknown",
 
-          auth?.uid || "unknown",
         byName,
 
         userId:
-
-          auth?.uid || "",
-
-        branchId:
-
+          auth?.uid ||
           "",
 
-        targetId:
+        branchId:
+          result?.branchId || "",
 
-          result?.targetId || null,
+        branchName:
+          result?.branchName || "",
+
+        targetId:
+          result?.targetId ||
+          null,
 
         targetName:
-          result?.targetName || "",
+          result?.targetName ||
+          "",
 
         details:
-          result?.logDetails || {}
+          result?.logDetails ||
+          {},
 
+        before:
+          result?.before ||
+          null,
+
+        after:
+          result?.after ||
+          null
 
       });
 
       return result;
 
-    } catch (error) {
-      console.error("ERROR:", error);
+    } catch (
+      error
+    ) {
 
-      // 🧾 log error
+      console.error(
+        "ERROR:",
+        error
+      );
+
       await logAction({
 
         action,
@@ -96,18 +134,24 @@ if (auth?.uid) {
           "error",
 
         by:
-          auth?.uid || "unknown",
-          
+          auth?.uid ||
+          "unknown",
+
         byName,
 
         userId:
-          auth?.uid || "",
-
-        branchId:
+          auth?.uid ||
           "",
 
+        branchId:
+          data?.branchId || "",
+
+        branchName:
+          data?.branchName || "",
+
         targetId:
-          data?.uid || null,
+          data?.uid ||
+          null,
 
         targetName:
           "",
@@ -118,17 +162,34 @@ if (auth?.uid) {
             error.message,
 
           code:
-            error.code || "unknown"
+            error.code ||
+            "unknown"
 
         },
 
+        before:
+          null,
+
+        after:
+          null
 
       });
 
-      if (error instanceof HttpsError) throw error;
-      throw new HttpsError("internal", error.message);
+      if (
+        error instanceof
+        HttpsError
+      ) {
+        throw error;
+      }
+
+      throw new HttpsError(
+        "internal",
+        error.message
+      );
     }
   };
 }
 
-module.exports = { withLog };
+module.exports = {
+  withLog
+};

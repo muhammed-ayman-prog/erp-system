@@ -74,6 +74,26 @@ export const LOG_ACTIONS = {
   // Settings
   CHANGE_PASSWORD:
     "CHANGE_PASSWORD",
+  // Branches
+  CREATE_BRANCH:
+    "CREATE_BRANCH",
+
+  UPDATE_BRANCH:
+    "UPDATE_BRANCH",
+
+  // Customers
+  CREATE_CUSTOMER:
+    "CREATE_CUSTOMER",
+
+  UPDATE_CUSTOMER:
+    "UPDATE_CUSTOMER",
+
+  ADD_CUSTOMER_NOTE:
+    "ADD_CUSTOMER_NOTE",
+
+  // Daily Closing
+  DAILY_CLOSING:
+    "DAILY_CLOSING",
 
   UPDATE_PROFILE:
     "UPDATE_PROFILE",

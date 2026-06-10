@@ -404,9 +404,12 @@ ease: "easeOut"
 
             {selectedBranch === "all"
 
-                ? t("branches.all")
+              ? t("branches.all")
 
-                : branchNames[selectedBranch] ||
+              : branchNames[
+                  selectedBranch
+                ]?.name ||
+
                 t("common.unknown")}
 
             </h2>

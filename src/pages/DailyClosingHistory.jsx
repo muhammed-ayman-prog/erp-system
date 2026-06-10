@@ -1,9 +1,16 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useState
 } from "react";
+import {
+  Download
+} from "lucide-react";
 
+import {
+  exportClosingPDF
+} from "../utils/exportClosingPDF";
 import {
   collection,
   onSnapshot,
@@ -60,11 +67,24 @@ const cardStyle = {
     "0 10px 30px rgba(0,0,0,0.05)"
 };
 
-const formatMoney = (num) => {
+const formatMoney = (
+  num,
+  lang = "en"
+) => {
 
-  return new Intl.NumberFormat(
-    "en-US"
-  ).format(Number(num || 0));
+  return `${
+
+    new Intl.NumberFormat(
+
+      lang === "ar"
+        ? "ar-EG"
+        : "en-US"
+
+    ).format(
+      Number(num || 0)
+    )
+
+  } EGP`;
 
 };
 
@@ -189,9 +209,10 @@ export default function DailyClosingHistory() {
     selectedBranch
   } = useApp();
 
-  const {
-    lang
-  } = useTranslate();
+const {
+  lang,
+  t
+} = useTranslate();
 
   const isOwner =
     user?.role === "owner";
@@ -220,6 +241,16 @@ export default function DailyClosingHistory() {
     sortBy,
     setSortBy
   ] = useState("latest");
+  const isMobile =
+
+  typeof window !==
+    "undefined"
+
+    &&
+
+  window.matchMedia(
+    "(max-width: 768px)"
+  ).matches;
 
   // ======================================================
   // FETCH
@@ -286,6 +317,10 @@ export default function DailyClosingHistory() {
 
         );
 
+        setExpandedRow(null);
+
+        setSearch("");
+
         setLoading(false);
 
       },
@@ -299,7 +334,7 @@ export default function DailyClosingHistory() {
       }
 
     );
-
+    
     return () => unsub();
 
   }, [
@@ -517,7 +552,10 @@ export default function DailyClosingHistory() {
   return (
 
     <div
-      dir={
+
+    key={branchToUse}
+
+    dir={
         lang === "ar"
           ? "rtl"
           : "ltr"
@@ -620,33 +658,41 @@ export default function DailyClosingHistory() {
         <div>
 
           <h1
-            style={{
-              margin: 0,
+  style={{
+    margin: 0,
+    fontSize:
+      isMobile ? 24 : 34,
+    fontWeight: 900,
+    color:
+      theme.colors.text
+  }}
+>
 
-              fontSize: 34,
+  📚 {
+    t(
+      "dailyClosing.historyTitle"
+    )
+  }
 
-              fontWeight: 900,
+</h1>
 
-              color:
-                theme.colors.text
-            }}
-          >
-            📚 سجل التقفيل اليومي
-          </h1>
+<div
+  style={{
+    marginTop: 8,
+    color:
+      theme.colors.textSecondary,
+    fontSize:
+      isMobile ? 13 : 15
+  }}
+>
 
-          <div
-            style={{
-              marginTop: 8,
+  {
+    t(
+      "dailyClosing.reviewClosings"
+    )
+  }
 
-              color:
-                theme.colors.textSecondary,
-
-              fontSize: 15
-            }}
-          >
-            مراجعة جميع عمليات
-            إغلاق اليومية
-          </div>
+</div>
 
         </div>
 
@@ -670,7 +716,11 @@ export default function DailyClosingHistory() {
       >
 
         <StatCard
-          title="اليوميات"
+          title={
+  t(
+    "dailyClosing.closings"
+  )
+}
           value={stats.total}
           icon={
             <CalendarDays
@@ -681,7 +731,11 @@ export default function DailyClosingHistory() {
         />
 
         <StatCard
-          title="مطابق"
+          title={
+  t(
+    "dailyClosing.matchedCount"
+  )
+}
           value={stats.matched}
           icon={
             <CheckCircle2
@@ -692,7 +746,11 @@ export default function DailyClosingHistory() {
         />
 
         <StatCard
-          title="زيادة"
+          title={
+  t(
+    "dailyClosing.cashOver"
+  )
+}
           value={stats.over}
           icon={
             <AlertTriangle
@@ -703,7 +761,11 @@ export default function DailyClosingHistory() {
         />
 
         <StatCard
-          title="عجز"
+          title={
+  t(
+    "dailyClosing.shortages"
+  )
+}
           value={stats.shortage}
           icon={
             <TrendingDown
@@ -788,10 +850,10 @@ export default function DailyClosingHistory() {
               }
 
               placeholder={
-                lang === "ar"
-                  ? "بحث..."
-                  : "Search..."
-              }
+  t(
+    "dailyClosing.search"
+  )
+}
 
               style={{
                 width: "100%",
@@ -850,15 +912,27 @@ export default function DailyClosingHistory() {
           >
 
             <option value="latest">
-              الأحدث
+              {
+  t(
+    "dailyClosing.latest"
+  )
+}
             </option>
 
             <option value="highestDiff">
-              أعلى فرق
+              {
+  t(
+    "dailyClosing.highestDiff"
+  )
+}
             </option>
 
             <option value="cash">
-              أعلى كاش
+              {
+  t(
+    "dailyClosing.highestCash"
+  )
+}
             </option>
 
           </select>
@@ -904,7 +978,11 @@ export default function DailyClosingHistory() {
                 marginBottom: 10
               }}
             >
-              لا يوجد بيانات
+              {
+  t(
+    "common.noData"
+  )
+}
             </div>
 
             <div
@@ -913,8 +991,11 @@ export default function DailyClosingHistory() {
                   theme.colors.textSecondary
               }}
             >
-              لم يتم العثور على
-              أي تقفيل يومي
+            {
+  t(
+    "dailyClosing.noData"
+  )
+}
             </div>
 
           </div>
@@ -945,7 +1026,30 @@ export default function DailyClosingHistory() {
                   "auto"
               }}
             >
+              {
+  isMobile && (
 
+    <div
+      style={{
+        padding: "12px 16px",
+        fontSize: 13,
+        color:
+          theme.colors.textSecondary,
+        borderBottom:
+          `1px solid ${theme.colors.border}`
+      }}
+    >
+
+      {
+  lang === "ar"
+    ? "← اسحب الجدول أفقيًا"
+    : "← Scroll horizontally"
+}
+
+    </div>
+
+  )
+}
               <table
                 style={{
                   width: "100%",
@@ -953,7 +1057,10 @@ export default function DailyClosingHistory() {
                   borderCollapse:
                     "collapse",
 
-                  minWidth: 1100
+                  minWidth:
+                  isMobile
+                    ? 950
+                    : 1100
                 }}
               >
 
@@ -965,36 +1072,59 @@ export default function DailyClosingHistory() {
                     </Th>
 
                     <Th>
-                      الفرع
+                      {
+  t("dailyClosing.branch")
+}
                     </Th>
 
                     <Th>
-                      Date
+                      {
+  t("common.date")
+}
                     </Th>
 
                     <Th>
-                      المتوقع
+                      {
+  t("dailyClosing.expected")
+}
                     </Th>
 
                     <Th>
-                      الفعلي
+                      {
+  t("dailyClosing.actual")
+}
                     </Th>
 
                     <Th>
-                      الفرق
+                      {
+  t("dailyClosing.difference")
+}
                     </Th>
 
                     <Th>
-                      الحالة
+                      {
+  t("dailyClosing.status")
+}
                     </Th>
 
                     <Th>
-                      المستخدم
+                      {
+  t("dailyClosing.user")
+}
                     </Th>
 
                     <Th>
-                      وقت الحفظ
+                      {
+  t("dailyClosing.createdAt")
+} 
                     </Th>
+                    <Th>
+  {
+    t(
+      "common.pdf"
+    )
+  }
+</Th>
 
                   </tr>
 
@@ -1019,15 +1149,12 @@ export default function DailyClosingHistory() {
 
                         return (
 
-                          <>
+                          <Fragment key={item.id}>
                             {/* ====================================================== */}
                             {/* ROW */}
                             {/* ====================================================== */}
 
                             <tr
-                              key={
-                                item.id
-                              }
 
                               onClick={() =>
 
@@ -1061,7 +1188,7 @@ export default function DailyClosingHistory() {
                                   "pointer",
 
                                 transition:
-                                  "0.2s",
+  "all 0.2s ease",
 
                                 background:
                                   isExpanded
@@ -1113,14 +1240,16 @@ export default function DailyClosingHistory() {
 
                               <Td>
                                 {formatMoney(
-                                  item.expectedCash
-                                )}
+  item.expectedCash,
+  lang
+)}
                               </Td>
 
                               <Td>
                                 {formatMoney(
-                                  item.actualCash
-                                )}
+  item.actualCash,
+  lang
+)}
                               </Td>
 
                               <Td
@@ -1129,8 +1258,9 @@ export default function DailyClosingHistory() {
                                 }
                               >
                                 {formatMoney(
-                                  item.difference
-                                )}
+  item.difference,
+  lang
+)}
                               </Td>
 
                               <Td>
@@ -1179,6 +1309,88 @@ export default function DailyClosingHistory() {
                                 />
 
                               </Td>
+                              <Td>
+
+  <button
+  title={
+  lang === "ar"
+    ? "تحميل PDF"
+    : "Download PDF"
+}
+
+    onClick={(e) => {
+
+      e.stopPropagation();
+
+      exportClosingPDF(
+        item,
+        lang
+      );
+
+    }}
+
+    style={{
+
+
+  background:
+    "#eff6ff",
+  outline: "none",
+  color:
+    "#2563eb",
+
+  width: 42,
+
+  height: 42,
+
+  borderRadius: 12,
+
+  cursor: "pointer",
+
+  display: "flex",
+
+  alignItems:
+    "center",
+
+  justifyContent:
+    "center",
+
+  transition:
+  "all 0.2s ease",
+
+  boxShadow:
+    "0 4px 12px rgba(37,99,235,0.12)",
+  border:
+  "1px solid #bfdbfe",
+
+}}
+onMouseEnter={(e) => {
+
+  e.currentTarget.style.transform =
+    "translateY(-2px)";
+
+  e.currentTarget.style.background =
+    "#dbeafe";
+
+}}
+
+onMouseLeave={(e) => {
+
+  e.currentTarget.style.transform =
+    "translateY(0px)";
+
+  e.currentTarget.style.background =
+    "#eff6ff";
+
+}}
+  >
+
+    <Download
+      size={18}
+    />
+
+  </button>
+
+</Td>
 
                             </tr>
 
@@ -1192,9 +1404,7 @@ export default function DailyClosingHistory() {
                                 <tr>
 
                                   <td
-                                    colSpan={
-                                      9
-                                    }
+                                    colSpan={11}
 
                                     style={{
                                       padding: 0,
@@ -1247,8 +1457,12 @@ export default function DailyClosingHistory() {
                                                 theme.colors.textSecondary
                                             }}
                                           >
-                                            ملخص
-                                            اليومية
+                                            {
+  t(
+    "dailyClosing.summary"
+  )
+}
+                                            
                                           </div>
 
                                           <div
@@ -1259,12 +1473,12 @@ export default function DailyClosingHistory() {
                                             }}
                                           >
 
-                                            {formatMoney(
-                                              item.actualCash
-                                            )}
+                                          {formatMoney(
+  item.actualCash,
+  lang
+)}
 
-                                            {" "}
-                                            EGP
+                                            
 
                                           </div>
 
@@ -1292,17 +1506,27 @@ export default function DailyClosingHistory() {
                                             "grid",
 
                                           gridTemplateColumns:
-                                            "repeat(auto-fit,minmax(190px,1fr))",
+
+                                            isMobile
+
+                                              ? "1fr"
+
+                                              : "repeat(auto-fit,minmax(190px,1fr))",
 
                                           gap: 16
                                         }}
                                       >
 
                                         <BreakdownCard
-                                          title="إجمالي المبيعات"
-                                          value={
-                                            item.totalSales
-                                          }
+  title={
+    t(
+      "dailyClosing.salesTotal"
+    )
+  }
+  value={
+    item.totalSales
+  }
+  lang={lang}
                                           color="#2563eb"
                                           icon={
                                             <BadgeDollarSign
@@ -1312,10 +1536,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="كاش"
-                                          value={
-                                            item.cashSales
-                                          }
+  title={
+    t(
+      "dailyClosing.cashOnly"
+    )
+  }
+  value={
+    item.cashSales
+  }
+  lang={lang}
                                           color="#16a34a"
                                           icon={
                                             <Wallet
@@ -1325,10 +1554,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="فيزا"
-                                          value={
-                                            item.visaSales
-                                          }
+  title={
+    t(
+      "dailyClosing.visa"
+    )
+  }
+  value={
+    item.visaSales
+  }
+  lang={lang}
                                           color="#7c3aed"
                                           icon={
                                             <CreditCard
@@ -1338,10 +1572,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="Instapay"
-                                          value={
-                                            item.instapaySales
-                                          }
+  title={
+    t(
+      "dailyClosing.instapay"
+    )
+  }
+  value={
+    item.instapaySales
+  }
+  lang={lang}
                                           color="#0f766e"
                                           icon={
                                             <Landmark
@@ -1351,10 +1590,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="مرتجعات"
-                                          value={
-                                            item.refunds
-                                          }
+  title={
+    t(
+      "dailyClosing.refundsOnly"
+    )
+  }
+  value={
+    item.refunds
+  }
+  lang={lang}
                                           color="#dc2626"
                                           icon={
                                             <RotateCcw
@@ -1364,10 +1608,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="مصروفات"
-                                          value={
-                                            item.expenses
-                                          }
+  title={
+    t(
+      "dailyClosing.expensesOnly"
+    )
+  }
+  value={
+    item.expenses
+  }
+  lang={lang}
                                           color="#ea580c"
                                           icon={
                                             <Receipt
@@ -1377,10 +1626,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="سلف"
-                                          value={
-                                            item.loans
-                                          }
+  title={
+    t(
+      "dailyClosing.loansOnly"
+    )
+  }
+  value={
+    item.loans
+  }
+  lang={lang}
                                           color="#eab308"
                                           icon={
                                             <Landmark
@@ -1390,10 +1644,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="حوافز"
-                                          value={
-                                            item.bonuses
-                                          }
+  title={
+    t(
+      "dailyClosing.bonusesOnly"
+    )
+  }
+  value={
+    item.bonuses
+  }
+  lang={lang}
                                           color="#22c55e"
                                           icon={
                                             <Gift
@@ -1403,10 +1662,15 @@ export default function DailyClosingHistory() {
                                         />
 
                                         <BreakdownCard
-                                          title="الفواتير"
-                                          value={
-                                            item.invoices
-                                          }
+  title={
+    t(
+      "dailyClosing.invoiceCount"
+    )
+  }
+  value={
+    item.invoices
+  }
+  lang={lang}
                                           color="#334155"
 
                                           icon={
@@ -1452,7 +1716,11 @@ export default function DailyClosingHistory() {
                                                 fontSize: 15
                                               }}
                                             >
-                                              ملاحظات
+                                              {
+  t(
+    "dailyClosing.notesTitle"
+  )
+}
                                             </div>
 
                                             <div
@@ -1482,7 +1750,7 @@ export default function DailyClosingHistory() {
                               )
                             }
 
-                          </>
+                          </Fragment>
 
                         );
 
@@ -1673,6 +1941,7 @@ function BreakdownCard({
   value,
   color,
   icon,
+  lang,
   isMoney = true
 }) {
 
@@ -1690,7 +1959,10 @@ function BreakdownCard({
 
         padding: 18,
 
-        minHeight: 130,
+        minHeight:
+  isMoney
+    ? 130
+    : 110,
 
         display: "flex",
 
@@ -1701,7 +1973,7 @@ function BreakdownCard({
           "space-between",
 
         transition:
-          "0.2s"
+          "all 0.2s ease",
       }}
     >
 
@@ -1771,7 +2043,8 @@ function BreakdownCard({
           isMoney
 
             ? formatMoney(
-                value
+                value,
+                lang
               )
 
             : value

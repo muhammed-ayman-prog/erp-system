@@ -4,82 +4,91 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 
-import { db }
-from "../firebase";
+import { db } from "../firebase";
 
-export default async function
-logAction({
+export default async function logAction({
 
   action,
 
   module,
 
+  entityType = "",
+
   severity = "info",
 
   status = "success",
 
-  by = "",
+  performedBy = "",
 
-  byName = "",
-
-  userId = "",
+  performedByName = "",
 
   branchId = "",
+
+  branchName = "",
 
   targetId = "",
 
   targetName = "",
 
+  before = null,
+
+  after = null,
+
   details = {},
 
+  metadata = {}
 
 }) {
 
   try {
-const cleanData = {
 
-    action,
-
-    module,
-
-    severity,
-
-    status,
-
-    by,
-
-    byName,
-
-    userId,
-
-    branchId,
-
-    targetId,
-
-    targetName,
-
-    details,
-
-
-    };
     if (!action || !module) {
 
-        console.warn(
-            "Missing log action/module"
-        );
+      console.warn(
+        "Missing log action/module"
+      );
 
-        return;
+      return;
+    }
 
-        }
     await addDoc(
       collection(db, "logs"),
-
       {
-        ...cleanData,
+
+        action,
+
+        module,
+
+        entityType,
+
+        severity,
+
+        status,
+
+        performedBy,
+
+        performedByName,
+
+        branchId,
+
+        branchName,
+
+        targetId,
+
+        targetName,
+
+        before,
+
+        after,
+
+        details,
+
+        metadata,
 
         createdAt:
-            serverTimestamp()
-        }
+          serverTimestamp()
+
+      }
     );
 
   } catch (err) {

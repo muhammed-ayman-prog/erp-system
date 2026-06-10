@@ -32,7 +32,15 @@ export const LOG_MODULES = {
 
   PRICING:
     "Pricing",
+  BRANCHES:
+  "Branches",
 
+  CUSTOMERS:
+    "Customers",
+
+  DAILY_CLOSING:
+    "Daily Closing",
+    
   SYSTEM:
     "System"
 

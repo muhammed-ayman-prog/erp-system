@@ -196,9 +196,21 @@ export default function DailyClosing() {
     selectedBranch
   } = useApp();
 
-  const {
-    lang
-  } = useTranslate();
+const {
+  lang,
+  t
+} = useTranslate();
+
+const isMobile =
+
+  typeof window !==
+    "undefined"
+
+    &&
+
+  window.matchMedia(
+    "(max-width: 768px)"
+  ).matches;
 
   const [loading, setLoading] =
     useState(true);
@@ -865,7 +877,7 @@ const handleSaveClosing =
 
   alert(
     lang === "ar"
-      ? "تم إغلاق اليومية بالفعل"
+      ? t("dailyClosing.alreadyClosed")
       : "Daily already closed"
   );
 
@@ -986,7 +998,12 @@ const handleSaveClosing =
         style={{
           display: "grid",
           gridTemplateColumns:
-            "repeat(auto-fit,minmax(260px,1fr))",
+
+            isMobile
+
+              ? "1fr"
+
+              : "repeat(auto-fit,minmax(260px,1fr))",
           gap: 20
         }}
       >
@@ -1059,7 +1076,8 @@ const handleSaveClosing =
             style={{
               margin: 0,
 
-              fontSize: 36,
+              fontSize:
+                isMobile ? 28 : 36,
 
               fontWeight: 800,
 
@@ -1067,7 +1085,7 @@ const handleSaveClosing =
                 theme.colors.text
             }}
           >
-            📦 Daily Closing
+             {t("dailyClosing.title")}
           </h1>
 
           <div
@@ -1138,7 +1156,12 @@ const handleSaveClosing =
           display: "grid",
 
           gridTemplateColumns:
-            "repeat(auto-fit,minmax(260px,1fr))",
+
+            isMobile
+
+              ? "1fr"
+
+              : "repeat(auto-fit,minmax(260px,1fr))",
 
           gap: 18,
 
@@ -1147,7 +1170,7 @@ const handleSaveClosing =
       >
 
         <StatCard
-          title="إجمالي المبيعات"
+          title={t("dailyClosing.totalSales")}
           value={
             analytics.totalSales
           }
@@ -1160,7 +1183,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="الفواتير"
+          title={t("dailyClosing.invoices")}
           value={
             analytics.invoices
           }
@@ -1174,7 +1197,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="كاش"
+          title={t("dailyClosing.cash")}
           value={
             analytics.cashSales
           }
@@ -1187,7 +1210,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="فيزا"
+          title={t("dailyClosing.visa")}
           value={
             analytics.visaSales
           }
@@ -1200,7 +1223,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="Instapay"
+          title={t("dailyClosing.instapay")}
           value={
             analytics.instapaySales
           }
@@ -1213,7 +1236,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="مرتجعات"
+          title={t("dailyClosing.refunds")}
           value={
             analytics.totalRefunds
           }
@@ -1226,7 +1249,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="مصروفات"
+          title={t("dailyClosing.expenses")}
           value={
             analytics.totalExpenses
           }
@@ -1239,7 +1262,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="سلف"
+          title={t("dailyClosing.loans")}
           value={
             analytics.totalLoans
           }
@@ -1252,7 +1275,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="حوافز"
+          title={t("dailyClosing.bonuses")}
           value={
             analytics.totalBonuses
           }
@@ -1265,7 +1288,7 @@ const handleSaveClosing =
         />
 
         <StatCard
-          title="الكاش المتوقع"
+          title={t("dailyClosing.expectedCash")}
           value={
             analytics.expectedCash
           }
@@ -1321,12 +1344,13 @@ const handleSaveClosing =
                   theme.colors.textSecondary
               }}
             >
-              Cash Reconciliation
+              {t("dailyClosing.reconciliation")}
             </div>
 
             <div
               style={{
-                fontSize: 42,
+                fontSize:
+                  isMobile ? 30 : 42,
 
                 fontWeight: 800,
 
@@ -1351,7 +1375,7 @@ const handleSaveClosing =
           >
 
             <ReconRow
-              title="Cash Sales"
+              title={t("dailyClosing.cashSales")}
               value={
                 analytics.cashSales
               }
@@ -1359,28 +1383,28 @@ const handleSaveClosing =
             />
 
             <ReconRow
-              title="Refunds"
+              title={t("dailyClosing.refunds")}
               value={
                 analytics.totalRefunds
               }
             />
 
             <ReconRow
-              title="Expenses"
+              title={t("dailyClosing.expenses")}
               value={
                 analytics.totalExpenses
               }
             />
 
             <ReconRow
-              title="Loans"
+              title={t("dailyClosing.loans")}
               value={
                 analytics.totalLoans
               }
             />
 
             <ReconRow
-              title="Bonuses"
+              title={t("dailyClosing.bonuses")}
               value={
                 analytics.totalBonuses
               }
@@ -1439,9 +1463,7 @@ const handleSaveClosing =
             theme.colors.text
         }}
       >
-        {lang === "ar"
-          ? "إغلاق اليومية"
-          : "Close Daily Cash"}
+        {t("dailyClosing.closeDailyCash")}
       </div>
 
       <div
@@ -1455,7 +1477,7 @@ const handleSaveClosing =
         }}
       >
         {lang === "ar"
-          ? "أدخل النقدية الفعلية الموجودة"
+          ? t("dailyClosing.enterActualCash")
           : "Enter actual cash amount"}
       </div>
 
@@ -1478,13 +1500,12 @@ const handleSaveClosing =
             fontWeight: 600
           }}
         >
-          {lang === "ar"
-            ? "الكاش الفعلي"
-            : "Actual Cash"}
+          {t("dailyClosing.actualCash")}
         </label>
 
         <input
           type="number"
+          min="0"
           inputMode="numeric"
           value={actualCash}
 
@@ -1540,7 +1561,7 @@ const handleSaveClosing =
           }}
         >
           {lang === "ar"
-            ? "ملاحظات"
+            ? t("dailyClosing.notes")
             : "Notes"}
         </label>
 
@@ -1557,7 +1578,7 @@ const handleSaveClosing =
 
           placeholder={
             lang === "ar"
-              ? "اكتب أي ملاحظات..."
+              ? t("dailyClosing.writeNotes")
               : "Write notes..."
           }
 
@@ -1667,7 +1688,7 @@ const handleSaveClosing =
         : saving
 
         ? lang === "ar"
-            ? "جاري الحفظ..."
+            ? t("dailyClosing.saving")
             : "Saving..."
 
         : lang === "ar"
@@ -1682,7 +1703,10 @@ const handleSaveClosing =
 
     <div
       style={{
-        width: 320
+        width:
+  isMobile
+    ? "100%"
+    : 320
       }}
     >
 
@@ -1711,7 +1735,7 @@ const handleSaveClosing =
         <ClosingInfoRow
           label={
             lang === "ar"
-              ? "الكاش الفعلي"
+              ? t("dailyClosing.actualCash")
               : "Actual Cash"
           }
           value={
@@ -1787,7 +1811,7 @@ const handleSaveClosing =
           "matched"
 
             ? lang === "ar"
-              ? "الكاش مطابق"
+              ? t("dailyClosing.cashMatched")
               : "Cash Matched"
 
             : differenceStatus ===
@@ -1819,7 +1843,10 @@ const handleSaveClosing =
           display: "grid",
 
           gridTemplateColumns:
-            "repeat(auto-fit,minmax(500px,1fr))",
+
+  isMobile
+    ? "1fr"
+    : "repeat(auto-fit,minmax(500px,1fr))",
 
           gap: 22
         }}
@@ -1830,7 +1857,7 @@ const handleSaveClosing =
         {/* ====================================================== */}
 
         <TableCard
-          title="المرتجعات"
+          title={t("dailyClosing.refundsTable")}
           icon={
             <RotateCcw
               size={18}
@@ -1841,7 +1868,11 @@ const handleSaveClosing =
           {todayRefunds.length ===
           0 ? (
 
-            <EmptyState />
+            <EmptyState
+  text={
+    t("dailyClosing.noData")
+  }
+/>
 
           ) : (
 
@@ -1856,19 +1887,19 @@ const handleSaveClosing =
                   <tr>
 
                     <Th>
-                      المنتج
+                      {t("dailyClosing.product")}
                     </Th>
 
                     <Th>
-                      الكمية
+                      {t("dailyClosing.qty")}
                     </Th>
 
                     <Th>
-                      السعر
+                      {t("dailyClosing.amount")}
                     </Th>
 
                     <Th>
-                      التاريخ
+                      {t("dailyClosing.time")}
                     </Th>
 
                   </tr>
@@ -1933,7 +1964,7 @@ const handleSaveClosing =
         {/* ====================================================== */}
 
         <TableCard
-          title="المصروفات"
+          title={t("dailyClosing.expensesTable")}
           icon={
             <Wallet
               size={18}
@@ -1944,7 +1975,11 @@ const handleSaveClosing =
           {todayExpenses.length ===
           0 ? (
 
-            <EmptyState />
+            <EmptyState
+  text={
+    t("dailyClosing.noData")
+  }
+/>
 
           ) : (
 
@@ -1959,19 +1994,19 @@ const handleSaveClosing =
                   <tr>
 
                     <Th>
-                      التصنيف
+                      {t("dailyClosing.category")}
                     </Th>
 
                     <Th>
-                      الملاحظة
+                      {t("dailyClosing.note")}
                     </Th>
 
                     <Th>
-                      المبلغ
+                      {t("dailyClosing.amount")}
                     </Th>
 
                     <Th>
-                      التاريخ
+                      {t("dailyClosing.time")}
                     </Th>
 
                   </tr>
@@ -2058,7 +2093,7 @@ function StatCard({
 
         padding: 24,
 
-        minHeight: 165,
+        minHeight: 145,
 
         position: "relative",
 
@@ -2142,7 +2177,7 @@ function StatCard({
 
       <div
         style={{
-          fontSize: 36,
+          fontSize: "clamp(28px,5vw,36px)",
 
           fontWeight: 800,
 
@@ -2296,7 +2331,9 @@ function TableWrapper({
 
 }
 
-function EmptyState() {
+function EmptyState({
+  text
+}) {
 
   return (
 
@@ -2332,7 +2369,7 @@ function EmptyState() {
           fontSize: 15
         }}
       >
-        لا توجد بيانات اليوم
+        {text}
       </div>
 
     </div>
@@ -2469,8 +2506,9 @@ function ClosingInfoRow({
 }
 const table = {
   width: "100%",
+
   borderCollapse:
     "collapse",
 
-  minWidth: 650
+  minWidth: 520
 };

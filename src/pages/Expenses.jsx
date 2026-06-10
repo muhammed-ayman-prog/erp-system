@@ -4,21 +4,16 @@ import {
   useMemo
 } from "react";
 import {
-  addDoc,
   collection,
   onSnapshot,
   orderBy,
   query,
   where,
-  deleteDoc,
-  doc,
-  updateDoc
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
 import { theme } from "../theme";
-import { serverTimestamp } from "firebase/firestore";
 import { useTranslate } from "../useTranslate";
 import {
   PieChart,
@@ -35,6 +30,14 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import {
+  createExpenseService,
+  updateExpenseService,
+  createLoanService,
+  updateLoanService,
+  createBonusService,
+  updateBonusService
+} from "../features/expenses/services/expensesService";
 export default function Expenses() {
   const { t, tt, lang } = useTranslate();
   const { user } = useAuth();
@@ -226,12 +229,11 @@ const handleAddLoan = async () => {
   return;
 }
 
-await addDoc(collection(db, "loans"), {
+await createLoanService({
   employeeName,
   amount: Number(loanAmount),
   note: loanNote,
-  branchId: branchToUse,
-  createdAt: serverTimestamp()
+  branchId: branchToUse
 });
 
   setEmployeeName("");
@@ -239,17 +241,7 @@ await addDoc(collection(db, "loans"), {
   setLoanNote("");
   toast.success("تم إضافة السلفة");
   setSelectedEmployee("all");
-  await addLog({
-    action: "ADD_LOAN",
-
-    details: {
-      employee: employeeName,
-      amount: loanAmount,
-      note: loanNote
-    },
-
-    targetName: employeeName
-  });
+  
 
 };
 const handleAddBonus = async () => {
@@ -262,12 +254,11 @@ const handleAddBonus = async () => {
   return;
 }
 
-await addDoc(collection(db, "bonuses"), {
+await createBonusService({
   employeeName,
   amount: Number(bonusAmount),
   note: bonusNote,
-  branchId: branchToUse,
-  createdAt: serverTimestamp()
+  branchId: branchToUse
 });
 
   setEmployeeName("");
@@ -275,73 +266,69 @@ await addDoc(collection(db, "bonuses"), {
   setBonusNote("");
   toast.success("تم إضافة الحافز");
   setSelectedEmployee("all");
-  await addLog({
-    action: "ADD_BONUS",
-
-    details: {
-      employee: employeeName,
-      amount: bonusAmount,
-      note: bonusNote
-    },
-
-    targetName: employeeName
-  });
+  
 
   
 };
   // ➕ add expense
   const handleAddExpense = async () => {
-    if (!branchToUse || branchToUse === "all") {
-      toast.error("اختر فرع محدد أولًا");
+
+  if (!branchToUse || branchToUse === "all") {
+    toast.error("اختر فرع محدد أولًا");
+    return;
+  }
+
+  if (!amount) {
+    toast.error(t("expenses.enterAmount"));
+    return;
+  }
+
+  try {
+
+    const finalCategory =
+      category === "➕ تصنيف جديد"
+        ? customCategory
+        : category;
+
+    if (!finalCategory) {
+      toast.error("اكتب التصنيف");
       return;
     }
 
-    if (!amount) {
-      toast.error(t("expenses.enterAmount"));
-      return;
-    }
+    await createExpenseService({
 
-    try {
-      const finalCategory =
-        category === "➕ تصنيف جديد"
-          ? customCategory
-          : category;
+      amount:
+        Number(amount),
 
-      if (!finalCategory) {
-        toast.error("اكتب التصنيف");
-        return;
-      }
-      await addDoc(collection(db, "expenses"), {
-      amount: Number(amount),
       note,
-      category: finalCategory,
-      branchId: branchToUse,
-      userId: user.uid,
-      createdAt: serverTimestamp()
+
+      category:
+        finalCategory,
+
+      branchId:
+        branchToUse
+
     });
 
-      setAmount("");
-      setNote("");
-      setCategory("إيجار");
-      setCustomCategory("");
+    setAmount("");
+    setNote("");
+    setCategory("إيجار");
+    setCustomCategory("");
 
-      toast.success("تم إضافة المصروف");
-      await addLog({
-        action: "ADD_EXPENSE",
+    toast.success(
+      "تم إضافة المصروف"
+    );
 
-        details: {
-          amount,
-          category: finalCategory,
-          note
-        },
+  } catch (err) {
 
-        targetName: finalCategory
-      });
-      
-    } catch (err) {
-      toast.error(t("common.error"));
-    }
-  };
+    console.error(err);
+
+    toast.error(
+      t("common.error")
+    );
+
+  }
+};
 const isInRange = (date) => {
   if (!date) return true;
 
@@ -626,36 +613,6 @@ const employeeActivities = useMemo(() => [
   employeeLoans,
   employeeBonuses
 ]);
- 
-const handleDeleteExpense = async (id) => {
-  const confirmDelete = window.confirm(
-    "هل أنت متأكد من حذف المصروف؟"
-  );
-
-  if (!confirmDelete) return;
-
-  try {
-    const expenseToDelete =
-     expenses.find(e => e.id === id);
-    await deleteDoc(doc(db, "expenses", id));
-    toast.success("تم حذف المصروف");
-    await addLog({
-      action: "DELETE_EXPENSE",
-
-      details: {
-        amount: expenseToDelete?.amount,
-        category: expenseToDelete?.category,
-        note: expenseToDelete?.note
-      },
-
-      targetName:
-        expenseToDelete?.category
-    });
-
-  } catch (err) {
-    toast.error("حصل خطأ أثناء الحذف");
-  }
-};
 const handleUpdateExpense = async () => {
   if (!editingExpense) return;
 
@@ -664,27 +621,15 @@ const handleUpdateExpense = async () => {
       editCategory === "➕ تصنيف جديد"
         ? customCategory
         : editCategory;
-    await updateDoc(
-      doc(db, "expenses", editingExpense.id),
-      {
-        amount: Number(editAmount),
-        note: editNote,
-        category: finalEditCategory
-      }
-    );
+    await updateExpenseService({
+  id: editingExpense.id,
+  amount: Number(editAmount),
+  note: editNote,
+  category: finalEditCategory
+});
     setEditingExpense(null);
     toast.success("تم تعديل المصروف");
-    await addLog({
-      action: "UPDATE_EXPENSE",
-
-      details: {
-        amount: editAmount,
-        category: finalEditCategory,
-        note: editNote
-      },
-
-      targetName: finalEditCategory
-    });
+    
   } catch (err) {
     toast.error("حصل خطأ أثناء التعديل");
   }
@@ -695,31 +640,15 @@ const handleUpdateLoan = async () => {
 
   try {
 
-    await updateDoc(
-      doc(db, "loans", editingLoan.id),
-      {
-        employeeName: editEmployeeName,
-        amount: Number(editAmount),
-        note: editNote
-      }
-    );
+    await updateLoanService({
+  id: editingLoan.id,
+  employeeName: editEmployeeName,
+  amount: Number(editAmount),
+  note: editNote
+});
 
     toast.success("تم تعديل السلفة");
-
-    await addLog({
-      action: "UPDATE_LOAN",
-
-      details: {
-        employee: editEmployeeName,
-        amount: editAmount,
-        note: editNote
-      },
-
-      targetName: editEmployeeName
-    });
-
     setEditingLoan(null);
-
   } catch (err) {
 
     toast.error("حصل خطأ أثناء التعديل");
@@ -733,95 +662,20 @@ const handleUpdateBonus = async () => {
 
   try {
 
-    await updateDoc(
-      doc(db, "bonuses", editingBonus.id),
-      {
-        employeeName: editEmployeeName,
-        amount: Number(editAmount),
-        note: editNote
-      }
-    );
+    await updateBonusService({
+  id: editingBonus.id,
+  employeeName: editEmployeeName,
+  amount: Number(editAmount),
+  note: editNote
+});
 
     toast.success("تم تعديل الحافز");
-
-    await addLog({
-      action: "UPDATE_BONUS",
-
-      details: {
-        employee: editEmployeeName,
-        amount: editAmount,
-        note: editNote
-      },
-
-      targetName: editEmployeeName
-    });
 
     setEditingBonus(null);
 
   } catch (err) {
 
     toast.error("حصل خطأ أثناء التعديل");
-
-  }
-
-};
-const addLog = async ({
-  action,
-  details,
-  module = "Expenses",
-  status = "success",
-  targetName = "",
-  targetId = ""
-}) => {
-if (!branchToUse) return;
-  try {
-    const autoSeverity =
-      action?.includes("DELETE")
-        ? "danger"
-        : action?.includes("UPDATE")
-        ? "warning"
-        : "success";
-    await addDoc(collection(db, "logs"), {
-
-      action,
-
-      module,
-
-      status,
-
-      severity: autoSeverity,
-
-      targetName,
-
-      targetId,
-
-      byName:
-        user?.email || "Unknown",
-
-      userId:
-        user?.uid || null,
-
-      branchId:
-        branchToUse === "all"
-          ? null
-          : branchToUse || null,
-        
-      userAgent:
-         navigator.userAgent,
-
-      details,
-
-      createdAt:
-        serverTimestamp()
-
-    });
-
-  } catch (err) {
-
-    console.error(
-      "log error",
-      err
-    );
 
   }
 
@@ -1434,19 +1288,7 @@ e.currentTarget.style.transform =
                   ✏️ تعديل
                 </button>
 
-                <button
-                  onClick={() =>
-                    handleDeleteExpense(e.id)
-                  }
-
-                  style={{
-                    ...actionBtn,
-                    background: "#fee2e2",
-                    color: "#dc2626"
-                  }}
-                >
-                  🗑️ حذف
-                </button>
+                
 
               </div>
 
@@ -2591,14 +2433,7 @@ const editBtn = {
   cursor: "pointer"
 };
 
-const deleteBtn = {
-  flex: 1,
-  border: "none",
-  borderRadius: 10,
-  padding: "8px",
-  background: "#fee2e2",
-  cursor: "pointer"
-};
+  
 
 const modalOverlay = {
   position: "fixed",

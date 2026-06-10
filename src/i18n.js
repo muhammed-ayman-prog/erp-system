@@ -176,6 +176,8 @@ export const translations = {
       available: "Available",
       max: "Max",
       ml: "ml",
+      pdf:
+        "PDF"
       
     },
     
@@ -509,7 +511,7 @@ greetings: {
 dailyClosing: {
   title: "Daily Closing",
   subtitle: "Daily financial summary",
-
+  cashMatched: "Cash Matched",
   totalSales: "Total Sales",
   invoices: "Invoices",
   refunds: "Refunds",
@@ -549,7 +551,7 @@ matched:
   "Cash Matched",
 
 cashOver:
-  "Cash Over",
+  "Over",
 
 cashShortage:
   "Cash Shortage",
@@ -636,7 +638,42 @@ historyTitle:
   "Daily Closing History",
 
 completed:
-  "Daily closing already completed"
+  "Daily closing already completed",
+latest:
+  "Latest",
+
+highestDiff:
+  "Highest Difference",
+
+highestCash:
+  "Highest Cash",
+
+summary:
+  "Closing Summary",
+
+salesTotal:
+  "Total Sales",
+
+cashOnly:
+  "Cash",
+
+refundsOnly:
+  "Refunds",
+
+expensesOnly:
+  "Expenses",
+
+loansOnly:
+  "Loans",
+
+bonusesOnly:
+  "Bonuses",
+
+invoiceCount:
+  "Invoices",
+
+notesTitle:
+  "Notes"
 },
     
   },
@@ -815,6 +852,8 @@ completed:
       available: "متاح",
       max: "الحد الأقصى",
       ml: "مل",
+      pdf:
+       "PDF"
 
     },
 
@@ -1150,7 +1189,7 @@ greetings: {
 dailyClosing: {
   title: "الجرد اليومي",
   subtitle: "ملخص مالي يومي",
-
+  cashMatched: "الكاش مطابق",
   totalSales: "إجمالي المبيعات",
 
   invoices: "الفواتير",
@@ -1281,7 +1320,42 @@ historyTitle:
   "سجل التقفيل اليومي",
 
 completed:
-  "تم إغلاق اليومية لهذا اليوم"
+  "تم إغلاق اليومية لهذا اليوم",
+latest:
+  "الأحدث",
+
+highestDiff:
+  "أعلى فرق",
+
+highestCash:
+  "أعلى كاش",
+
+summary:
+  "ملخص اليومية",
+
+salesTotal:
+  "إجمالي المبيعات",
+
+cashOnly:
+  "كاش",
+
+refundsOnly:
+  "مرتجعات",
+
+expensesOnly:
+  "مصروفات",
+
+loansOnly:
+  "سلف",
+
+bonusesOnly:
+  "حوافز",
+
+invoiceCount:
+  "الفواتير",
+
+notesTitle:
+  "ملاحظات"
 },
   }
 };

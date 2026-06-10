@@ -7,7 +7,6 @@ function AnimatedCard({
   title,
   children
 }) {
-
   const isMobile =
   useIsMobile();
 

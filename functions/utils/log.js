@@ -19,13 +19,19 @@ async function logAction({
 
   branchId = "",
 
+  branchName = "",
+
   targetId = null,
 
   targetName = "",
 
   details = {},
 
-  metadata = {}
+  metadata = {},
+
+  before = null,
+
+  after = null
 
 }) {
 
@@ -43,12 +49,14 @@ async function logAction({
       status,
 
       by,
-      
+
       byName,
 
       userId,
 
       branchId,
+
+      branchName,
 
       targetId,
 
@@ -56,11 +64,17 @@ async function logAction({
 
       details,
 
-      
+      metadata,
+
+      before,
+
+      after,
+
       createdAt:
         admin.firestore
           .FieldValue
           .serverTimestamp(),
+
     });
 
 }
