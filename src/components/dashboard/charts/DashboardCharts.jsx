@@ -16,15 +16,23 @@ import ActivityFeed from
 import { memo } from "react";
 function DashboardCharts({
 
-  data,
+  data = {},
 
-  activity,
+  activity = [],
 
   isMobile,
 
   t
 
 }) {
+
+  const salesByBranch = Array.isArray(data.salesByBranch)
+    ? data.salesByBranch
+    : [];
+
+  const profitByBranch = Array.isArray(data.profitByBranch)
+    ? data.profitByBranch
+    : [];
 
   return (
 
@@ -79,7 +87,7 @@ function DashboardCharts({
   }
 >
 
-  {data.salesByBranch.length === 0 ? (
+  {salesByBranch.length === 0 ? (
 
     <div style={{
       textAlign: "center",
@@ -104,7 +112,7 @@ function DashboardCharts({
 
     }}>
 
-      {[...data.salesByBranch]
+      {[...salesByBranch]
 
         .sort((a, b) =>
           b.total - a.total
@@ -258,7 +266,7 @@ function DashboardCharts({
           title={t("dashboard.profitableBranches")}
         >
 
-          {data.profitByBranch.length === 0 ? (
+          {profitByBranch.length === 0 ? (
 
             <div style={{
               textAlign: "center",
@@ -283,7 +291,7 @@ function DashboardCharts({
 
   }}>
 
-    {data.profitByBranch.map(
+    {profitByBranch.map(
       (branch, i) => (
 
       <div

@@ -1,16 +1,11 @@
     import { useState, useEffect, useRef } from "react";
     import {
-  addDoc,
-  getDoc,
-  getDocs,
+    getDocs,
   collection,
   onSnapshot,
   query,
   where,
   orderBy,
-  doc,
-  setDoc,
-  increment
 } from "firebase/firestore";
     import { db } from "../firebase";
     import { useAuth } from "../store/useAuth";
@@ -19,6 +14,9 @@
     import { serverTimestamp } from "firebase/firestore";
     import { useTranslate } from "../useTranslate";
     import React from "react";
+    import {
+  createPurchaseService
+} from "../features/purchases/services/purchasesService";
     export default function Purchases() {
       const { t, tt, lang } = useTranslate();
       const cardStyle = {
@@ -198,55 +196,29 @@ if (hasDuplicates) {
   if (!confirmDup) return;
 }
   try {
-    const purchaseRef = await addDoc(collection(db, "purchases"), {
-      items: validItems.map(i => ({
-        productId: i.productId,
-        quantity: Number(i.quantity)
-      })),
-      branchId: branchToUse,
-      userId: user.uid,
-      createdAt: serverTimestamp()
-    });
-
-    for (const item of validItems) {
-
-  const productId = item.productId;
-const qty = Number(item.quantity);
-
-// 🔥 get current quantity
-const inventoryRef = doc(db, "inventory", `${branchToUse}_${productId}`);
-const currentSnap = await getDoc(inventoryRef);
-
-const beforeQty = currentSnap.exists()
-  ? currentSnap.data().quantity
-  : 0;
-
-const afterQty = beforeQty + qty;
-
-// ✅ stock log
-await addDoc(collection(db, "stock"), {
-  productId,
-  quantity: qty,
-  before: beforeQty,
-  after: afterQty,
+    const result = await createPurchaseService({
   branchId: branchToUse,
-  createdAt: serverTimestamp(),
-  type: "purchase",
-  purchaseId: purchaseRef.id
+  items: validItems.map(i => ({
+    productId: i.productId,
+    quantity: Number(i.quantity)
+  }))
 });
 
-// ✅ update inventory
-await setDoc(
-  doc(db, "inventory", `${branchToUse}_${productId}`),
-  {
-    quantity: increment(qty)
-  },
-  { merge: true }
-);
-}
+
+    
+
 
     alert("✅ " + t("common.save"));
-    setItems([{ productId: "", quantity: "" }]);
+    setItems([
+  {
+    productId: "",
+    quantity: "",
+    search: "",
+  },
+]);
+
+setActiveIndex(null);
+setHighlightIndex({});
 
   } catch (err) {
     alert("في مشكلة ❌");

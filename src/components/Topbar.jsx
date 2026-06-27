@@ -7,7 +7,6 @@ import { Globe } from "lucide-react";
 import { useTranslate } from "../useTranslate";
 import { useNavigate }
 from "react-router-dom";
-import Notifications from "../components/Notifications";
 
 export default function Topbar({
   openMobile,
@@ -381,7 +380,6 @@ onMouseLeave={(e) =>
     )}
 
   </div>    
-  <Notifications /> 
 
         {/* 👤 User */}
         <div

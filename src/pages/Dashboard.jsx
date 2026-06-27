@@ -81,6 +81,7 @@ export default function Dashboard() {
   if (loading) {
   return <DashboardSkeleton />;
 }
+
   return (
     <div style={page}>
     <h2 style={{ marginBottom: "10px" }}>

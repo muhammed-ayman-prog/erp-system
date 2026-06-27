@@ -1,65 +1,65 @@
+const admin = require("firebase-admin");
+
 const { logAction } = require("./log");
+
+const { getCurrentUser } =
+  require("./getCurrentUser");
+
 const {
-  HttpsError
+  HttpsError,
 } = require("firebase-functions/v2/https");
 
-function withLog(
-  config,
-  handler
-) {
-  return async (
-    request
-  ) => {
+async function getBranchName(branchId) {
+  if (!branchId) return "";
 
-    const auth =
-      request.auth;
+  const snap = await admin
+    .firestore()
+    .collection("branches")
+    .doc(branchId)
+    .get();
 
-    const data =
-      request.data;
+  return snap.exists
+    ? snap.data().name || ""
+    : "";
+}
 
-    let byName = "";
+function withLog(config, handler) {
+  return async (request) => {
 
-    if (auth?.uid) {
-
-      const admin =
-        require(
-          "firebase-admin"
-        );
-
-      const userSnap =
-        await admin
-          .firestore()
-          .collection(
-            "users"
-          )
-          .doc(
-            auth.uid
-          )
-          .get();
-
-      byName =
-        userSnap.data()
-          ?.name || "";
-    }
+    const auth = request.auth;
+    const data = request.data;
 
     const {
-
       action,
-
-      module =
-        "System",
-
-      severity =
-        "info"
-
+      module = "System",
+      severity = "info",
     } = config;
+
+    let performedByName = "";
+
+    if (auth?.uid) {
+      
+
+const currentUser =
+  await getCurrentUser(auth?.uid);
+
+ performedByName =
+  currentUser?.name || "";
+    }
 
     try {
 
       const result =
-        await handler(
-          request
-        );
+        await handler(request);
+
+      const branchId =
+        result?.branchId || "";
+
+      let branchName = result?.branchName || "";
+
+      if (!branchName && branchId) {
+        branchName = await getBranchName(branchId);
+      }
 
       await logAction({
 
@@ -69,54 +69,51 @@ function withLog(
 
         severity,
 
-        status:
-          "success",
+        status: "success",
 
         performedBy:
-          auth?.uid ||
-          "unknown",
+          auth?.uid || "unknown",
 
-        performedByName:
-          byName,
+        performedByName,
 
-        branchId:
-          result?.branchId || "",
+        branchId,
 
-        branchName:
-          result?.branchName || "",
+        branchName,
 
         targetId:
-          result?.targetId ||
-          null,
+          result?.targetId || null,
 
         targetName:
-          result?.targetName ||
-          "",
+          result?.targetName || "",
 
         details:
-          result?.logDetails ||
-          {},
+          result?.logDetails || {},
+
+        metadata:
+          result?.metadata || {},
 
         before:
-          result?.before ||
-          null,
+          result?.before || null,
 
         after:
-          result?.after ||
-          null
+          result?.after || null,
 
       });
 
       return result;
 
-    } catch (
-      error
-    ) {
+    } catch (error) {
 
-      console.error(
-        "ERROR:",
-        error
-      );
+      console.error(error);
+
+      const branchId =
+        data?.branchId || "";
+
+      let branchName = data?.branchName || "";
+
+      if (!branchName && branchId) {
+        branchName = await getBranchName(branchId);
+      }
 
       await logAction({
 
@@ -124,55 +121,42 @@ function withLog(
 
         module,
 
-        severity:
-          "danger",
+        severity: "danger",
 
-        status:
-          "error",
+        status: "error",
 
-       performedBy:
-        auth?.uid ||
-        "unknown",
+        performedBy:
+          auth?.uid || "unknown",
 
-      performedByName:
-        byName,
+        performedByName,
 
-        branchId:
-          data?.branchId || "",
+        branchId,
 
-        branchName:
-          data?.branchName || "",
+        branchName,
 
         targetId:
-          data?.uid ||
+          data?.targetId ||
+          data?.id ||
           null,
 
         targetName:
-          "",
+          data?.targetName || "",
 
         details: {
-
-          message:
-            error.message,
-
+          message: error.message,
           code:
-            error.code ||
-            "unknown"
-
+            error.code || "unknown",
         },
 
-        before:
-          null,
+        metadata: {},
 
-        after:
-          null
+        before: null,
+
+        after: null,
 
       });
 
-      if (
-        error instanceof
-        HttpsError
-      ) {
+      if (error instanceof HttpsError) {
         throw error;
       }
 
@@ -185,5 +169,5 @@ function withLog(
 }
 
 module.exports = {
-  withLog
+  withLog,
 };
