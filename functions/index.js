@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const { withLog } = require("./utils/withLog");
+const branches = require("./branches");
 admin.initializeApp();
 
 exports.createUser = onCall(
@@ -903,3 +904,14 @@ exports.updateBonus = onCall(
     }
   )
 );
+exports.createBranch =
+  branches.createBranch;
+
+exports.updateBranch =
+  branches.updateBranch;
+
+exports.archiveBranch =
+  branches.archiveBranch;
+
+exports.restoreBranch =
+  branches.restoreBranch;

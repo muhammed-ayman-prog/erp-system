@@ -24,14 +24,7 @@
   import { createPortal } from "react-dom";
   import toast from "react-hot-toast";
   import { DollarSign, Banknote, CreditCard, Smartphone } from "lucide-react";
-  const branchMap = {
-    "Abbas Akkad 1": "abbasAkkad1",
-    "Abbas Akkad 2": "abbasAkkad2",
-    "Abbas Akkad 3": "abbasAkkad3",
-    "City Stars": "cityStars",
-    "El Obour": "elObour",
-    "El Rehab": "elRehab"
-  };
+  import logAction from "../utils/logAction";
   const branchNameMap = {
   "City Stars": "cityStars",
   "City Stars 2": "cityStars2",
@@ -68,7 +61,10 @@ useEffect(() => {
     const navigate = useNavigate();
     const { id } =
     useParams();
-    const { selectedBranch } = useApp();
+    const {
+      selectedBranch,
+      user
+    } = useApp();
     const [branchName, setBranchName] = useState("");
 
     const [sales, setSales] = useState([]);
@@ -551,6 +547,44 @@ if (inv.customerId) {
     ),
   });
 }
+await logAction({
+  action: "CANCEL_INVOICE",
+  module: "Sales",
+  severity: "warning",
+  status: "success",
+
+  performedBy: user?.uid || "",
+  performedByName:
+    user?.displayName ||
+    user?.name ||
+    user?.email ||
+    "",
+
+  userId: user?.uid || "",
+
+  branchId: inv.branchId,
+branchName: branchName || selectedBranch,
+
+  targetId: inv.id,
+  targetName: inv.invoiceNumber,
+
+  details: {
+    invoiceNumber: inv.invoiceNumber,
+    customerName: inv.customerName,
+    customerPhone: inv.customerPhone,
+    paymentMethod: inv.paymentMethod,
+    refundedAmount: inv.total || 0,
+  },
+
+  changes: [
+    {
+      field: "status",
+      before: "completed",
+      after: "cancelled"
+    }
+  ]
+});
+
       toast.success(t("invoices.cancelSuccess"));
 
     } catch (err) {
@@ -1008,6 +1042,47 @@ if (
 
 });
 }
+await logAction({
+  action: "PARTIAL_REFUND",
+  module: "Sales",
+  severity: "warning",
+  status: "success",
+
+  performedBy: user?.uid || "",
+  performedByName:
+    user?.displayName ||
+    user?.name ||
+    user?.email ||
+    "",
+
+  userId: user?.uid || "",
+
+  branchId: selectedInvoice.branchId,
+branchName: branchName || selectedBranch,
+
+  targetId: selectedInvoice.id,
+  targetName: selectedInvoice.invoiceNumber,
+
+  details: {
+    invoiceNumber:
+      selectedInvoice.invoiceNumber,
+
+    customerName:
+      selectedInvoice.customerName,
+
+    customerPhone:
+      selectedInvoice.customerPhone,
+    paymentMethod: selectedInvoice.paymentMethod,
+    refundAmount:
+      refundAmountNow,
+
+    refundedItems:
+      validItems.map(i => ({
+        name: i.name,
+        qty: i.qty
+      }))
+  }
+});
   toast.success(t("invoices.refundSuccess"));
 
     // UI

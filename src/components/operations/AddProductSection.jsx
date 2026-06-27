@@ -71,8 +71,8 @@ const t = useTranslate();
                   }}>
       
                     <h3>
-                      ➕ Add Product
-                    </h3>
+  ➕ {t("products.addProduct")}
+</h3>
       
                     <div style={{
                       display: "flex",
@@ -83,7 +83,7 @@ const t = useTranslate();
       
                       <input
                         type="text"
-                        placeholder="Product Name"
+                        placeholder={t("products.productName")}
                         value={newProductName}
                         onChange={(e) =>
                           setNewProductName(e.target.value)
@@ -109,28 +109,28 @@ const t = useTranslate();
                         }}
                       >
                         <option value="">
-                          Select Type
-                        </option>
-      
-                        <option value="oil">
-                          Oil
-                        </option>
-      
-                        <option value="container">
-                          Container
-                        </option>
-      
-                        <option value="product">
-                          Product
-                        </option>
-      
-                        <option value="original">
-                          Original
-                        </option>
-      
-                        <option value="packaging">
-                          Packaging
-                        </option>
+  {t("products.selectType")}
+</option>
+
+<option value="oil">
+  {t("products.types.oil")}
+</option>
+
+<option value="container">
+  {t("products.types.container")}
+</option>
+
+<option value="product">
+  {t("products.types.product")}
+</option>
+
+<option value="original">
+  {t("products.types.original")}
+</option>
+
+<option value="packaging">
+  {t("products.types.packaging")}
+</option>
                       </select>
       
                       {newProductType === "container" && (
@@ -150,20 +150,20 @@ const t = useTranslate();
                           }}
                         >
                           <option value="">
-                            Select SubCategory
-                          </option>
-      
-                          <option value="bottle">
-                            Bottle
-                          </option>
-      
-                          <option value="box">
-                            Box
-                          </option>
-      
-                          <option value="sample">
-                            Sample
-                          </option>
+  {t("products.selectSubCategory")}
+</option>
+
+<option value="bottle">
+  {t("products.subCategories.bottle")}
+</option>
+
+<option value="box">
+  {t("products.subCategories.box")}
+</option>
+
+<option value="sample">
+  {t("products.subCategories.sample")}
+</option>
       
                         </select>
                       )}
@@ -187,16 +187,16 @@ const t = useTranslate();
         >
       
           <option value="">
-            Select Category
-          </option>
-      
-          <option value="Cream">
-            Cream
-          </option>
-      
-          <option value="Makhmaria">
-            Makhmaria
-          </option>
+  {t("products.selectCategory")}
+</option>
+
+<option value="Cream">
+  {t("products.categories.cream")}
+</option>
+
+<option value="Makhmaria">
+  {t("products.categories.makhmaria")}
+</option>
       
         </select>
       )}
@@ -220,12 +220,12 @@ const t = useTranslate();
         >
       
           <option value="">
-            Select Category
-          </option>
-      
-          <option value="Original">
-            Original
-          </option>
+  {t("products.selectCategory")}
+</option>
+
+<option value="Original">
+  {t("products.categories.original")}
+</option>
       
         </select>
       )}
@@ -248,20 +248,20 @@ const t = useTranslate();
                             }}
                           >
                             <option value="">
-                              Select Oil Category
-                            </option>
-      
-                            <option value="French">
-                              French
-                            </option>
-      
-                            <option value="Oriental">
-                              Oriental
-                            </option>
-      
-                            <option value="Musk">
-                              Musk
-                            </option>
+  {t("products.selectOilCategory")}
+</option>
+
+<option value="French">
+  {t("products.oilCategories.french")}
+</option>
+
+<option value="Oriental">
+  {t("products.oilCategories.oriental")}
+</option>
+
+<option value="Musk">
+  {t("products.oilCategories.musk")}
+</option>
       
                           </select>
       
@@ -280,44 +280,44 @@ const t = useTranslate();
                           >
       
                             <option value="">
-                              Select Pricing Tier
-                            </option>
+  {t("products.selectPricingTier")}
+</option>
       
                             {newOilCategory === "French" && (
-                              <option value="French">
-                                French
-                              </option>
+                             <option value="French">
+  {t("products.pricing.french")}
+</option>
                             )}
       
                             {newOilCategory === "Oriental" && (
                               <>
                                 <option value="A">
-                                  Oriental A
-                                </option>
-      
-                                <option value="B">
-                                  Oriental B
-                                </option>
-      
-                                <option value="C">
-                                  Oriental C
-                                </option>
+  {t("products.pricing.orientalA")}
+</option>
+
+<option value="B">
+  {t("products.pricing.orientalB")}
+</option>
+
+<option value="C">
+  {t("products.pricing.orientalC")}
+</option>
                               </>
                             )}
       
                             {newOilCategory === "Musk" && (
                               <>
         <option value="tahara">
-          Tahara
-        </option>
-      
-        <option value="rumman">
-          Rumman
-        </option>
-      
-        <option value="crystal">
-          Crystal
-        </option>
+  {t("products.pricing.tahara")}
+</option>
+
+<option value="rumman">
+  {t("products.pricing.rumman")}
+</option>
+
+<option value="crystal">
+  {t("products.pricing.crystal")}
+</option>
       </>
                             )}
       
@@ -328,7 +328,7 @@ const t = useTranslate();
       
                       <input
                         type="number"
-                        placeholder="Cost Price"
+                        placeholder={t("products.costPrice")}
                         value={newProductCost}
                         onChange={(e) =>
                           setNewProductCost(e.target.value)
@@ -348,7 +348,7 @@ const t = useTranslate();
       
                         <input
                           type="number"
-                          placeholder="Selling Price"
+                          placeholder={t("products.sellingPrice")}
                           value={newProductPrice}
                           onChange={(e) =>
                             setNewProductPrice(e.target.value)
@@ -393,8 +393,8 @@ const t = useTranslate();
                         }}
                       >
                         {createLoading
-                          ? "Creating..."
-                          : "➕ Create Product"}
+  ? t("common.creating")
+  : `➕ ${t("products.createProduct")}`}
                       </button>
       
                     </div>

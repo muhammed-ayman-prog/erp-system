@@ -11,11 +11,9 @@ async function logAction({
 
   status = "success",
 
-  by = "unknown",
+  performedBy = "unknown",
 
-  byName = "",
-
-  userId = "",
+  performedByName = "",
 
   branchId = "",
 
@@ -48,11 +46,9 @@ async function logAction({
 
       status,
 
-      by,
+      performedBy,
 
-      byName,
-
-      userId,
+      performedByName,
 
       branchId,
 

@@ -92,13 +92,14 @@ export default function LogsSection({
               {t("operations.activityLog")} 📊
             </h3>
             <div
-  style={{
-    display: "flex",
-    gap: "10px",
-    marginTop: "25px",
-    marginBottom: "20px"
-  }}
->
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginTop: "25px",
+                marginBottom: "20px",
+                flexWrap: "wrap"
+              }}
+            >
 
   <button
     onClick={() =>
@@ -106,6 +107,8 @@ export default function LogsSection({
     }
 
     style={{
+      flex: 1,
+  minWidth: "140px",
       padding: "12px 18px",
       borderRadius: "12px",
       border: "none",
@@ -125,7 +128,7 @@ export default function LogsSection({
       cursor: "pointer"
     }}
   >
-    📊 Activity Logs
+    📊 {t("logs.activity")}
   </button>
 
   <button
@@ -134,7 +137,9 @@ export default function LogsSection({
     }
 
     style={{
-      padding: "12px 18px",
+      flex: 1,
+  minWidth: "140px",
+  padding: "12px 18px",
       borderRadius: "12px",
       border: "none",
 
@@ -153,7 +158,7 @@ export default function LogsSection({
       cursor: "pointer"
     }}
   >
-    📦 Product Logs
+    📦 {t("logs.products")}
   </button>
 
 </div>
@@ -193,7 +198,7 @@ export default function LogsSection({
                     borderRadius: "8px",
                     marginLeft: "8px"
                   }}>
-                    REVERSED
+                    {t("logs.reversed")}
                   </span>
                 )}
 
@@ -253,7 +258,7 @@ export default function LogsSection({
 
 <input
   type="text"
-  placeholder="Search logs..."
+  placeholder={t("logs.search")}
 
   value={logSearch}
 
@@ -286,21 +291,21 @@ export default function LogsSection({
   }}
 >
   <option value="">
-    All Actions
+    {t("logs.allActions")}
   </option>
 
   <option value="create">
-    Create
+    {t("logs.create")}
   </option>
 
   <option value="archive">
-    Archive
+    {t("logs.archive")}
   </option>
   <option value="restore">
-  Restore
+  {t("logs.restore")}
 </option>
 <option value="edit">
-  Edit
+  {t("logs.edit")}
 </option>
 
 </select>
@@ -328,10 +333,10 @@ export default function LogsSection({
 
   })
 
-  .map(log => (
+  .map((log, index) => (
 
     <div
-      key={log.id}
+      key={log.id || `${log.action}-${log.productName}-${index}`}
 
       style={{
         background: "#fff",
@@ -351,31 +356,28 @@ export default function LogsSection({
         }}
       >
         {log.action === "create"
-          ? "➕ Product Created"
-
-          : log.action === "archive"
-          ? "📦 Product Archived"
-
-          : log.action === "restore"
-? "♻️ Product Restored"
-
-: "✏️ Product Edited"}
+          ? `➕ ${t("logs.productCreated")}`
+: log.action === "archive"
+? `📦 ${t("logs.productArchived")}`
+: log.action === "restore"
+? `♻️ ${t("logs.productRestored")}`
+: `✏️ ${t("logs.productEdited")}`}
       </p>
 
       <p>
-        <strong>Product:</strong>
+        <strong>{t("operations.product")}:</strong>
         {" "}
         {log.productName}
       </p>
 
       <p>
-        <strong>Type:</strong>
+        <strong>{t("operations.type")}:</strong>
         {" "}
         {log.type}
       </p>
 
       <p>
-        <strong>User:</strong>
+        <strong>{t("users.single")}:</strong>
         {" "}
         {log.user}
       </p>
@@ -390,7 +392,7 @@ export default function LogsSection({
           ? new Date(
               log.createdAt.toDate()
             ).toLocaleString()
-          : "No Date"}
+          : t("common.noData")}
       </p>
 
     </div>

@@ -72,15 +72,12 @@ function withLog(
         status:
           "success",
 
-        by:
+        performedBy:
           auth?.uid ||
           "unknown",
 
-        byName,
-
-        userId:
-          auth?.uid ||
-          "",
+        performedByName:
+          byName,
 
         branchId:
           result?.branchId || "",
@@ -133,15 +130,12 @@ function withLog(
         status:
           "error",
 
-        by:
-          auth?.uid ||
-          "unknown",
+       performedBy:
+        auth?.uid ||
+        "unknown",
 
+      performedByName:
         byName,
-
-        userId:
-          auth?.uid ||
-          "",
 
         branchId:
           data?.branchId || "",

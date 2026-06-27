@@ -560,10 +560,11 @@
       status:
         "success",
 
-      by:
+      performedBy:
         user?.uid || "",
 
-      byName:
+      performedByName:
+        user?.displayName ||
         user?.name ||
         user?.email ||
         "",
@@ -573,7 +574,7 @@
 
       branchId:
         branchToUse,
-
+      branchName: branchName,
       targetId:
         saleRef.id,
 
@@ -588,10 +589,11 @@
         branchName,
 
         seller:
-          seller || {
-            name: user?.name || "—",
-            role: "seller"
-          },
+          seller ||
+          user?.displayName ||
+          user?.name ||
+          user?.email ||
+          "Unknown Seller",
 
         
 
@@ -627,18 +629,19 @@
         0
       ),
 
-        topItems:
-      cleanedCart
-        .slice(0, 5)
-        .map(item => ({
-
-          name:
-            item.name,
-
-          qty:
-            item.qty
-
-        }))
+      topItems:
+  cleanedCart
+    .slice(0, 5)
+    .map(item => ({
+      name: item.name,
+      qty: item.qty,
+      total:
+        item.price * item.qty,
+      totalCost:
+        item.unitCost || 0,
+      totalProfit:
+        item.profit || 0
+    }))
 
       }
 
@@ -667,10 +670,10 @@
           status:
             "error",
 
-          by:
+          performedBy:
             user?.uid || "",
 
-          byName:
+          performedByName:
             user?.name || "",
 
           userId:
@@ -678,7 +681,7 @@
 
           branchId:
             branchToUse,
-          
+          branchName: branchName,
           details: {
 
             customerName,

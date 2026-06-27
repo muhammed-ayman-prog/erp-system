@@ -35,6 +35,12 @@ import { db } from "../firebase";
 import { useTranslate } from "../useTranslate";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
+import {
+  createBranchService,
+  updateBranchService,
+  archiveBranchService,
+  restoreBranchService
+} from "../features/branches/services/branchesService";
 const cardStyle = {
   background: "#fff",
   borderRadius: "20px",
@@ -249,176 +255,167 @@ user?.role === "owner"
 }, []);
 
   // 🔥 Add / Edit
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
 
-    if (saving) return;
+  if (saving) return;
 
-    if (!form.name.trim()) {
-      alert(
-        t("branches.validation.nameRequired")
-      );
+  if (!form.name.trim()) {
+    alert(
+      t("branches.validation.nameRequired")
+    );
+    return;
+  }
 
-      return;
-    }
+  if (!form.code.trim()) {
+    alert("لازم تدخل كود الفرع");
+    return;
+  }
 
-    if (!form.code.trim()) {
-      alert("لازم تدخل كود الفرع");
+  const cleanedEmployees =
+    form.employees.filter(
+      employee =>
+        employee.name?.trim()
+    );
 
-      return;
-    }
-    const cleanedEmployees =
-      form.employees.filter(
-        employee =>
-          employee.name?.trim()
-      );
+  setSaving(true);
 
-    setSaving(true);
+  try {
 
-    try {
+    if (editingBranch) {
 
-      if (editingBranch) {
+      await updateBranchService({
 
-        await updateDoc(
-          doc(
-            db,
-            "branches",
-            editingBranch.id
-          ),
-          {
-            ...form,
+        id:
+          editingBranch.id,
 
-            employees:
-              cleanedEmployees,
+        name:
+          form.name,
 
-            updatedAt:
-              serverTimestamp()
-          }
-        );
+        code:
+          form.code,
 
-      } else {
+        phone:
+          form.phone,
 
-        const branchRef = await addDoc(
-          collection(db, "branches"),
-          {
-            ...form,
-            employees: cleanedEmployees,
-            status: "active",
-            isArchived: false,
-            createdAt: serverTimestamp()
-          }
-        );
+        address:
+          form.address,
 
-        // create invoice counter
-        await setDoc(
-          doc(db, "counters", branchRef.id),
-          {
-            lastNumber: 0
-          }
-        );
+        manager:
+          form.manager,
 
-      }
+        employees:
+          cleanedEmployees
 
-      setForm({
-        name: "",
-        code: "",
-        phone: "",
-        address: "",
-        manager: "",
-
-        employees: [
-          {
-            name: "",
-            role: "seller"
-          }
-        ]
       });
 
-      setEditingBranch(null);
-      setShowForm(false);
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    } else {
+
+      await createBranchService({
+
+        name:
+          form.name,
+
+        code:
+          form.code,
+
+        phone:
+          form.phone,
+
+        address:
+          form.address,
+
+        manager:
+          form.manager,
+
+        employees:
+          cleanedEmployees
+
       });
-    } catch (err) {
-
-      console.error(err);
-
-      alert(
-        t("common.error")
-      );
 
     }
-    finally {
 
-  setSaving(false);
+    setForm(defaultForm);
 
-}
+    setEditingBranch(null);
 
-  };
+    setShowForm(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      t("common.error")
+    );
+
+  } finally {
+
+    setSaving(false);
+
+  }
+
+};
   
 
   // 🔥 Archive
   const handleArchive = async (
-    branch
-  ) => {
+  branch
+) => {
 
-    const confirmed =
-      window.confirm(
-        t("branches.archiveConfirm", {
-          name: branch.name
-        })
-      );
+  const confirmed =
+    window.confirm(
+      t("branches.archiveConfirm", {
+        name: branch.name
+      })
+    );
 
-    if (!confirmed) return;
+  if (!confirmed) return;
 
-    try {
+  try {
 
-      await updateDoc(
-        doc(
-          db,
-          "branches",
-          branch.id
-        ),
-        {
-          isArchived: true,
-          status: "inactive"
-        }
-      );
+    await archiveBranchService({
+      id: branch.id
+    });
 
-    } catch (err) {
+  } catch (err) {
 
-      console.error(err);
+    console.error(err);
 
-    }
+    alert(
+      t("common.error")
+    );
 
-  };
+  }
+
+};
 
   // 🔥 Restore
   const handleRestore = async (
-    branch
-  ) => {
+  branch
+) => {
 
-    try {
+  try {
 
-      await updateDoc(
-        doc(
-          db,
-          "branches",
-          branch.id
-        ),
-        {
-          isArchived: false,
-          status: "active"
-        }
-      );
+    await restoreBranchService({
+      id: branch.id
+    });
 
-    } catch (err) {
+  } catch (err) {
 
-      console.error(err);
+    console.error(err);
 
-    }
+    alert(
+      t("common.error")
+    );
 
-  };
+  }
+
+};
 
   // 🔥 Filter
   const filteredBranches =
@@ -1600,7 +1597,6 @@ function StatBox({
   label,
   value
 }) {
-
   return (
     <div style={{
       background: "#f9fafb",

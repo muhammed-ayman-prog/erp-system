@@ -6,36 +6,62 @@ import {
 
 import { db } from "../firebase";
 
+const cleanDeep = (obj) => {
+
+  if (obj === undefined) {
+    return null;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(cleanDeep);
+  }
+
+  if (
+    obj &&
+    typeof obj === "object" &&
+    !(obj instanceof Date)
+  ) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(
+          ([_, value]) =>
+            value !== undefined
+        )
+        .map(
+          ([key, value]) => [
+            key,
+            cleanDeep(value)
+          ]
+        )
+    );
+  }
+
+  return obj;
+};
+
 export default async function logAction({
 
   action,
-
   module,
 
   entityType = "",
 
   severity = "info",
-
   status = "success",
 
   performedBy = "",
-
   performedByName = "",
 
   branchId = "",
-
   branchName = "",
 
   targetId = "",
-
   targetName = "",
 
   before = null,
-
   after = null,
 
   details = {},
-
   metadata = {}
 
 }) {
@@ -55,38 +81,41 @@ export default async function logAction({
       collection(db, "logs"),
       {
 
+        // Core
         action,
-
         module,
 
+        // Classification
         entityType,
 
         severity,
-
         status,
 
+        // User
         performedBy,
-
         performedByName,
 
+        // Branch
         branchId,
-
         branchName,
 
+        // Target
         targetId,
-
         targetName,
 
-        before,
+        // Audit
+        before: cleanDeep(before),
+        after: cleanDeep(after),
 
-        after,
+        // Extra
+        details: cleanDeep(details),
+        metadata: cleanDeep(metadata),
 
-        details,
-
-        metadata,
-
+        // Timestamps
         createdAt:
-          serverTimestamp()
+          serverTimestamp(),
+
+        version: 1
 
       }
     );

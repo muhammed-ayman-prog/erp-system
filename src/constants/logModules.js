@@ -1,47 +1,70 @@
 export const LOG_MODULES = {
 
-  USERS:
-    "Users",
-
-  SALES:
-    "Sales",
-
-  INVENTORY:
-    "Inventory",
-
-  PRODUCTS:
-    "Products",
-
-  RETURNS:
-    "Returns",
-
-  PURCHASES:
-    "Purchases",
-
-  EXPENSES:
-    "Expenses",
-
-  SETTINGS:
-    "Settings",
-
+  // Auth
   AUTH:
     "Auth",
 
-  WASTE:
-    "Waste",
+  // Users
+  USERS:
+    "Users",
 
-  PRICING:
-    "Pricing",
-  BRANCHES:
-  "Branches",
-
+  // Customers
   CUSTOMERS:
     "Customers",
 
+  // Sales
+  SALES:
+    "Sales",
+
+  // Returns
+  RETURNS:
+    "Returns",
+
+  // Inventory
+  INVENTORY:
+    "Inventory",
+
+  // Products
+  PRODUCTS:
+    "Products",
+
+  // Pricing
+  PRICING:
+    "Pricing",
+
+  // Purchases
+  PURCHASES:
+    "Purchases",
+
+  // Expenses
+  EXPENSES:
+    "Expenses",
+
+  // Waste
+  WASTE:
+    "Waste",
+
+  // Branches
+  BRANCHES:
+    "Branches",
+
+  // Daily Closing
   DAILY_CLOSING:
     "Daily Closing",
-    
+
+  // Reports
+  REPORTS:
+    "Reports",
+
+  // Operations
+  OPERATIONS:
+    "Operations",
+
+  // Settings
+  SETTINGS:
+    "Settings",
+
+  // System
   SYSTEM:
     "System"
-
 };

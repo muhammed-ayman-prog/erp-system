@@ -3,14 +3,26 @@ import {
   collection,
   getDocs,
   updateDoc,
-  doc
+  doc,
 } from "firebase/firestore";
+import logAction from "../utils/logAction";
+
+import { LOG_ACTIONS }
+  from "../constants/logActions";
+
+import { LOG_MODULES }
+  from "../constants/logModules";
+import { useAuth } from "../store/useAuth";
 import { useTranslate } from "../useTranslate";
 import { db } from "../firebase";
+import toast from "react-hot-toast";
 export default function Pricing() {
+const { user } = useAuth();
 const { t, tt, lang } = useTranslate();
 const [pricing, setPricing] = useState([]);
 const [readyProducts, setReadyProducts] = useState([]);
+const [pendingPricing, setPendingPricing] = useState({});
+const [pendingProducts, setPendingProducts] = useState({});
 const [openSections, setOpenSections] =
   useState({
     french: false,
@@ -28,7 +40,8 @@ const [openSections, setOpenSections] =
 
     originals: false,
     creams: false,
-    makhmaria: false
+    makhmaria: false,
+    packaging: false
   });   
   // 🔥 fetch pricing
   useEffect(() => {
@@ -230,76 +243,35 @@ const packagingProducts = useMemo(() => {
 }, [readyProducts]);
 
   // 🔥 update price
-  const handlePriceChange = async (
-    id,
-    value
-  ) => {
-
-    const numeric = Math.max(0, Number(value));
-
-    setPricing(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              price: numeric
-            }
-          : item
-      )
-    );
-
-    try {
-
-      await updateDoc(
-        doc(db, "pricing", id),
-        {
-          price: numeric
-        }
-      );
-
-    } catch (err) {
-
-      console.error(err);
-
-    }
-  };
-  const handleReadyPriceChange = async (
+  const handlePriceChange = (
   id,
   value
 ) => {
 
   const numeric = Math.max(
-  0,
-  Number(value)
-);
+    0,
+    Number(value)
+  );
 
-  setReadyProducts(prev =>
-  prev.map(item =>
-    item.id === id
-      ? {
-          ...item,
-          sellingPrice: numeric,
-          price: numeric
-        }
-      : item
-  )
-);
+  setPendingPricing(prev => ({
+    ...prev,
+    [id]: numeric
+  }));
+};
+const handleReadyPriceChange = (
+  id,
+  value
+) => {
 
-  try {
+  const numeric = Math.max(
+    0,
+    Number(value)
+  );
 
-    await updateDoc(
-        doc(db, "products", id),
-        {
-            sellingPrice: numeric,
-            price: numeric
-        }
-    );
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
+  setPendingProducts(prev => ({
+    ...prev,
+    [id]: numeric
+  }));
 };
 const toggleSection = (key) => {
 
@@ -308,6 +280,184 @@ const toggleSection = (key) => {
     [key]: !prev[key]
   }));
 
+};
+const savePricing = async (item) => {
+
+  const newPrice =
+    pendingPricing[item.id];
+
+  if (newPrice === undefined) return;
+
+  if (newPrice === item.price) {
+    toast("No Changes");
+    return;
+  }
+
+  
+
+  try {
+
+    await updateDoc(
+      doc(
+        db,
+        "pricing",
+        item.id
+      ),
+      {
+        price: newPrice
+      }
+    );
+   await logAction({
+  action: LOG_ACTIONS.PRICE_UPDATE,
+
+  module: LOG_MODULES.PRICING,
+
+  entityType: "pricing",
+
+  performedBy: user?.uid,
+
+  performedByName:
+    user?.displayName ||
+    user?.email ||
+    "Unknown",
+
+  targetId: item.id,
+
+  targetName:
+[
+  item.category,
+  item.grade,
+  item.size
+]
+.filter(Boolean)
+.join(" "),
+
+  before: {
+    price: item.price
+  },
+
+  after: {
+    price: newPrice
+  }
+});
+
+
+    setPricing(prev =>
+      prev.map(p =>
+        p.id === item.id
+          ? {
+              ...p,
+              price: newPrice
+            }
+          : p
+      )
+    );
+
+    setPendingPricing(prev => {
+  const copy = { ...prev };
+  delete copy[item.id];
+  return copy;
+});
+
+toast.success("Price Updated Successfully");
+
+} catch (err) {
+
+  console.error(err);
+
+  toast.error("Failed To Update Price");
+}
+};
+const saveProductPrice = async (
+  item
+) => {
+
+  const newPrice =
+    pendingProducts[item.id];
+
+  if (newPrice === undefined) return;
+
+  const currentPrice =
+    item.sellingPrice ??
+    item.price ??
+    0;
+
+  if (newPrice === currentPrice) {
+    toast("No Changes");
+    return;
+  }
+
+  try {
+
+    await updateDoc(
+      doc(
+        db,
+        "products",
+        item.id
+      ),
+      {
+        sellingPrice: newPrice,
+        price: newPrice
+      }
+    );
+   await logAction({
+  action: LOG_ACTIONS.PRICE_UPDATE,
+  module: LOG_MODULES.PRICING,
+
+  entityType: "product",
+
+  performedBy: user?.uid,
+  performedByName:
+    user?.displayName ||
+    user?.email ||
+    "Unknown",
+
+  targetId: item.id,
+  targetName: item.name,
+
+  before: {
+    price:
+      item.sellingPrice ??
+      item.price ??
+      0
+  },
+
+  after: {
+    price: newPrice
+  },
+
+  details: {
+    category: item.category,
+    type: item.type
+  }
+});
+
+    setReadyProducts(prev =>
+      prev.map(p =>
+        p.id === item.id
+          ? {
+              ...p,
+              sellingPrice: newPrice,
+              price: newPrice
+            }
+          : p
+      )
+    );
+
+    setPendingProducts(prev => {
+  const copy = { ...prev };
+  delete copy[item.id];
+  return copy;
+});
+
+toast.success("Price Updated Successfully");
+
+} catch (err) {
+
+  console.error(err);
+
+  toast.error("Failed To Update Price");
+}
 };
 
   const renderPricingTable = (
@@ -359,7 +509,7 @@ const toggleSection = (key) => {
   style={{
     display: "grid",
     gridTemplateColumns:
-      "1fr 1fr 1fr 120px",
+      "1fr 1fr 1fr 120px 90px",
     gap: "10px",
     marginBottom: "10px",
     fontWeight: "700",
@@ -368,13 +518,10 @@ const toggleSection = (key) => {
 >
 
   <div>Size</div>
-
-  <div>Container</div>
-
-  <div>Category</div>
-
-  <div>Price</div>
-
+<div>Container</div>
+<div>Category</div>
+<div>Price</div>
+<div></div>
 </div>
 
         {data.map(item => (
@@ -385,7 +532,7 @@ const toggleSection = (key) => {
             style={{
               display: "grid",
               gridTemplateColumns:
-                "1fr 1fr 1fr 120px",
+                "1fr 1fr 1fr 120px 90px",
 
               gap: "10px",
 
@@ -417,7 +564,11 @@ const toggleSection = (key) => {
   type="number"
   min="0"
 
-  value={item.price}
+  value={
+  pendingPricing[item.id] ??
+  item.price ??
+  0
+}
 
   onChange={(e) =>
     handlePriceChange(
@@ -433,7 +584,15 @@ const toggleSection = (key) => {
     width: "100%",
     boxSizing: "border-box"
   }}
+  
 />
+<button
+  onClick={() =>
+    savePricing(item)
+  }
+>
+  Save
+</button>
 
           </div>
         ))}
@@ -493,7 +652,7 @@ const renderReadyProductsTable = (
         style={{
           display: "grid",
           gridTemplateColumns:
-            "1fr 140px",
+            "1fr 140px 90px",
           gap: "10px",
           marginBottom: "10px",
           fontWeight: "700",
@@ -502,8 +661,8 @@ const renderReadyProductsTable = (
       >
 
         <div>Product</div>
-
         <div>Price</div>
+        <div></div>
 
       </div>
 
@@ -515,7 +674,7 @@ const renderReadyProductsTable = (
           style={{
             display: "grid",
             gridTemplateColumns:
-              "1fr 140px",
+  "1fr 140px 90px",
 
             gap: "10px",
 
@@ -538,6 +697,7 @@ const renderReadyProductsTable = (
             min="0"
 
             value={
+  pendingProducts[item.id] ??
   item.sellingPrice ??
   item.price ??
   0
@@ -558,6 +718,13 @@ const renderReadyProductsTable = (
               boxSizing: "border-box"
             }}
           />
+          <button
+  onClick={() =>
+    saveProductPrice(item)
+  }
+>
+  Save
+</button>
 
         </div>
       ))}
@@ -618,7 +785,7 @@ const renderExtrasTable = (
         style={{
           display: "grid",
           gridTemplateColumns:
-            "1fr 140px",
+  "1fr 140px 90px",
           gap: "10px",
           marginBottom: "10px",
           fontWeight: "700",
@@ -627,8 +794,8 @@ const renderExtrasTable = (
       >
 
         <div>Type</div>
-
         <div>Price</div>
+        <div></div>
 
       </div>
 
@@ -645,7 +812,7 @@ const renderExtrasTable = (
             ? `Oriental Oil ${item.grade}`
 
           : item.category;
-
+        
         return (
 
           <div
@@ -654,7 +821,7 @@ const renderExtrasTable = (
             style={{
               display: "grid",
               gridTemplateColumns:
-                "1fr 140px",
+               "1fr 140px 90px",
 
               gap: "10px",
 
@@ -676,7 +843,11 @@ const renderExtrasTable = (
               type="number"
               min="0"
 
-              value={item.price}
+              value={
+  pendingPricing[item.id] ??
+  item.price ??
+  0
+}
 
               onChange={(e) =>
                 handlePriceChange(
@@ -693,6 +864,13 @@ const renderExtrasTable = (
                 boxSizing: "border-box"
               }}
             />
+            <button
+  onClick={() =>
+    savePricing(item)
+  }
+>
+  Save
+</button>
 
           </div>
         );
