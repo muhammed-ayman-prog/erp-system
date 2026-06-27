@@ -1696,7 +1696,7 @@ greetings: {
   welcome: "أهلاً بعودتك"
 },
 dailyClosing: {
-  title: "الجرد اليومي",
+  title: "التقفيل اليومي",
   subtitle: "ملخص مالي يومي",
   cashMatched: "الكاش مطابق",
   totalSales: "إجمالي المبيعات",
