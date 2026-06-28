@@ -208,7 +208,11 @@
       request.resource.data.branchId
     );
 
-        allow update, delete:
+        allow update:
+          if isLoggedIn() &&
+          hasBranchAccess(resource.data.branchId);
+
+        allow delete:
           if false;
       }
 
@@ -487,15 +491,8 @@
       );
 
     allow update:
-      if isLoggedIn() &&
-      (
-        isOwner() ||
-        isSupervisor() ||
-        isBranchManager()
-      ) &&
-      hasBranchAccess(
-        resource.data.branchId
-      );
+  if isLoggedIn() &&
+  hasBranchAccess(resource.data.branchId);
 
     allow delete:
       if false;

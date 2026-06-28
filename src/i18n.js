@@ -126,8 +126,9 @@ logActions: {
   TOGGLE_USER_STATUS: "Toggle User Status",
 
   CREATE_INVOICE: "Create Invoice",
-  CANCEL_INVOICE: "Cancel Invoice",
-  PARTIAL_REFUND: "Partial Refund",
+  "FULL_REFUND": "Full Refund",
+  "PARTIAL_REFUND": "Partial Refund",
+  "CANCEL_INVOICE": "Cancel Invoice",
   RETURN_RESALE: "Return & Resale",
 
   TRANSFER_STOCK: "Transfer Stock",
@@ -374,6 +375,7 @@ modules: {
       available: "Available",
       max: "Max",
       ml: "ml",
+      records: "records",
       pdf:
         "PDF",
         "creating": "Creating...",
@@ -522,6 +524,7 @@ modules: {
       samples: "Samples",
       pureOil: "Pure Oil",
       available: "available",
+      size: "Size",
       low: "Low",
       oilQty: "Oil quantity (ml)",
       "editProduct": "Edit Product",
@@ -607,6 +610,10 @@ modules: {
       returnedItems: "Returned Items",
       refundSuccess: "Refund completed successfully",
       cancelSuccess: "Invoice cancelled successfully",
+      "type": "Invoice Type",
+      "sale": "Sale",
+      "returnResale": "Return Resale",
+      "mixed": "Mixed",
       "filter": {
         "sales": "Filter by sales"
       },
@@ -650,9 +657,23 @@ modules: {
       invoice: "Invoice",
       product: "Product",
       type: "Type",
+      title: "Returns",
+      subtitle: "Track all returned and exchanged items",
+      invoice: "Invoice",
+      product: "Product",
+      type: "Type",
+      total: "Total Returns",
+      items: "Returned Items",
+      sold: "Resold",
+      returned: "Returned",
+      search: "Search by invoice, product or branch...",
+      selectReturn: "Select a return to view details",
+      container: "Container",
       noReturns: "No returns yet",
       refund: "Refund",
-      exchange: "Exchange"
+      exchange: "Exchange",
+      "selectReturnDescription": "Click any return to view its details."
+
     },
 
     users: {
@@ -703,6 +724,7 @@ modules: {
       users: "Users",
       salesToday: "Sales Today",
       archiveConfirm: "Archive {{name}} ?",
+      branch: "Branch",
       employees: "Employees",
       employeeName: "Employee Name",
       addEmployee: "Add Employee",
@@ -1041,6 +1063,7 @@ notesTitle:
     },
     common: {
       user: "مستخدم",
+      records: "سجل",
       days: "أيام",
       save: "حفظ",
       delete: "حذف",
@@ -1199,8 +1222,9 @@ logActions: {
   TOGGLE_USER_STATUS: "تغيير حالة المستخدم",
 
   CREATE_INVOICE: "إنشاء فاتورة",
-  CANCEL_INVOICE: "إلغاء فاتورة",
-  PARTIAL_REFUND: "مرتجع جزئي",
+  "FULL_REFUND": "استرجاع كامل",
+  "PARTIAL_REFUND": "استرجاع جزئي",
+  "CANCEL_INVOICE": "إلغاء فاتورة",
   RETURN_RESALE: "مرتجع وإعادة بيع",
 
   TRANSFER_STOCK: "تحويل مخزون",
@@ -1310,9 +1334,22 @@ modules: {
       invoice: "الفاتورة",
       product: "المنتج",
       type: "النوع",
+      title: "المرتجعات",
+      subtitle: "متابعة جميع عمليات الاسترجاع والاستبدال",
+      invoice: "الفاتورة",
+      product: "المنتج",
+      type: "النوع",
+      total: "إجمالي المرتجعات",
+      items: "العناصر المرتجعة",
+      sold: "تم بيعها",
+      returned: "مرتجع",
+      search: "ابحث برقم الفاتورة أو المنتج أو الفرع...",
+      selectReturn: "اختر عملية مرتجع لعرض التفاصيل",
+      container: "العبوة",
       noReturns: "لا توجد مرتجعات",
       refund: "استرجاع",
-      exchange: "استبدال"
+      exchange: "استبدال",
+      "selectReturnDescription": "اختر أي مرتجع من الجدول لعرض تفاصيله."
     },
 
 
@@ -1454,6 +1491,7 @@ modules: {
       pureOil: "زيت خام",
       available: "متوفر",
       low: "قليل",
+      size: "الحجم",
       oilQty: "كمية الزيت (ml)",
       enterOilQty: "لازم تدخل كمية الزيت",
       noPrice: "مفيش سعر للمنتج ده",
@@ -1561,6 +1599,10 @@ modules: {
       returnedItems: "المنتجات المرتجعة",
       refundSuccess: "تم الاسترجاع بنجاح",
       cancelSuccess: "تم إلغاء الفاتورة بنجاح",
+      "type": "نوع الفاتورة",
+      "sale": "بيع جديد",
+      "returnResale": "إعادة بيع مرتجع",
+      "mixed": "مختلطة",
       "filter": {
         "sales": "فلترة بالبائع"
       },
@@ -1637,6 +1679,7 @@ modules: {
       elObour: "العبور",
       elRehab: "الرحاب",
       title: "الفرع",
+      branch: "الفرع",
       all: "كل الفروع",
       single: "الفرع",
       select: "اختار فرع الأول",

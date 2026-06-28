@@ -26,6 +26,8 @@
       seller,
       user       
     }) => {
+      let branchName = "Unknown";
+       let branchCode = "BRCH";
       try {
       // 🏪 Get branch data
   const branchRef = doc(db, "branches", branchToUse);
@@ -38,11 +40,11 @@
 
   const branchData = branchSnap.data();
 
-  const branchName =
-    branchData?.name || "Unknown";
+  branchName =
+  branchData?.name || "Unknown";
 
-  const branchCode =
-    branchData?.code || "BRCH";
+branchCode =
+  branchData?.code || "BRCH";
         await runTransaction(db, async (transaction) => {
 
           const reads = [];
@@ -432,58 +434,64 @@
     }
   }
         // 🟢 3) SAVE INVOICE
-        const cleanedCart = cart.map(item => ({
-      seller:
-        seller ||
-        user?.name ||
-      "Unknown Seller",
-      // 🧾 Basic
-      id: item.id,
-      name: item.name,
+          const cleanedCart = cart.map(item => ({
+        seller:
+          seller ||
+          user?.name ||
+        "Unknown Seller",
+        // 🧾 Basic
+        id: item.id,
+        name: item.name,
 
-      itemType: item.itemType || "UNKNOWN",
+        itemType: item.itemType || "UNKNOWN",
 
-      saleMode: item.saleMode || "UNKNOWN",
+        saleMode: item.saleMode || "UNKNOWN",
 
-      // 🛢 Oil
-      oilId: item.oilId || item.id,
-      oilName: item.oilName || item.name,
-      oilCategory: item.oilCategory || "",
+        isReturned: item.isReturned || false,
 
-      oilQtyML: item.oilQtyML || 0,
+        saleType: item.isReturned
+          ? "RETURN_RESALE"
+          : "SALE",
 
-      // 🧴 Container
-      size: item.size || "",
+        // 🛢 Oil
+        oilId: item.oilId || item.id,
+        oilName: item.oilName || item.name,
+        oilCategory: item.oilCategory || "",
 
-      containerName: item.containerName || "",
-      containerType: item.containerType ?? "unknown",
-      containerId: item.containerId ?? null,
+        oilQtyML: item.oilQtyML || 0,
 
-      // 📦 Qty
-      qty: item.qty || 1,
+        // 🧴 Container
+        size: item.size || "",
 
-      // 💰 Pricing
-      unitPrice: item.unitPrice || item.price || 0,
-      price: item.price || 0,
+        containerName: item.containerName || "",
+        containerType: item.containerType ?? "unknown",
+        containerId: item.containerId ?? null,
 
-      // 💸 Costing
-      oilCostPerML: item.oilCostPerML || 0,
+        // 📦 Qty
+        qty: item.qty || 1,
 
-      oilCost: item.oilCost || 0,
+        // 💰 Pricing
+        unitPrice: item.unitPrice || item.price || 0,
+        price: item.price || 0,
 
-      containerCost: item.containerCost || 0,
+        // 💸 Costing
+        oilCostPerML: item.oilCostPerML || 0,
 
-      overheadCost: item.overheadCost || 0,
+        oilCost: item.oilCost || 0,
 
-      unitCost: item.unitCost || 0,
+        containerCost: item.containerCost || 0,
 
-      profit: item.profit || 0,
+        overheadCost: item.overheadCost || 0,
 
-      margin: item.margin || 0,
+        unitCost: item.unitCost || 0,
 
-      // 🟡 Backward compatibility
-      oilQty: item.oilQty || 0
-    }));
+        profit: item.profit || 0,
+
+        margin: item.margin || 0,
+
+        // 🟡 Backward compatibility
+        oilQty: item.oilQty || 0
+      }));
         const totalProfit = cleanedCart.reduce(
       (sum, item) => sum + (item.profit || 0),
       0
@@ -498,11 +506,51 @@
       total > 0
         ? Number(((totalProfit / total) * 100).toFixed(2))
         : 0;
+    const returnedItems = cleanedCart.filter(i => i.isReturned);
+
+const newItems = cleanedCart.filter(i => !i.isReturned);
+
+const returnedTotal = returnedItems.reduce((sum, i) => {
+
+  const isOil =
+    (i.containerType || "").toLowerCase() === "oil";
+
+  if (isOil) {
+  return sum + ((i.price || 0) * (i.oilQty || 0));
+}
+
+  return sum + ((i.price || 0) * (i.qty || 0));
+
+}, 0);
+
+const newTotal = total - returnedTotal;
+
+const returnedItemsCount = returnedItems.length;
+
+const newItemsCount = newItems.length;
+
+const saleType =
+  returnedItemsCount === 0
+    ? "SALE"
+    : newItemsCount === 0
+    ? "RETURN_RESALE"
+    : "MIXED";
         const saleRef = await addDoc(collection(db, "sales"), {
       customerId:
         customerId || null,
 
       invoiceNumber,
+
+      saleType,
+
+      newItemsCount,
+
+      returnedItemsCount,
+
+      newTotal,
+
+      returnedTotal,
+
       items: cleanedCart,
 
       total: total || 0,
@@ -518,6 +566,7 @@
       branchName:
         branchName,
       createdAt: serverTimestamp(),
+      status: "completed",
 
       totalQty: cart.reduce(
         (sum, i) =>
@@ -582,7 +631,16 @@
         invoiceNumber,
 
       details: {
+        saleType,
+        invoiceType: saleType,
 
+        newItemsCount,
+
+        returnedItemsCount,
+
+        newTotal,
+
+        returnedTotal,
         invoiceNumber,
 
         branchName:
@@ -720,3 +778,4 @@
       }
 
     };
+    

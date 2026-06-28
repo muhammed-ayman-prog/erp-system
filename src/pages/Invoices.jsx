@@ -25,6 +25,7 @@
   import toast from "react-hot-toast";
   import { DollarSign, Banknote, CreditCard, Smartphone } from "lucide-react";
   import logAction from "../utils/logAction";
+  import { useAuth } from "../store/useAuth";
   const branchNameMap = {
   "City Stars": "cityStars",
   "City Stars 2": "cityStars2",
@@ -35,6 +36,12 @@
   "El Rehab": "elRehab"
 };
   export default function Invoices() {
+    const { user } = useAuth();
+
+    const {
+      selectedBranch
+    } = useApp();
+
     const { t, lang } = useTranslate();
     const [isMobile, setIsMobile] = useState(
   typeof window !== "undefined"
@@ -61,10 +68,7 @@ useEffect(() => {
     const navigate = useNavigate();
     const { id } =
     useParams();
-    const {
-      selectedBranch,
-      user
-    } = useApp();
+    
     const [branchName, setBranchName] = useState("");
 
     const [sales, setSales] = useState([]);
@@ -203,10 +207,10 @@ useEffect(() => {
   collection(db, "returns"),
 
   where(
-    "invoiceId",
-    "==",
-    selectedInvoice.id
-  ),
+  "invoiceDocId",
+  "==",
+  selectedInvoice.id
+),
 
   where(
     "branchId",
@@ -407,7 +411,7 @@ useEffect(() => {
       const returnsSnap = await getDocs(
         query(
           collection(db, "returns"),
-          where("invoiceId", "==", inv.id)
+          where("invoiceDocId", "==", inv.id)
         )
       );
 
@@ -547,6 +551,7 @@ if (inv.customerId) {
     ),
   });
 }
+
 await logAction({
   action: "CANCEL_INVOICE",
   module: "Sales",
@@ -560,7 +565,6 @@ await logAction({
     user?.email ||
     "",
 
-  userId: user?.uid || "",
 
   branchId: inv.branchId,
 branchName: branchName || selectedBranch,
@@ -755,21 +759,11 @@ const fullyRefunded =
   }
 
   const freshInvoice = freshSaleSnap.data();
-  const freshReturnsSnap = await getDocs(
+ const freshReturnsSnap = await getDocs(
   query(
     collection(db, "returns"),
-
-    where(
-      "invoiceId",
-      "==",
-      selectedInvoice.id
-    ),
-
-    where(
-      "branchId",
-      "==",
-      selectedInvoice.branchId
-    )
+    where("invoiceDocId", "==", selectedInvoice.id),
+    where("branchId", "==", selectedInvoice.branchId)
   )
 );
 
@@ -869,7 +863,8 @@ const isReadyProduct =
 
         price: item.price || 0,
 
-        invoiceId: selectedInvoice.id,
+        invoiceId: selectedInvoice.invoiceNumber,
+invoiceDocId: selectedInvoice.id,
 
         containerName:
           item.containerName ||
@@ -891,7 +886,8 @@ const isReadyProduct =
 
     // 🔥 ده لازم يكون جوه اللوب وتحت الكل
     batch.set(returnRef, {
-      invoiceId: selectedInvoice.id,
+      invoiceId: selectedInvoice.invoiceNumber,
+      invoiceDocId: selectedInvoice.id,
       productId: item.productId || item.id,
       productName: item.name,
       productType: item.type || "unknown",
@@ -1042,8 +1038,23 @@ if (
 
 });
 }
+const totalRefundedQty =
+  (selectedInvoice.refundedQty || 0) + refundedQtyNow;
+
+const totalRefundedMl =
+  (selectedInvoice.refundedMl || 0) + refundedMlNow;
+
+const fullRefund =
+  isFullyRefunded(
+    totalRefundedQty,
+    totalRefundedMl,
+    totalProducts,
+    totalMl
+  );
 await logAction({
-  action: "PARTIAL_REFUND",
+  action: fullRefund
+  ? "FULL_REFUND"
+  : "PARTIAL_REFUND",
   module: "Sales",
   severity: "warning",
   status: "success",
@@ -1055,7 +1066,6 @@ await logAction({
     user?.email ||
     "",
 
-  userId: user?.uid || "",
 
   branchId: selectedInvoice.branchId,
 branchName: branchName || selectedBranch,
@@ -1081,7 +1091,24 @@ branchName: branchName || selectedBranch,
         name: i.name,
         qty: i.qty
       }))
+  },
+  changes: [
+  {
+    field: "refundedAmount",
+    before: selectedInvoice.refundedAmount || 0,
+    after: (selectedInvoice.refundedAmount || 0) + refundAmountNow
+  },
+  {
+    field: "refundedQty",
+    before: selectedInvoice.refundedQty || 0,
+    after: totalRefundedQty
+  },
+  {
+    field: "refundedMl",
+    before: selectedInvoice.refundedMl || 0,
+    after: totalRefundedMl
   }
+]
 });
   toast.success(t("invoices.refundSuccess"));
 
@@ -1311,6 +1338,7 @@ const modalBoxStyle = {
     <th style={{ padding: "10px" }}>{t("customer.title")}</th>
     <th style={{ padding: "10px" }}>{t("common.date")}</th>
     <th style={{ padding: "10px" }}>{t("payment.method")}</th>
+    <th style={{ padding: "10px" }}>{t("invoices.type")}</th>
     <th style={{ padding: "10px" }}>{t("cart.total")}</th>
     <th style={{ padding: "10px" }}>{t("common.status")}</th>
   </tr>
@@ -1319,7 +1347,7 @@ const modalBoxStyle = {
                 {loadingSales
       ? Array.from({ length: 5 }).map((_, i) => (
           <tr key={i}>
-            <td colSpan="6" style={{ padding: "12px" }}>
+            <td colSpan="7" style={{ padding: "12px" }}>
               <div
                 style={{
                   height: "20px",
@@ -1334,7 +1362,7 @@ const modalBoxStyle = {
         
       : paginated.length === 0 ? (
     <tr>
-      <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+      <td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>
         <div style={{ color: "#999" }}>
           📭 {t("common.noData")}
         </div>
@@ -1379,7 +1407,24 @@ const fullyRefunded =
     totalProducts,
     totalMl
   );
-
+const saleTypeStyle =
+  s.saleType === "RETURN_RESALE"
+    ? {
+        bg: "#fff7ed",
+        color: "#c2410c",
+        text: `🔄 ${t("invoices.returnResale")}`
+      }
+    : s.saleType === "MIXED"
+    ? {
+        bg: "#f3e8ff",
+        color: "#7e22ce",
+        text: `🟣 ${t("invoices.mixed")}`
+      }
+    : {
+        bg: "#dcfce7",
+        color: "#166534",
+        text: `🟢 ${t("invoices.sale")}`
+      };
 const statusStyle =
   s.status === "cancelled"
     ? { bg: "#e5e7eb", color: "#374151" }
@@ -1457,7 +1502,25 @@ const statusStyle =
     {t(`common.${(s.paymentMethod || "").toLowerCase()}`)}
   </span>
       </td>
-
+      <td
+  style={{
+    padding: "12px",
+    textAlign: "center"
+  }}
+>
+  <span
+    style={{
+      background: saleTypeStyle.bg,
+      color: saleTypeStyle.color,
+      padding: "5px 10px",
+      borderRadius: "999px",
+      fontSize: "12px",
+      fontWeight: "600"
+    }}
+  >
+    {saleTypeStyle.text}
+  </span>
+</td>
       {/* Total */}
       <td style={{
         padding: "12px",
@@ -1835,6 +1898,34 @@ const statusStyle =
 
     </div>
 
+    <div style={{ marginBottom: "8px" }}>
+  <span
+    style={{
+      background:
+        selectedInvoice.saleType === "RETURN_RESALE"
+          ? "#fff7ed"
+          : selectedInvoice.saleType === "MIXED"
+          ? "#f3e8ff"
+          : "#dcfce7",
+      color:
+        selectedInvoice.saleType === "RETURN_RESALE"
+          ? "#c2410c"
+          : selectedInvoice.saleType === "MIXED"
+          ? "#7e22ce"
+          : "#166534",
+      padding: "5px 10px",
+      borderRadius: "999px",
+      fontSize: "12px",
+      fontWeight: "600"
+    }}
+  >
+    {selectedInvoice.saleType === "RETURN_RESALE"
+      ? `🔄 ${t("invoices.returnResale")}`
+      : selectedInvoice.saleType === "MIXED"
+      ? `🟣 ${t("invoices.mixed")}`
+      : `🟢 ${t("invoices.sale")}`}
+  </span>
+</div>
     {/* 🏪 Branch */}
     <div>
       {t("branches.title")}: {
@@ -1914,25 +2005,31 @@ const statusStyle =
         fontWeight: "600",
         display: "inline-block",
         background:
-          fullyRefunded
+        selectedInvoice.status === "cancelled"
+          ? "#e5e7eb"
+          : fullyRefunded
             ? "#fee2e2"
             : refunded > 0 || refundedMl > 0
             ? "#fef9c3"
             : "#dcfce7",
         color:
-          fullyRefunded
+          selectedInvoice.status === "cancelled"
+            ? "#374151"
+            : fullyRefunded
             ? "#dc2626"
             : refunded > 0 || refundedMl > 0
             ? "#ca8a04"
             : "#16a34a"
       }}>
         {
-          fullyRefunded
-            ? t("invoices.refunded")
-            : refunded > 0 || refundedMl > 0
-            ? t("invoices.partialRefunded")
-            : t("invoices.completed")
-        }
+  selectedInvoice.status === "cancelled"
+    ? t("invoices.cancelled")
+    : fullyRefunded
+    ? t("invoices.refunded")
+    : refunded > 0 || refundedMl > 0
+    ? t("invoices.partialRefunded")
+    : t("invoices.completed")
+}
       </div>
         );
       })()}
