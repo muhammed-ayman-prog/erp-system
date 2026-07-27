@@ -427,7 +427,10 @@ modules: {
       "product": "Product",
       "undo": "Undo",
       "undoSuccess": "Undo successful",
-      "noChanges": "No changes detected"
+      "noChanges": "No changes detected",
+      products: "Products",
+addProduct: "Add Product",
+productsManagement: "Products Management",
     },
     system: {
     name: "A Perfume Story",
@@ -955,7 +958,7 @@ notesTitle:
       returns: "المرتجعات",
       inventory: "المخزون",
       purchases: "المشتريات",
-      waste: "الهالك",
+      waste: "الهدر",
       pricing: "التسعير",
       reports: "التقارير",
       customers: "العملاء",
@@ -1396,7 +1399,10 @@ modules: {
       "product": "المنتج",
       "undo": "تراجع",
       "undoSuccess": "تم التراجع بنجاح",
-      "noChanges": "لا توجد أي تعديلات"
+      "noChanges": "لا توجد أي تعديلات",
+      products: "المنتجات",
+      addProduct: "إضافة منتج",
+      productsManagement: "إدارة المنتجات",
     },
 
     cart: {

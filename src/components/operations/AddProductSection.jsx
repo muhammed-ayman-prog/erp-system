@@ -32,7 +32,7 @@ export default function AddProductSection({
   handleCreateProduct
 
 }) {
-const t = useTranslate();
+const { t } = useTranslate();
   return (
 
     <>

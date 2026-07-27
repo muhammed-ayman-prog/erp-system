@@ -32,16 +32,13 @@ export const NAVIGATION_ITEMS = [
 
     items: [
 
-      {
-        label:
-          "sidebar.dashboard",
-
-        path:
-          "/dashboard",
-
-        icon:
-          Home
-      },
+      // {
+      //   label: "sidebar.dashboard",
+      //
+      //   path: "/dashboard",
+      //
+      //   icon: Home
+      // },
 
       {
         label:
@@ -222,19 +219,15 @@ export const NAVIGATION_ITEMS = [
           PERMISSIONS.PRICING_VIEW
       },
 
-      {
-        label:
-          "sidebar.reports",
-
-        path:
-          "/reports",
-
-        icon:
-          BarChart3,
-
-        permission:
-          PERMISSIONS.REPORTS_VIEW
-      },
+      // {
+//   label: "sidebar.reports",
+//
+//   path: "/reports",
+//
+//   icon: BarChart3,
+//
+//   permission: PERMISSIONS.REPORTS_VIEW
+// },
 
       {
         label:
