@@ -1,0 +1,51 @@
+export const logIcons = {
+  CREATE_USER: "👤",
+  UPDATE_USER: "✏️",
+  DELETE_USER: "🗑️",
+  TOGGLE_USER_STATUS: "🔒",
+
+  CREATE_INVOICE: "🧾",
+  CANCEL_INVOICE: "❌",
+  PARTIAL_REFUND: "💵",
+  RETURN_RESALE: "🔄",
+
+  TRANSFER_STOCK: "📦",
+  UNDO_TRANSFER: "↩️",
+  ADJUST_STOCK: "⚖️",
+  UNDO_ADJUSTMENT: "↩️",
+
+  CREATE_PRODUCT: "🧴",
+  UPDATE_PRODUCT: "✏️",
+  ARCHIVE_PRODUCT: "📦",
+  RESTORE_PRODUCT: "♻️",
+
+  CREATE_PURCHASE: "🛒",
+  UNDO_PURCHASE: "↩️",
+
+  CREATE_WASTE: "🗑️",
+
+  CREATE_EXPENSE: "💸",
+  CREATE_LOAN: "💰",
+  CREATE_BONUS: "🎁",
+
+  PRICE_UPDATE: "💲",
+
+  CREATE_BRANCH: "🏪",
+  UPDATE_BRANCH: "🏪",
+
+  CREATE_CUSTOMER: "🤝",
+  UPDATE_CUSTOMER: "✏️",
+  ADD_CUSTOMER_NOTE: "📝",
+
+  DAILY_CLOSING: "📊",
+
+  CHANGE_PASSWORD: "🔑",
+
+  UPDATE_PROFILE: "👨‍💼",
+
+  RESET_SYSTEM: "⚠️",
+
+  LOGIN_SUCCESS: "✅",
+  LOGIN_FAILED: "❌",
+  LOGOUT: "🚪"
+};
