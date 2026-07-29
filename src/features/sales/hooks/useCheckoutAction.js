@@ -43,8 +43,8 @@ export function useCheckoutAction({
       customerPhone,
 
       paymentMethod,
-      salesName:
-        selectedSeller,
+      employeeId: selectedSeller?.id,
+      employeeName: selectedSeller?.name,
       selectedBranch,
       user,
 

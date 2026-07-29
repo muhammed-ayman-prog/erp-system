@@ -232,7 +232,7 @@ function App() {
         </Suspense>
       </Router>
       <Toaster
-  position="top-right"
+  position="bottom-center"
   containerStyle={{
     zIndex: 9999999,
     top: 20,

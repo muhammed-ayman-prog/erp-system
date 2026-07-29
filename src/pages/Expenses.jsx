@@ -9,6 +9,8 @@ import {
   orderBy,
   query,
   where,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../store/useAuth";
@@ -42,7 +44,9 @@ export default function Expenses() {
   const { t, tt, lang } = useTranslate();
   const { user } = useAuth();
   const { selectedBranch } = useApp();
-  const [employeeName, setEmployeeName] = useState("");
+  const [branchEmployees, setBranchEmployees] = useState([]);
+  const [selectedLoanEmployee, setSelectedLoanEmployee] = useState(null);
+const [selectedBonusEmployee, setSelectedBonusEmployee] = useState(null); 
 
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -67,6 +71,35 @@ export default function Expenses() {
     user?.role === "owner"
   ? selectedBranch
   : user?.branchIds?.[0];
+  useEffect(() => {
+  if (!branchToUse || branchToUse === "all") {
+    setBranchEmployees([]);
+    return;
+  }
+
+  const loadEmployees = async () => {
+    try {
+      const snap = await getDoc(
+        doc(db, "branches", branchToUse)
+      );
+
+      if (!snap.exists()) {
+        setBranchEmployees([]);
+        return;
+      }
+
+      setBranchEmployees(
+        snap.data().employees || []
+      );
+
+    } catch (err) {
+      console.error(err);
+      setBranchEmployees([]);
+    }
+  };
+
+  loadEmployees();
+}, [branchToUse]);
   const [search, setSearch] = useState("");
   const [tableSort, setTableSort] =
   useState({
@@ -82,13 +115,18 @@ export default function Expenses() {
 const [editingBonus, setEditingBonus] =
   useState(null);
 
-const [editEmployeeName,
-  setEditEmployeeName] =
-  useState("");
+const [editEmployeeData, setEditEmployeeData] = useState(null);
 
 const [editAmount, setEditAmount] = useState("");
 const [editNote, setEditNote] = useState("");
 const [editCategory, setEditCategory] = useState("عام");
+const [isAddingExpense, setIsAddingExpense] = useState(false);
+const [isAddingLoan, setIsAddingLoan] = useState(false);
+const [isAddingBonus, setIsAddingBonus] = useState(false);
+
+const [isUpdatingExpense, setIsUpdatingExpense] = useState(false);
+const [isUpdatingLoan, setIsUpdatingLoan] = useState(false);
+const [isUpdatingBonus, setIsUpdatingBonus] = useState(false);
   // 📥 fetch expenses
   useEffect(() => {
 
@@ -220,58 +258,84 @@ const [editCategory, setEditCategory] = useState("عام");
 
 }, [branchToUse, user?.role]);
 const handleAddLoan = async () => {
+  if (isAddingLoan) return;
+
   if (!branchToUse || branchToUse === "all") {
-  toast.error("اختر فرع محدد أولًا");
-  return;
-}
-  if (!employeeName || !loanAmount) {
-  toast.error("اكتب اسم الموظف والمبلغ");
-  return;
-}
+    toast.error("اختر فرع محدد أولًا");
+    return;
+  }
 
-await createLoanService({
-  employeeName,
-  amount: Number(loanAmount),
-  note: loanNote,
-  branchId: branchToUse
-});
+  if (!selectedLoanEmployee || !loanAmount) {
+    toast.error("اختر الموظف وأدخل المبلغ");
+    return;
+  }
 
-  setEmployeeName("");
-  setLoanAmount("");
-  setLoanNote("");
-  toast.success("تم إضافة السلفة");
-  setSelectedEmployee("all");
-  
+  try {
+    setIsAddingLoan(true);
 
+    await createLoanService({
+      employeeId: selectedLoanEmployee.id,
+      employeeName: selectedLoanEmployee.name,
+      amount: Number(loanAmount),
+      note: loanNote,
+      branchId: branchToUse
+    });
+
+    setSelectedLoanEmployee(null);
+    setLoanAmount("");
+    setLoanNote("");
+    setSelectedEmployee("all");
+
+    toast.success("تم إضافة السلفة");
+
+  } catch (err) {
+    console.error(err);
+    toast.error("حدث خطأ أثناء إضافة السلفة");
+  } finally {
+    setIsAddingLoan(false);
+  }
 };
 const handleAddBonus = async () => {
+  if (isAddingBonus) return;
+
   if (!branchToUse || branchToUse === "all") {
-  toast.error("اختر فرع محدد أولًا");
-  return;
-}
-  if (!employeeName || !bonusAmount) {
-  toast.error("اكتب اسم الموظف والمبلغ");
-  return;
-}
+    toast.error("اختر فرع محدد أولًا");
+    return;
+  }
 
-await createBonusService({
-  employeeName,
-  amount: Number(bonusAmount),
-  note: bonusNote,
-  branchId: branchToUse
-});
+  if (!selectedBonusEmployee || !bonusAmount) {
+    toast.error("اختر الموظف وأدخل المبلغ");
+    return;
+  }
 
-  setEmployeeName("");
-  setBonusAmount("");
-  setBonusNote("");
-  toast.success("تم إضافة الحافز");
-  setSelectedEmployee("all");
-  
+  try {
+    setIsAddingBonus(true);
 
-  
+    await createBonusService({
+      employeeId: selectedBonusEmployee.id,
+      employeeName: selectedBonusEmployee.name,
+      amount: Number(bonusAmount),
+      note: bonusNote,
+      branchId: branchToUse
+    });
+
+    setSelectedBonusEmployee(null);
+    setBonusAmount("");
+    setBonusNote("");
+    setSelectedEmployee("all");
+
+    toast.success("تم إضافة الحافز");
+
+  } catch (err) {
+    console.error(err);
+    toast.error("حدث خطأ أثناء إضافة الحافز");
+  } finally {
+    setIsAddingBonus(false);
+  }
 };
   // ➕ add expense
-  const handleAddExpense = async () => {
+const handleAddExpense = async () => {
+  if (isAddingExpense) return;
 
   if (!branchToUse || branchToUse === "all") {
     toast.error("اختر فرع محدد أولًا");
@@ -284,6 +348,7 @@ await createBonusService({
   }
 
   try {
+    setIsAddingExpense(true);
 
     const finalCategory =
       category === "➕ تصنيف جديد"
@@ -296,18 +361,10 @@ await createBonusService({
     }
 
     await createExpenseService({
-
-      amount:
-        Number(amount),
-
+      amount: Number(amount),
       note,
-
-      category:
-        finalCategory,
-
-      branchId:
-        branchToUse
-
+      category: finalCategory,
+      branchId: branchToUse
     });
 
     setAmount("");
@@ -315,18 +372,13 @@ await createBonusService({
     setCategory("إيجار");
     setCustomCategory("");
 
-    toast.success(
-      "تم إضافة المصروف"
-    );
+    toast.success("تم إضافة المصروف");
 
   } catch (err) {
-
     console.error(err);
-
-    toast.error(
-      t("common.error")
-    );
-
+    toast.error(t("common.error"));
+  } finally {
+    setIsAddingExpense(false);
   }
 };
 const isInRange = (date) => {
@@ -614,71 +666,77 @@ const employeeActivities = useMemo(() => [
   employeeBonuses
 ]);
 const handleUpdateExpense = async () => {
-  if (!editingExpense) return;
+  if (!editingExpense || isUpdatingExpense) return;
 
   try {
+    setIsUpdatingExpense(true);
+
     const finalEditCategory =
       editCategory === "➕ تصنيف جديد"
         ? customCategory
         : editCategory;
+
     await updateExpenseService({
-  id: editingExpense.id,
-  amount: Number(editAmount),
-  note: editNote,
-  category: finalEditCategory
-});
+      id: editingExpense.id,
+      amount: Number(editAmount),
+      note: editNote,
+      category: finalEditCategory
+    });
+
     setEditingExpense(null);
     toast.success("تم تعديل المصروف");
-    
+
   } catch (err) {
     toast.error("حصل خطأ أثناء التعديل");
+  } finally {
+    setIsUpdatingExpense(false);
   }
 };
 const handleUpdateLoan = async () => {
-
-  if (!editingLoan) return;
+  if (!editingLoan || isUpdatingLoan) return;
 
   try {
+    setIsUpdatingLoan(true);
 
     await updateLoanService({
-  id: editingLoan.id,
-  employeeName: editEmployeeName,
-  amount: Number(editAmount),
-  note: editNote
-});
+      id: editingLoan.id,
+      employeeId: editEmployeeData.id,
+      employeeName: editEmployeeData.name,
+      amount: Number(editAmount),
+      note: editNote
+    });
 
     toast.success("تم تعديل السلفة");
     setEditingLoan(null);
+
   } catch (err) {
-
     toast.error("حصل خطأ أثناء التعديل");
-
+  } finally {
+    setIsUpdatingLoan(false);
   }
-
 };
 const handleUpdateBonus = async () => {
-
-  if (!editingBonus) return;
+  if (!editingBonus || isUpdatingBonus) return;
 
   try {
+    setIsUpdatingBonus(true);
 
     await updateBonusService({
-  id: editingBonus.id,
-  employeeName: editEmployeeName,
-  amount: Number(editAmount),
-  note: editNote
-});
+      id: editingBonus.id,
+      employeeId: editEmployeeData.id,
+      employeeName: editEmployeeData.name,
+      amount: Number(editAmount),
+      note: editNote
+    });
 
     toast.success("تم تعديل الحافز");
-
     setEditingBonus(null);
 
   } catch (err) {
-
     toast.error("حصل خطأ أثناء التعديل");
-
+  } finally {
+    setIsUpdatingBonus(false);
   }
-
 };
 const exportToExcel = () => {
 
@@ -764,17 +822,6 @@ const exportToExcel = () => {
 
   return (
     <div style={page}>
-      <Toaster
-  position="top-right"
-  toastOptions={{
-    duration: 3000,
-    style: {
-      borderRadius: "12px",
-      background: "#111827",
-      color: "#fff"
-    }
-  }}
-/>
   <div style={container}>
 
       <h2 style={{ marginBottom: 15, fontWeight: "600" }}>
@@ -994,9 +1041,18 @@ const exportToExcel = () => {
         style={input}
       />
 
-      <button style={btnRed} onClick={handleAddExpense}>
-        {t("expenses.add")}
-      </button>
+      <button
+  style={{
+    ...btnRed,
+    opacity: isAddingExpense ? 0.6 : 1,
+    cursor: isAddingExpense ? "not-allowed" : "pointer",
+    pointerEvents: isAddingExpense ? "none" : "auto"
+  }}
+  disabled={isAddingExpense}
+  onClick={handleAddExpense}
+>
+  {isAddingExpense ? "⏳ جاري الإضافة..." : "إضافة مصروف"}
+</button>
     </div>
 
 
@@ -1482,11 +1538,17 @@ e.currentTarget.style.transform =
         }}
       >
         <button
-          style={btnGreen}
-          onClick={handleUpdateExpense}
-        >
-          حفظ
-        </button>
+  style={{
+    ...btnGreen,
+    opacity: isUpdatingExpense ? 0.6 : 1,
+    cursor: isUpdatingExpense ? "not-allowed" : "pointer",
+    pointerEvents: isUpdatingExpense ? "none" : "auto"
+  }}
+  disabled={isUpdatingExpense}
+  onClick={handleUpdateExpense}
+>
+  {isUpdatingExpense ? "⏳ جاري الحفظ..." : "حفظ"}
+</button>
 
         <button
           style={btnRed}
@@ -1507,15 +1569,28 @@ e.currentTarget.style.transform =
         ✏️ تعديل السلفة
       </h3>
 
-      <input
-        value={editEmployeeName}
-        onChange={(e) =>
-          setEditEmployeeName(
-            e.target.value
-          )
-        }
-        style={input}
-      />
+      <select
+  value={editEmployeeData?.id || ""}
+  onChange={(e) => {
+    const employee = branchEmployees.find(
+      emp => emp.id === e.target.value
+    );
+
+    setEditEmployeeData(employee || null);
+  }}
+  style={input}
+>
+  <option value="">اختر الموظف</option>
+
+  {branchEmployees.map(employee => (
+    <option
+      key={employee.id}
+      value={employee.id}
+    >
+      {employee.name}
+    </option>
+  ))}
+</select>
 
       <input
         type="number"
@@ -1544,12 +1619,18 @@ e.currentTarget.style.transform =
           gap: 10
         }}
       >
-        <button
-          style={btnGreen}
-          onClick={handleUpdateLoan}
-        >
-          حفظ
-        </button>
+       <button
+  style={{
+    ...btnGreen,
+    opacity: isUpdatingLoan ? 0.6 : 1,
+    cursor: isUpdatingLoan ? "not-allowed" : "pointer",
+pointerEvents: isUpdatingLoan ? "none" : "auto"
+  }}
+  disabled={isUpdatingLoan}
+  onClick={handleUpdateLoan}
+>
+  {isUpdatingLoan ? "⏳ جاري الحفظ..." : "حفظ"}
+</button>
 
         <button
           style={btnRed}
@@ -1572,15 +1653,28 @@ e.currentTarget.style.transform =
         ✏️ تعديل الحافز
       </h3>
 
-      <input
-        value={editEmployeeName}
-        onChange={(e) =>
-          setEditEmployeeName(
-            e.target.value
-          )
-        }
-        style={input}
-      />
+      <select
+  value={editEmployeeData?.id || ""}
+  onChange={(e) => {
+    const employee = branchEmployees.find(
+      emp => emp.id === e.target.value
+    );
+
+    setEditEmployeeData(employee || null);
+  }}
+  style={input}
+>
+  <option value="">اختر الموظف</option>
+
+  {branchEmployees.map(employee => (
+    <option
+      key={employee.id}
+      value={employee.id}
+    >
+      {employee.name}
+    </option>
+  ))}
+</select>
 
       <input
         type="number"
@@ -1610,11 +1704,17 @@ e.currentTarget.style.transform =
         }}
       >
         <button
-          style={btnGreen}
-          onClick={handleUpdateBonus}
-        >
-          حفظ
-        </button>
+  style={{
+    ...btnGreen,
+    opacity: isUpdatingBonus ? 0.6 : 1,
+    cursor: isUpdatingBonus ? "not-allowed" : "pointer",
+pointerEvents: isUpdatingBonus ? "none" : "auto"
+  }}
+  disabled={isUpdatingBonus}
+  onClick={handleUpdateBonus}
+>
+  {isUpdatingBonus ? "⏳ جاري الحفظ..." : "حفظ"}
+</button>
 
         <button
           style={btnRed}
@@ -1663,12 +1763,30 @@ e.currentTarget.style.transform =
     <div style={box}>
       <h3 style={{ marginBottom: 10 }}>🧾 إضافة سلفة</h3>
 
-      <input
-        placeholder="اسم الموظف"
-        value={employeeName}
-        onChange={(e) => setEmployeeName(e.target.value)}
-        style={input}
-      />
+      <select
+  value={selectedLoanEmployee?.id || ""}
+  onChange={(e) => {
+    const employee = branchEmployees.find(
+      emp => emp.id === e.target.value
+    );
+
+    setSelectedLoanEmployee(employee || null);
+  }}
+  style={input}
+>
+  <option value="">
+    اختر الموظف
+  </option>
+
+  {branchEmployees.map(employee => (
+    <option
+      key={employee.id}
+      value={employee.id}
+    >
+      {employee.name}
+    </option>
+  ))}
+</select>
 
       <input
         type="number"
@@ -1685,9 +1803,18 @@ e.currentTarget.style.transform =
         style={input}
       />
 
-      <button style={btnRed} onClick={handleAddLoan}>
-        إضافة سلفة
-      </button>
+      <button
+  style={{
+    ...btnRed,
+    opacity: isAddingLoan ? 0.6 : 1,
+    cursor: isAddingLoan ? "not-allowed" : "pointer",
+    pointerEvents: isAddingLoan ? "none" : "auto"
+  }}
+  disabled={isAddingLoan}
+  onClick={handleAddLoan}
+>
+  {isAddingLoan ? "⏳ جاري الإضافة..." : "إضافة سلفة"}
+</button>
     </div>
     
     <div style={modernTableWrapper}>
@@ -1842,20 +1969,15 @@ e.currentTarget.style.transform =
 
             <button
               onClick={() => {
+setEditingLoan(l);
 
-                setEditingLoan(l);
+setEditEmployeeData({
+  id: l.employeeId,
+  name: l.employeeName
+});
 
-                setEditEmployeeName(
-                  l.employeeName || ""
-                );
-
-                setEditAmount(
-                  l.amount || ""
-                );
-
-                setEditNote(
-                  l.note || ""
-                );
+setEditAmount(l.amount || "");
+setEditNote(l.note || "");
 
               }}
 
@@ -1916,12 +2038,30 @@ e.currentTarget.style.transform =
     <div style={box}>
       <h3 style={{ marginBottom: 10 }}>🎁 إضافة حافز</h3>
 
-      <input
-        placeholder="اسم الموظف"
-        value={employeeName}
-        onChange={(e) => setEmployeeName(e.target.value)}
-        style={input}
-      />
+      <select
+  value={selectedBonusEmployee?.id || ""}
+  onChange={(e) => {
+    const employee = branchEmployees.find(
+      emp => emp.id === e.target.value
+    );
+
+    setSelectedBonusEmployee(employee || null);
+  }}
+  style={input}
+>
+  <option value="">
+    اختر الموظف
+  </option>
+
+  {branchEmployees.map(employee => (
+    <option
+      key={employee.id}
+      value={employee.id}
+    >
+      {employee.name}
+    </option>
+  ))}
+</select>
 
       <input
         type="number"
@@ -1938,9 +2078,18 @@ e.currentTarget.style.transform =
         style={input}
       />
 
-      <button style={btnGreen} onClick={handleAddBonus}>
-        إضافة Bonus
-      </button>
+      <button
+  style={{
+    ...btnGreen,
+    opacity: isAddingBonus ? 0.6 : 1,
+    cursor: isAddingBonus ? "not-allowed" : "pointer",
+    pointerEvents: isAddingBonus ? "none" : "auto"
+  }}
+  disabled={isAddingBonus}
+  onClick={handleAddBonus}
+>
+  {isAddingBonus ? "⏳ جاري الإضافة..." : "إضافة حافز"}
+</button>
     </div>
     
 
@@ -2099,17 +2248,13 @@ e.currentTarget.style.transform =
 
                 setEditingBonus(b);
 
-                setEditEmployeeName(
-                  b.employeeName || ""
-                );
+setEditEmployeeData({
+  id: b.employeeId,
+  name: b.employeeName
+});
 
-                setEditAmount(
-                  b.amount || ""
-                );
-
-                setEditNote(
-                  b.note || ""
-                );
+setEditAmount(b.amount || "");
+setEditNote(b.note || "");
 
               }}
 

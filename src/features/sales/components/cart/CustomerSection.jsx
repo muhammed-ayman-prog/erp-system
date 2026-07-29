@@ -263,7 +263,7 @@ useEffect(() => {
   employees.map((employee, index) => (
 
         <button
-          key={index}
+          key={employee.id || index}
 
           type="button"
 
@@ -286,7 +286,7 @@ useEffect(() => {
             marginBottom: "4px",
 
             background:
-              selectedSeller?.name === employee.name
+              selectedSeller?.id === employee.id
                 ? "rgba(59,130,246,0.12)"
                 : "transparent",
 
@@ -311,7 +311,7 @@ useEffect(() => {
 
           onMouseLeave={(e) => {
             e.currentTarget.style.background =
-              selectedSeller?.name === employee.name
+              selectedSeller?.id === employee.id
                 ? "rgba(59,130,246,0.12)"
                 : "transparent";
           }}

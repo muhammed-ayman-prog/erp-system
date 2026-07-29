@@ -292,8 +292,10 @@ useEffect(() => {
         s.invoiceNumber?.toString().includes(searchKey);
 
       const matchSales =
-        !salesKey ||
-        (s.salesName || "").toLowerCase().includes(salesKey);
+  !salesKey ||
+  (s.employeeName || "")
+    .toLowerCase()
+    .includes(salesKey);
 
       const date = s.createdAt?.seconds
         ? new Date(s.createdAt.seconds * 1000)
@@ -1902,24 +1904,24 @@ const statusStyle =
         👨‍💼 {t("invoices.salesName")}: {
 
   selectedInvoice.items?.find(
-    i => i.seller
-  )?.seller
+  i => i.employeeName
+)?.employeeName
 
-  ||
+||
 
-  selectedInvoice.salesName
+selectedInvoice.employeeName
 
-  ||
+||
 
-  (
-    lang === "ar"
-      ? "غير معروف"
-      : "Unknown"
-  )
+(
+  lang === "ar"
+    ? "غير معروف"
+    : "Unknown"
+)
 }
       </span>
 
-      {selectedInvoice.enteredBy !== selectedInvoice.salesName && (
+      {selectedInvoice.enteredBy !== selectedInvoice.employeeName && (
     <span style={{
       padding: "4px 10px",
       borderRadius: "999px",
@@ -1935,12 +1937,12 @@ const statusStyle =
 
     : (
         selectedInvoice.items?.find(
-          i => i.seller
-        )?.seller
+          i => i.employeeName
+        )?.employeeName
 
         ||
 
-        selectedInvoice.salesName
+        selectedInvoice.employeeName
 
         ||
 

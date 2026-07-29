@@ -671,7 +671,7 @@ const lastVisitDays = customer.lastPurchase
       color: "#64748b",
       marginTop: "3px"
     }}>
-      👨‍💼 {s.salesName || t("common.unknown")}
+      👨‍💼 {s.employeeName || t("common.unknown")}
     </div>
   </div>
 

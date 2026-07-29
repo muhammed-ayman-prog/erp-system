@@ -24,7 +24,6 @@ import {
   TrendingUp,
   Wallet,
   Receipt,
-  CircleDollarSign,
   Gift,
   Landmark,
   AlertCircle
@@ -39,7 +38,7 @@ import { useApp } from "../store/useApp";
 import { useTranslate } from "../useTranslate";
 
 import { theme } from "../theme";
-
+import { toast } from "react-hot-toast";
 // ======================================================
 // HELPERS
 // ======================================================
@@ -871,18 +870,35 @@ const differenceStatus =
   // ======================================================
   // LOADING
   // ======================================================
-const handleSaveClosing =
-  async () => {
-    if (alreadyClosed) {
+const handleSaveClosing = async () => {
 
-  alert(
+  if (branchToUse === "all") {
+    toast.error(
+  lang === "ar"
+    ? "لا يمكن تقفيل اليومية لكل الفروع. يرجى اختيار فرع أولاً."
+    : "Daily closing cannot be performed for all branches. Please select a branch first."
+);
+    return;
+  }
+  if (Number(actualCash) < 0) {
+  toast.error(
     lang === "ar"
-      ? t("dailyClosing.alreadyClosed")
-      : "Daily already closed"
+      ? "قيمة الكاش لا يمكن أن تكون سالبة."
+      : "Actual cash cannot be negative."
   );
-
   return;
 }
+
+  if (alreadyClosed) {
+
+    toast.error(
+  lang === "ar"
+    ? t("dailyClosing.alreadyClosed")
+    : "Daily already closed"
+);
+
+    return;
+  }
 
     try {
 
@@ -959,11 +975,11 @@ const handleSaveClosing =
         }
       );
 
-      alert(
-        lang === "ar"
-          ? "تم حفظ الجرد اليومي"
-          : "Daily closing saved"
-      );
+      toast.success(
+  lang === "ar"
+    ? "تم حفظ التقفيل اليومي بنجاح"
+    : "Daily closing saved successfully"
+);
 
       setActualCash("");
 
@@ -973,13 +989,13 @@ const handleSaveClosing =
 
     catch (err) {
 
-      console.log(err);
+      console.error("Daily Closing Error:", err);
 
-      alert(
-        lang === "ar"
-          ? "حدث خطأ"
-          : "Something went wrong"
-      );
+      toast.error(
+  lang === "ar"
+    ? "حدث خطأ أثناء حفظ اليومية"
+    : "Failed to save daily closing"
+);
 
     }
 
@@ -1641,10 +1657,11 @@ const handleSaveClosing =
         }
 
         disabled={
-  saving ||
-  alreadyClosed ||
-  actualCash === ""
-}
+          saving ||
+          alreadyClosed ||
+          actualCash === "" ||
+          branchToUse === "all"
+        }
 
         style={{
           height: 52,
@@ -1657,12 +1674,9 @@ const handleSaveClosing =
           borderRadius: 14,
 
           background:
-
-            alreadyClosed
-
-                ? "#94a3b8"
-
-                : theme.colors.primary,
+            alreadyClosed || branchToUse === "all"
+              ? "#94a3b8"
+              : theme.colors.primary,
 
           color: "#fff",
 
@@ -1670,7 +1684,13 @@ const handleSaveClosing =
 
           fontWeight: 700,
 
-          cursor: "pointer",
+          cursor:
+  saving ||
+  alreadyClosed ||
+  actualCash === "" ||
+  branchToUse === "all"
+    ? "not-allowed"
+    : "pointer",
 
           opacity:
             saving
@@ -1681,19 +1701,25 @@ const handleSaveClosing =
 
         {alreadyClosed
 
-        ? lang === "ar"
-            ? "تم إغلاق اليومية"
-            : "Already Closed"
+  ? lang === "ar"
+      ? "تم إغلاق اليومية"
+      : "Already Closed"
 
-        : saving
+  : branchToUse === "all"
 
-        ? lang === "ar"
-            ? t("dailyClosing.saving")
-            : "Saving..."
+  ? lang === "ar"
+      ? "اختر فرع أولاً"
+      : "Select Branch First"
 
-        : lang === "ar"
-        ? "حفظ اليومية"
-        : "Save Closing"}
+  : saving
+
+  ? lang === "ar"
+      ? t("dailyClosing.saving")
+      : "Saving..."
+
+  : lang === "ar"
+      ? "حفظ اليومية"
+      : "Save Closing"}
 
       </button>
 
@@ -2245,8 +2271,7 @@ function ReconRow({
             : "#dc2626"
         }}
       >
-        {positive ? "+" : "-"}{" "}
-        {formatMoney(value)}
+        {positive ? "+" : "-"} {formatMoney(value)}
       </div>
 
     </div>
@@ -2496,7 +2521,11 @@ function ClosingInfoRow({
             theme.colors.text
         }}
       >
-        {formatMoney(value)}
+        {typeof value === "string"
+  ? value.startsWith("+")
+    ? `+${formatMoney(value.slice(1))}`
+    : value
+  : formatMoney(value)}
       </div>
 
     </div>

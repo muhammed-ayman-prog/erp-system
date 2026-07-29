@@ -586,6 +586,7 @@ exports.createLoan = onCall(
     async (request) => {
 
       const {
+        employeeId,
         employeeName,
         amount,
         note,
@@ -597,11 +598,10 @@ exports.createLoan = onCall(
           .firestore()
           .collection("loans")
           .add({
+            employeeId,
             employeeName,
-            amount:
-              Number(amount),
-            note:
-              note || "",
+            amount: Number(amount),
+            note: note || "",
             branchId,
             createdAt:
               admin.firestore.FieldValue.serverTimestamp(),
@@ -633,20 +633,17 @@ exports.createLoan = onCall(
         before: null,
 
         after: {
+          employeeId,
           employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
+          amount: Number(amount),
+          note: note || "",
         },
 
         logDetails: {
-          employee:
-            employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
+          employeeId,
+          employee: employeeName,
+          amount: Number(amount),
+          note: note || "",
         },
       };
     }
@@ -662,11 +659,12 @@ exports.updateLoan = onCall(
     async (request) => {
 
       const {
-        id,
-        employeeName,
-        amount,
-        note,
-      } = request.data;
+  id,
+  employeeId,
+  employeeName,
+  amount,
+  note,
+} = request.data;
 
       const ref =
         admin
@@ -688,12 +686,11 @@ exports.updateLoan = onCall(
         snap.data();
 
       await ref.update({
-        employeeName,
-        amount:
-          Number(amount),
-        note:
-          note || "",
-      });
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+});
 
       const branchSnap =
         await admin
@@ -721,6 +718,7 @@ exports.updateLoan = onCall(
         before,
 
         after: {
+          employeeId,
           employeeName,
           amount:
             Number(amount),
@@ -729,6 +727,7 @@ exports.updateLoan = onCall(
         },
 
         logDetails: {
+          employeeId,
           employee:
             employeeName,
           amount:
@@ -750,26 +749,25 @@ exports.createBonus = onCall(
     async (request) => {
 
       const {
-        employeeName,
-        amount,
-        note,
-        branchId,
-      } = request.data;
+  employeeId,
+  employeeName,
+  amount,
+  note,
+  branchId,
+} = request.data;
 
       const bonusRef =
         await admin
           .firestore()
           .collection("bonuses")
           .add({
-            employeeName,
-            amount:
-              Number(amount),
-            note:
-              note || "",
-            branchId,
-            createdAt:
-              admin.firestore.FieldValue.serverTimestamp(),
-          });
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+  branchId,
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 
       const branchSnap =
         await admin
@@ -797,21 +795,18 @@ exports.createBonus = onCall(
         before: null,
 
         after: {
-          employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
-        },
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+},
 
         logDetails: {
-          employee:
-            employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
-        },
+  employeeId,
+  employee: employeeName,
+  amount: Number(amount),
+  note: note || "",
+},
       };
     }
   )
@@ -826,11 +821,12 @@ exports.updateBonus = onCall(
     async (request) => {
 
       const {
-        id,
-        employeeName,
-        amount,
-        note,
-      } = request.data;
+  id,
+  employeeId,
+  employeeName,
+  amount,
+  note,
+} = request.data;
 
       const ref =
         admin
@@ -852,12 +848,11 @@ exports.updateBonus = onCall(
         snap.data();
 
       await ref.update({
-        employeeName,
-        amount:
-          Number(amount),
-        note:
-          note || "",
-      });
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+});
 
       const branchSnap =
         await admin
@@ -885,6 +880,7 @@ exports.updateBonus = onCall(
         before,
 
         after: {
+          employeeId,
           employeeName,
           amount:
             Number(amount),
@@ -893,6 +889,7 @@ exports.updateBonus = onCall(
         },
 
         logDetails: {
+          employeeId,
           employee:
             employeeName,
           amount:

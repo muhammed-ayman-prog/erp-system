@@ -328,7 +328,8 @@ const handleCheckout = async (
     customerName,
     customerPhone,
     playCheckoutSound,
-    salesName,
+    employeeId,
+    employeeName,
     user,
     paymentMethod,
     selectedBranch,
@@ -343,34 +344,7 @@ const handleCheckout = async (
     setPaymentMethod,
     setCustomerName,
     setCustomerPhone,
-  } = params;
-  const sellerName =
-  
-  
-
-  typeof salesName === "string"
-
-    ? salesName
-
-    : salesName?.name || "";
-   
-
-  cartLength:
-    cart.length,
-
-  selectedBranch,
-
-  customerPhone,
-
-  customerName,
-
-  salesName,
-
-  sellerName,
-
-  user
-
-;
+  } = params;   
 if (!paymentMethod) {
   showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
   return;
@@ -395,11 +369,11 @@ if (!customerName?.trim()) {
   showToast(setToastText, setShowToast,"ادخل اسم العميل ❗");
   return;
 }
-if (!sellerName.trim()) {
+if (!employeeId || !employeeName?.trim()) {
   showToast(
     setToastText,
     setShowToast,
-    "ادخل اسم البائع ❗"
+    "اختر الموظف ❗"
   );
   return;
 }
@@ -416,8 +390,8 @@ if (!sellerName.trim()) {
       customerName,
       customerPhone,
 
-      seller: sellerName,
-
+      employeeId,
+      employeeName,
       user
     });
 

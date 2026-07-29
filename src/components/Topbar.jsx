@@ -75,7 +75,6 @@ const accessibleBranches =
     : branches.filter((b) =>
         user?.branchIds?.includes(b.id)
       );
-      console.log(accessibleBranches);
   return (
 
     <div

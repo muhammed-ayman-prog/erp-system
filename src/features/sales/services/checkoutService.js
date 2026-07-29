@@ -23,8 +23,9 @@
       paymentMethod,
       customerName,
       customerPhone,
-      seller,
-      user       
+      employeeId,
+      employeeName,
+      user
     }) => {
       let branchName = "Unknown";
        let branchCode = "BRCH";
@@ -248,110 +249,7 @@ branchCode =
             }
           }
         });
-        // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
-    try {
-
-    await Promise.all(
-      cart.flatMap(item => {
-        const arr = [];
-
-        arr.push(
-          addDoc(collection(db, "stock")  , {
-            productId: item.containerType === "oil"
-      ? item.id
-      : item.containerId || item.id,
-            quantity:
-      item.containerType === "oil"
-        ? item.oilQty * item.qty
-        : item.qty,
-            type: item.isReturned ? "resell" : "sale",
-            movementType: item.isReturned
-              ? "RETURN_RESALE"
-              : "SALE",
-
-            movementSource:
-              item.isReturned
-                ? "RETURN_RESALE"
-                : "SALE",
-
-            direction: "OUT",
-
-            productType:
-              item.isReturned
-                ? "RETURNED_PRODUCT"
-                : item.containerType === "oil"
-                ? "RAW_OIL"
-                : "CONTAINER",
-
-            unit:
-              item.containerType === "oil"
-                ? "ML"
-                : "PCS",
-
-            unitCost:
-              item.containerType === "oil"
-                ? item.oilCostPerML || 0
-                : item.containerCost || 0,
-
-            totalCost:
-              item.containerType === "oil"
-                ? item.oilCost || 0
-                : item.containerCost || 0,
-            price: item.price || 0,
-            total: (item.price || 0) * item.qty,
-            branchId: branchToUse,
-            branchName: branchName,
-            createdAt: serverTimestamp()
-          })
-        );
-
-        if (
-    !item.isReturned &&
-    item.containerType !== "oil" &&
-    item.oilQty > 0
-  ) {
-          arr.push(
-            addDoc(collection(db, "stock"), {
-              productId: item.id,
-              quantity: item.oilQty * item.qty,
-              type: item.isReturned ? "resell" : "sale",
-              movementType: item.isReturned
-                ? "RETURN_RESALE"
-                : "SALE",
-
-              movementSource:
-                item.isReturned
-                  ? "RETURN_RESALE"
-                  : "SALE",
-
-              direction: "OUT",
-
-              productType: "RAW_OIL",
-
-              unit: "ML",
-
-              unitCost: item.oilCostPerML || 0,
-
-              totalCost: item.oilCost || 0,
-              price: item.oilQty ? item.price / item.oilQty : 0,
-              total: (item.price || 0) * item.qty,
-              branchId: branchToUse,
-              branchName: branchName,
-              createdAt: serverTimestamp()
-            })
-          );
-        }
-
-        return arr;
-      })
-    );
-
-  } catch (err) {
-
-    
-
-    throw err;
-  }
+        
 
         // 🟢 2) INVOICE NUMBER
         let invoiceNumber = "";
@@ -433,12 +331,18 @@ branchCode =
       customerId = newCustomerRef.id;
     }
   }
+  
         // 🟢 3) SAVE INVOICE
           const cleanedCart = cart.map(item => ({
-        seller:
-          seller ||
+        employeeId:
+          employeeId || null,
+
+        employeeName:
+          employeeName ||
+          user?.displayName ||
           user?.name ||
-        "Unknown Seller",
+          user?.email ||
+          "Unknown Employee",
         // 🧾 Basic
         id: item.id,
         name: item.name,
@@ -579,11 +483,15 @@ const saleType =
 
       refundedQty: 0,
 
-      seller:
-        seller ||
+      employeeId:
+        employeeId || null,
+
+      employeeName:
+        employeeName ||
+        user?.displayName ||
         user?.name ||
         user?.email ||
-        "Unknown Seller",
+        "Unknown Employee",
       enteredBy:
         user?.displayName ||
         user?.name ||
@@ -595,6 +503,131 @@ const saleType =
         user?.id ||
         null
     });
+    // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
+    try {
+
+    await Promise.all(
+      cart.flatMap(item => {
+        const arr = [];
+
+        arr.push(
+          addDoc(collection(db, "stock")  , {
+            productId: item.containerType === "oil"
+      ? item.id
+      : item.containerId || item.id,
+            productName: item.name,
+            quantity:
+      item.containerType === "oil"
+        ? item.oilQty * item.qty
+        : item.qty,
+            type: item.isReturned ? "resell" : "sale",
+            movementType: item.isReturned
+              ? "RETURN_RESALE"
+              : "SALE",
+
+            movementSource:
+              item.isReturned
+                ? "RETURN_RESALE"
+                : "SALE",
+
+            direction: "OUT",
+            source: "SALE",
+
+            productType:
+              item.isReturned
+                ? "RETURNED_PRODUCT"
+                : item.containerType === "oil"
+                ? "RAW_OIL"
+                : "CONTAINER",
+
+            unit:
+              item.containerType === "oil"
+                ? "ML"
+                : "PCS",
+
+            unitCost:
+              item.containerType === "oil"
+                ? item.oilCostPerML || 0
+                : item.containerCost || 0,
+
+            totalCost:
+              item.containerType === "oil"
+                ? item.oilCost || 0
+                : item.containerCost || 0,
+            price: item.price || 0,
+            total: (item.price || 0) * item.qty,
+            branchId: branchToUse,
+            branchName: branchName,
+            employeeId:
+              employeeId || null,
+
+            employeeName:
+              employeeName ||
+              user?.displayName ||
+              user?.name ||
+              user?.email ||
+              "Unknown Employee",
+            createdAt: serverTimestamp()
+          })
+        );
+
+        if (
+    !item.isReturned &&
+    item.containerType !== "oil" &&
+    item.oilQty > 0
+  ) {
+          arr.push(
+            addDoc(collection(db, "stock"), {
+              productId: item.id,
+              quantity: item.oilQty * item.qty,
+              type: item.isReturned ? "resell" : "sale",
+              movementType: item.isReturned
+                ? "RETURN_RESALE"
+                : "SALE",
+
+              movementSource:
+                item.isReturned
+                  ? "RETURN_RESALE"
+                  : "SALE",
+
+              direction: "OUT",
+              source: "SALE",
+
+              productType: "RAW_OIL",
+
+              unit: "ML",
+
+              unitCost: item.oilCostPerML || 0,
+
+              totalCost: item.oilCost || 0,
+              price: item.oilQty ? item.price / item.oilQty : 0,
+              total: (item.price || 0) * item.qty,
+              branchId: branchToUse,
+              branchName: branchName,
+              employeeId:
+                employeeId || null,
+
+              employeeName:
+                employeeName ||
+                user?.displayName ||
+                user?.name ||
+                user?.email ||
+                "Unknown Employee",
+              createdAt: serverTimestamp()
+            })
+          );
+        }
+
+        return arr;
+      })
+    );
+
+  } catch (err) {
+
+    
+
+    throw err;
+  }
     await logAction({
 
       action:
@@ -646,12 +679,15 @@ const saleType =
         branchName:
         branchName,
 
-        seller:
-          seller ||
+        employeeId:
+          employeeId || null,
+
+        employeeName:
+          employeeName ||
           user?.displayName ||
           user?.name ||
           user?.email ||
-          "Unknown Seller",
+          "Unknown Employee",
 
         
 

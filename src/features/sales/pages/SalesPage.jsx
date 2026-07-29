@@ -192,7 +192,7 @@ const {
   const [
   selectedSeller,
   setSelectedSeller
-] = useState("");
+] = useState(null);
   
   
 
