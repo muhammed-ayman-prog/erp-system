@@ -24,14 +24,7 @@ export default function Topbar({
   "El Obour": t("branchNames.elObour"),
   "El Rehab": t("branchNames.elRehab"),
 };
-  const branchOrder = [
-  "Abbas Akkad 1",
-  "Abbas Akkad 2",
-  "Abbas Akkad 3",
-  "City Stars",
-  "El Obour",
-  "El Rehab"
-];
+
   const [isMobile, setIsMobile] = useState(
   window.innerWidth < 768
 );
@@ -82,6 +75,7 @@ const accessibleBranches =
     : branches.filter((b) =>
         user?.branchIds?.includes(b.id)
       );
+      console.log(accessibleBranches);
   return (
 
     <div
@@ -232,21 +226,11 @@ const accessibleBranches =
           <option value="all">🌍 {t("topbar.allBranches")}</option>
         )}
 
-        {[...(accessibleBranches || [])]
-  .sort((a, b) => {
-    const indexA = branchOrder.indexOf(a.name);
-    const indexB = branchOrder.indexOf(b.name);
-
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-
-    return indexA - indexB;
-  })
-  .map((b) => (
-    <option key={b.id} value={b.id}>
-  {branchTranslations[b.name] || b.name}
-</option>
-  ))}
+        {accessibleBranches.map((b) => (
+  <option key={b.id} value={b.id}>
+    {branchTranslations[b.name] || b.name}
+  </option>
+))}
       </select>
 
       

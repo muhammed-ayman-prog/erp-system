@@ -12,7 +12,10 @@ import {
 } from "framer-motion";
 import { useAuth } from "../store/useAuth";
 import { useApp } from "../store/useApp";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot
+} from "firebase/firestore";
 import { db } from "../firebase";
 import { theme } from "../theme";
 import { useTranslate } from "../useTranslate";
@@ -51,20 +54,25 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    const fetchBranches = async () => {
-      if (branches.length) return;
-      const snap = await getDocs(collection(db, "branches"));
+  const unsubscribe = onSnapshot(
+  collection(db, "branches"),
+  (snap) => {
 
-      const data = snap.docs.map(doc => ({
+    const data = snap.docs
+      .map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      }))
+      .filter(branch => branch.isArchived !== true)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-      setBranches(data);
-    };
+    setBranches(data);
 
-    fetchBranches();
-  }, []);
+  }
+);
+
+  return () => unsubscribe();
+}, []);
 
   // 🔥 MENU
  

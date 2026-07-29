@@ -57,11 +57,12 @@ const defaultForm = {
   address: "",
   manager: "",
   employees: [
-    {
-      name: "",
-      role: "seller"
-    }
-  ]
+  {
+    id: null,
+    name: "",
+    role: "seller"
+  }
+]
 };
 
 export default function Branches() {
@@ -936,6 +937,7 @@ const salesByBranch = useMemo(() => {
                         ? updated
                         : [
                             {
+                              id: null,
                               name: "",
                               role: "seller"
                             }
@@ -981,6 +983,7 @@ const salesByBranch = useMemo(() => {
                 employees: [
                   ...prev.employees,
                   {
+                    id: null,
                     name: "",
                     role: "seller"
                   }
@@ -1479,6 +1482,7 @@ onMouseLeave={(e) => {
                           ? branch.employees
                           : [
                               {
+                                id: null,
                                 name: "",
                                 role: "seller"
                               }

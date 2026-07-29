@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const { withLog } = require("./utils/withLog");
-
+const { randomUUID } = require("crypto");
 exports.createBranch = onCall(
   withLog(
     {
@@ -28,7 +28,11 @@ exports.createBranch = onCall(
         manager,
         employees
       } = request.data;
-
+      const normalizedEmployees = (employees || []).map(employee => ({
+        id: employee.id || randomUUID(),
+        name: employee.name,
+        role: employee.role
+      }));
       const branchRef =
         await admin
           .firestore()
@@ -39,7 +43,7 @@ exports.createBranch = onCall(
             phone: phone || "",
             address: address || "",
             manager: manager || "",
-            employees: employees || [],
+            employees: normalizedEmployees,
             status: "active",
             isArchived: false,
             createdAt:
@@ -73,7 +77,7 @@ exports.createBranch = onCall(
           phone,
           address,
           manager,
-          employees
+          employees: normalizedEmployees
         },
 
         logDetails: {
@@ -122,16 +126,35 @@ exports.updateBranch = onCall(
 
       const before =
         snap.data();
+      const previousEmployees = before.employees || [];
 
+const normalizedEmployees = (employees || []).map(employee => {
+
+  if (employee.id) {
+    return employee;
+  }
+
+  const oldEmployee = previousEmployees.find(
+    e =>
+      e.name === employee.name &&
+      e.role === employee.role
+  );
+
+  return {
+    id: oldEmployee?.id || randomUUID(),
+    name: employee.name,
+    role: employee.role
+  };
+
+});
       await ref.update({
         name,
         code,
         phone,
         address,
         manager,
-        employees,
-        updatedAt:
-          admin.firestore.FieldValue.serverTimestamp()
+        employees: normalizedEmployees,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
       return {
@@ -153,7 +176,7 @@ exports.updateBranch = onCall(
           phone,
           address,
           manager,
-          employees
+          employees: normalizedEmployees
         },
 
         logDetails: {
