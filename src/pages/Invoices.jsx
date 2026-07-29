@@ -89,9 +89,9 @@ useEffect(() => {
     const [showRefundPopup, setShowRefundPopup] = useState(false);
     const [refundItems, setRefundItems] = useState([]);
     const hasValidRefund = useMemo(
-    () => refundItems.some(i => i.qty > 0),
-    [refundItems]
-  );
+  () => refundItems.some(i => i.refundQty > 0),
+  [refundItems]
+);
     const getKey = (item) =>
     `${item.productId || item.id}_${
       (item.containerType || item.container || "")
@@ -99,13 +99,13 @@ useEffect(() => {
         .trim()
     }_${item.size}`;
     const refundMap = useMemo(() =>
-    Object.fromEntries(
-      refundItems.map(i => [
-        getKey(i),
-        i.qty
-      ])
-    ),
-  [refundItems]);
+  Object.fromEntries(
+    refundItems.map(i => [
+      getKey(i),
+      i.refundQty
+    ])
+  ),
+[refundItems]);
     const [loading, setLoading] = useState(false);
     const [previousReturns, setPreviousReturns] = useState([]);
     const [salesFilter, setSalesFilter] = useState("");
@@ -315,6 +315,8 @@ useEffect(() => {
     });
   }, [sales, searchKey, salesKey, fromDate, toDate]);
     const [loadingSales, setLoadingSales] = useState(true);
+    const [cancelReason, setCancelReason] = useState("");
+    const [cancelReasonType, setCancelReasonType] = useState("");
     const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
@@ -357,7 +359,7 @@ useEffect(() => {
   
 
     // 🔴 CANCEL
-    const handleCancel = async (inv) => {
+    const handleCancel = async (inv, reason) => {
     if (inv.status === "cancelled" || cancelling) return;
     const refundedQty =
       inv.refundedQty || 0;
@@ -509,6 +511,15 @@ batch.update(oilRef, {
       batch.update(saleRef, {
         status: "cancelled",
         cancelledAt: serverTimestamp(),
+
+        cancelledBy: user?.uid || "",
+
+        cancelledByName:
+          user?.displayName ||
+          user?.name ||
+          user?.email ||
+          "",
+        cancelReason: reason,
         hasRefund: true,
         refundedQty: totalProducts,
         refundedMl: totalMl,
@@ -578,6 +589,7 @@ branchName: branchName || selectedBranch,
     customerPhone: inv.customerPhone,
     paymentMethod: inv.paymentMethod,
     refundedAmount: inv.total || 0,
+    cancelReason: reason,
   },
 
   changes: [
@@ -602,10 +614,12 @@ branchName: branchName || selectedBranch,
     const confirmAction = async () => {
       if (!selectedInvoice) return;
 
-      if (action === "cancel") await handleCancel(selectedInvoice);
+      if (action === "cancel") await handleCancel(selectedInvoice, cancelReason.trim());
 
       setShowConfirm(false);
       setAction("");
+      setCancelReason("");
+      setCancelReasonType("");
     };
     const handlePrint = () => {
 
@@ -672,11 +686,11 @@ branchName: branchName || selectedBranch,
 
       if (exists) {
         return prev.map(p =>
-          getKey(p) === key ? { ...p, qty: q } : p
+          getKey(p) === key ? { ...p, refundQty: q } : p
         );
       }
 
-      return [...prev, { ...item, qty: q }];
+      return [...prev, { ...item, refundQty: q }];
     });
   };
   const isFullyRefunded = (
@@ -731,7 +745,13 @@ const totalMl =
         sum + (i.oilQty * i.qty),
       0
     ) || 0;
-
+console.log({
+  refundedQty: refunded,
+  refundedMl,
+  totalProducts,
+  totalMl,
+  items: selectedInvoice.items
+});
 const fullyRefunded =
   isFullyRefunded(
     refunded,
@@ -774,7 +794,7 @@ const fullyRefunded =
     setLoading(false);
     return;
   }
-    const validItems = (refundItems || []).filter(i => i.qty > 0);
+    const validItems = (refundItems || []).filter(i => i.refundQty > 0);
 
   if (validItems.length === 0) {
   toast.error(t("invoices.selectQty"));
@@ -784,6 +804,7 @@ const fullyRefunded =
     
 
   const batch = writeBatch(db); 
+  const refundBatchId = crypto.randomUUID();
   for (const item of validItems) {
     const sourceItem = selectedInvoice.items.find(
     i => getKey(i) === getKey(item)
@@ -792,12 +813,17 @@ const fullyRefunded =
     .filter(r => getKey(r) === getKey(item))
     .reduce((sum, r) => sum + r.quantity, 0);
 
-    const maxAllowed =
-    ((sourceItem?.containerType || "").toLowerCase() === "oil"
-      ? (sourceItem?.oilQty || 0) * (sourceItem?.qty || 0)
-      : sourceItem?.qty || 0) - alreadyRefunded;
+   const isOil =
+  (sourceItem?.containerType || "").toLowerCase() === "oil";
 
-    const requestedQty = item.qty;
+const maxAllowed =
+  (
+    isOil
+      ? (sourceItem?.oilQty || 0) * (sourceItem?.qty || 0)
+      : (sourceItem?.qty || 0)
+  ) - alreadyRefunded;
+
+    const requestedQty = item.refundQty;
     
 
   if (requestedQty > maxAllowed) {
@@ -806,7 +832,7 @@ const fullyRefunded =
       return;
     }
   }  
-
+    
       for (const item of validItems) {
 
     const originalItem = selectedInvoice.items.find(
@@ -841,13 +867,13 @@ const isReadyProduct =
 );
 
  batch.update(invRef, {
-  quantity: increment(item.qty)
+  quantity: increment(item.refundQty)
 });
 
   } else {
 
     // ✅ كل قطعة تبقى document مستقل
-    for (let i = 0; i < item.qty; i++) {
+    for (let i = 0; i < item.refundQty; i++) {
 
       returnedRef = doc(collection(db, "returned_items"));
       returnedRefs.push(returnedRef.id);
@@ -894,7 +920,7 @@ invoiceDocId: selectedInvoice.id,
       category: item.category || "",
       size: item.size || "",
       unit: (item.size || "").includes("ml") ? "ml" : "",
-      quantity: item.qty,
+      quantity: item.refundQty,
       price: item.price,
 
       type: "refund",
@@ -916,11 +942,21 @@ invoiceDocId: selectedInvoice.id,
 
       returnedItemIds: returnedRefs, // 🔥 مهم
 
-      returnId: returnRef.id,
+      returnId: refundBatchId,
 
-      refundDate: serverTimestamp(),
-      originalSaleDate: selectedInvoice.createdAt,
-      createdAt: serverTimestamp()
+performedBy: user?.uid || "",
+
+performedByName:
+  user?.displayName ||
+  user?.name ||
+  user?.email ||
+  "",
+
+refundDate: serverTimestamp(),
+
+originalSaleDate: selectedInvoice.createdAt,
+
+createdAt: serverTimestamp()
     });
   }
 
@@ -929,18 +965,16 @@ invoiceDocId: selectedInvoice.id,
   const isOil =
     (i.containerType || "").toLowerCase() === "oil";
 
-  return isOil ? s : s + i.qty;
+  return isOil ? s : s + i.refundQty;
 }, 0);
 
 const refundedMlNow = validItems.reduce((s, i) => {
-
   const isOil =
     (i.containerType || "").toLowerCase() === "oil";
 
   return isOil
-    ? s + ((i.oilQty || 0) * (i.qty || 0))
+    ? s + (i.refundQty || 0)
     : s;
-
 }, 0);
 
   const saleRef = doc(db, "sales", selectedInvoice.id);
@@ -967,14 +1001,14 @@ const refundedMlNow = validItems.reduce((s, i) => {
       : 0;
 
   return sum + (
-    pricePerMl * item.qty
-  );
+  pricePerMl * item.refundQty
+);
 }
 
     return sum + (
-      (item.price || 0) *
-      (item.qty || 0)
-    );
+  (item.price || 0) *
+  (item.refundQty || 0)
+);
 
   },
   0
@@ -987,12 +1021,17 @@ batch.update(saleRef, {
 
   refundedMl: increment(refundedMlNow),
 
-  refundedAmount: increment(
-    refundAmountNow
-  ),
+  refundedAmount: increment(refundAmountNow),
 
-  lastRefundDate:
-    serverTimestamp()
+  lastRefundDate: serverTimestamp(),
+
+  lastRefundBy: user?.uid || "",
+
+  lastRefundByName:
+    user?.displayName ||
+    user?.name ||
+    user?.email ||
+    ""
 });
 
   setSales(prev =>
@@ -1089,7 +1128,7 @@ branchName: branchName || selectedBranch,
     refundedItems:
       validItems.map(i => ({
         name: i.name,
-        qty: i.qty
+        qty: i.refundQty
       }))
   },
   changes: [
@@ -1151,6 +1190,26 @@ setPreviousReturns([]);
     (selectedInvoice?.refundedAmount || 0)
   );
     const liveReturns = previousReturns || [];
+    const groupedReturns = useMemo(() => {
+  const groups = {};
+
+  previousReturns.forEach((item) => {
+    const id = item.returnId || item.id;
+
+    if (!groups[id]) {
+      groups[id] = {
+        returnId: id,
+        performedByName: item.performedByName,
+        refundDate: item.refundDate,
+        items: []
+      };
+    }
+
+    groups[id].items.push(item);
+  });
+
+  return Object.values(groups);
+}, [previousReturns]);
     const formatDate = (value) => {
 
   if (!value?.seconds) return "-";
@@ -2033,6 +2092,92 @@ const statusStyle =
       </div>
         );
       })()}
+     {selectedInvoice.status === "cancelled" &&
+  selectedInvoice.cancelReason && (
+    <div
+      style={{
+        marginTop: "12px",
+        padding: "12px",
+        borderRadius: "10px",
+        background: "#fff7ed",
+        border: "1px solid #fed7aa",
+        color: "#9a3412",
+        fontSize: "13px",
+        lineHeight: "1.7"
+      }}
+    >
+    {selectedInvoice.hasRefund &&
+  selectedInvoice.lastRefundByName && (
+    <div
+      style={{
+        marginTop: "12px",
+        padding: "12px",
+        borderRadius: "10px",
+        background: "#eff6ff",
+        border: "1px solid #bfdbfe",
+        color: "#1d4ed8",
+        fontSize: "13px",
+        lineHeight: "1.7"
+      }}
+    >
+      <strong>
+        🔄 {t("invoices.refundInfo")}
+      </strong>
+
+      <div
+        style={{
+          marginTop: "10px",
+          fontSize: "12px",
+          color: theme.colors.textSecondary
+        }}
+      >
+        👤 {selectedInvoice.lastRefundByName}
+      </div>
+
+      {selectedInvoice.lastRefundDate && (
+        <div
+          style={{
+            marginTop: "4px",
+            fontSize: "12px",
+            color: theme.colors.textSecondary
+          }}
+        >
+          🕒 {formatDateTime(selectedInvoice.lastRefundDate)}
+        </div>
+      )}
+    </div>
+)}
+      <strong>📝 {t("invoices.cancelReason")}</strong>
+
+      <div style={{ marginTop: "6px" }}>
+        {selectedInvoice.cancelReason}
+      </div>
+
+      {selectedInvoice.cancelledByName && (
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "12px",
+            color: theme.colors.textSecondary
+          }}
+        >
+          👤 {selectedInvoice.cancelledByName}
+        </div>
+      )}
+
+      {selectedInvoice.cancelledAt && (
+        <div
+          style={{
+            fontSize: "12px",
+            color: theme.colors.textSecondary,
+            marginTop: "4px"
+          }}
+        >
+          🕒 {formatDateTime(selectedInvoice.cancelledAt)}
+        </div>
+      )}
+    </div>
+)}
               <div style={{
                 fontSize: "28px",
                 fontWeight: "800",
@@ -2154,53 +2299,132 @@ const statusStyle =
     🔁 {t("invoices.returnedItems")}
   </div>
 
-      {previousReturns.map((r, i) => (
-    <div
-    key={i}
+      {groupedReturns.map((group, index) => (
+  <div
+  key={group.returnId}
+  style={{
+    marginBottom: "14px",
+    padding: "14px",
+    background: "#fff",
+    border: "1px solid #fde68a",
+    borderRadius: "12px",
+    boxShadow: "0 2px 8px rgba(0,0,0,.05)"
+  }}
+>
+  {/* Header */}
+  <div
     style={{
-      fontSize: "13px",
-      lineHeight: "1.8"
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "10px"
     }}
   >
-    {r.productName}
+    <strong
+      style={{
+        color: "#92400e"
+      }}
+    >
+      🔄 عملية مرتجع #{index + 1}
+    </strong>
 
-  {r.containerName && (
-    <>
-      {" • "}
-      {r.containerName}
-    </>
-  )}
-
-  {" • "}
-
-  {r.unit === "ml"
-    ? `${r.quantity} ml`
-    : r.quantity}
-
-  {" • "}
-
-    {(() => {
-    const isPureOil =
-    (r.container || r.containerType || "")
-      .toLowerCase() === "oil";
-
-    if (isPureOil) {
-      const totalMl =
-        (r.originalOilQty || parseInt(r.size) || 1) *
-        (r.originalQty || 1);
-
-      const pricePerMl =
-        totalMl > 0 ? (r.price || 0) / totalMl : 0;
-
-      const totalPrice = pricePerMl * r.quantity;
-
-      return `${totalPrice} EGP`;
-    }
-
-    return `${(r.price || 0) * (r.quantity || 0)} EGP`;
-  })()}
+    <span
+      style={{
+        fontSize: "12px",
+        color: theme.colors.textSecondary
+      }}
+    >
+      🕒 {formatDateTime(group.refundDate)}
+    </span>
   </div>
-  ))}
+
+  <div
+    style={{
+      fontSize: "12px",
+      color: theme.colors.textSecondary,
+      marginBottom: "12px"
+    }}
+  >
+    👤 {group.performedByName || "-"}
+  </div>
+
+  {group.items.map((r, i) => {
+    const isPureOil =
+      (r.container || r.containerType || "")
+        .toLowerCase() === "oil";
+
+    const price = (() => {
+      if (isPureOil) {
+        const totalMl =
+          (r.originalOilQty || parseInt(r.size) || 1) *
+          (r.originalQty || 1);
+
+        const pricePerMl =
+          totalMl > 0
+            ? (r.price || 0) / totalMl
+            : 0;
+
+        return pricePerMl * r.quantity;
+      }
+
+      return (r.price || 0) * (r.quantity || 0);
+    })();
+
+    return (
+      <div
+        key={i}
+        style={{
+          borderTop:
+            i === 0
+              ? "none"
+              : "1px dashed #eee",
+          paddingTop: i === 0 ? 0 : 10,
+          marginTop: i === 0 ? 0 : 10
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "600"
+          }}
+        >
+          📦 {r.productName}
+        </div>
+
+        {r.containerName && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#666",
+              marginTop: "2px"
+            }}
+          >
+            {r.containerName}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "6px",
+            fontSize: "13px"
+          }}
+        >
+          <span>
+            🔢 {r.unit === "ml"
+              ? `${r.quantity} ml`
+              : r.quantity}
+          </span>
+
+          <span>
+            💰 {price.toLocaleString()} EGP
+          </span>
+        </div>
+      </div>
+    );
+  })}
+</div>
+))}
     </div>
   )}
 
@@ -2508,9 +2732,81 @@ const statusStyle =
       {t("invoices.cancelWarning")}
     </p>
   </div>
+  <select
+  value={cancelReasonType}
+  onChange={(e) => {
+    setCancelReasonType(e.target.value);
+
+    if (e.target.value !== "other") {
+      setCancelReason(e.target.value);
+    } else {
+      setCancelReason("");
+    }
+  }}
+  style={{
+    width: "100%",
+    padding: "10px",
+    borderRadius: "10px",
+    border: `1px solid ${theme.colors.border}`,
+    marginTop: "15px",
+    marginBottom: "10px"
+  }}
+>
+  <option value="">
+    اختر سبب الإلغاء...
+  </option>
+
+  <option value="طلب العميل">
+    👤 طلب العميل
+  </option>
+
+  <option value="خطأ في إدخال الفاتورة">
+    📝 خطأ في إدخال الفاتورة
+  </option>
+
+  <option value="خطأ في المنتج">
+    📦 خطأ في المنتج
+  </option>
+
+  <option value="خطأ في السعر">
+    💰 خطأ في السعر
+  </option>
+
+  <option value="خطأ في طريقة الدفع">
+    💳 خطأ في طريقة الدفع
+  </option>
+
+  <option value="فاتورة مكررة">
+    📄 فاتورة مكررة
+  </option>
+
+  <option value="other">
+    ✍️ أخرى...
+  </option>
+</select>
+{cancelReasonType === "other" && (
+  <textarea
+    value={cancelReason}
+    onChange={(e) => setCancelReason(e.target.value)}
+    placeholder="اكتب سبب الإلغاء..."
+    rows={4}
+    style={{
+      width: "100%",
+      padding: "10px",
+      borderRadius: "10px",
+      border: `1px solid ${theme.colors.border}`,
+      resize: "vertical",
+      marginBottom: "15px"
+    }}
+  />
+)}
               <button
               type="button"
-    onClick={() => setShowConfirm(false)}
+    onClick={() => {
+  setShowConfirm(false);
+  setCancelReason("");
+  setCancelReasonType("");
+}}
     style={{
       padding: "8px 12px",
       borderRadius: "8px",
@@ -2523,17 +2819,32 @@ const statusStyle =
 
   <button
   type="button"
-    onClick={confirmAction}
-    style={{
-      padding: "8px 12px",
-      borderRadius: "8px",
-      background: theme.colors.danger,
-      color: "#fff",
-      border: "none"
-    }}
-  >
-    {t("common.confirm")}
-  </button>
+  onClick={confirmAction}
+  disabled={
+  !cancelReasonType ||
+  (cancelReasonType === "other" && !cancelReason.trim())
+}
+  style={{
+    padding: "8px 12px",
+    borderRadius: "8px",
+    background: theme.colors.danger,
+    color: "#fff",
+    border: "none",
+    opacity:
+  !cancelReasonType ||
+  (cancelReasonType === "other" && !cancelReason.trim())
+    ? 0.5
+    : 1,
+
+cursor:
+  !cancelReasonType ||
+  (cancelReasonType === "other" && !cancelReason.trim())
+    ? "not-allowed"
+    : "pointer"
+  }}
+>
+  {t("common.confirm")}
+</button>
             </div>
           </div>,
         document.body

@@ -620,7 +620,9 @@ productsManagement: "Products Management",
       "filter": {
         "sales": "Filter by sales"
       },
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "cancelReason": "Cancellation Reason",
+      "refundInfo": "Refund Information"
     },
 
     inventory: {
@@ -1612,7 +1614,9 @@ modules: {
       "filter": {
         "sales": "فلترة بالبائع"
       },
-      "cancelled": "ملغي"
+      "cancelled": "ملغي",
+      "cancelReason": "سبب الإلغاء",
+      "refundInfo": "بيانات  المرتجع"
     },
 
     inventory: {

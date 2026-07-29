@@ -19,7 +19,7 @@ export function useSelectProduct({
       const name = addToCart({
         ...p,
         size: t("products.standard"),
-        containerType: t("products.original"),
+        containerType: "original",
         containerName: t("products.original"),
         price: p.price
       });
@@ -52,22 +52,14 @@ export function useSelectProduct({
     size: t("products.ready"),
 
     containerType:
-      p.category
-        ?.toLowerCase()
-        ?.includes("cream")
+  p.category?.toLowerCase()?.includes("cream")
+    ? "cream"
+    : "makhmaria",
 
-        ? t("products.cream")
-
-        : t("products.makhmaria"),
-
-    containerName:
-      p.category
-        ?.toLowerCase()
-        ?.includes("cream")
-
-        ? t("products.cream")
-
-        : t("products.makhmaria"),
+containerName:
+  p.category?.toLowerCase()?.includes("cream")
+    ? t("products.cream")
+    : t("products.makhmaria"),
 
     containerId: null,
 
