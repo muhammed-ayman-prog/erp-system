@@ -25,6 +25,7 @@ import {
 import { Toaster } from "react-hot-toast";
 import Splash from "./pages/Splash";
 import Home from "./pages/Home";
+import PurchaseHistory from "./features/purchases/history/PurchaseHistory";
 const Dashboard = lazy(() =>
   import("./pages/Dashboard")
 );
@@ -48,9 +49,12 @@ const CustomerProfile = lazy(() =>
 const Purchases = lazy(() =>
   import("./pages/Purchases")
 );
+const PurchasesV2 = lazy(() =>
+  import("./features/purchases/PurchasesV2")
+);
 
 const Invoices = lazy(() =>
-  import("./pages/Invoices")
+  import("./features/invoices/Invoices")
 );
 
 const Logs = lazy(() =>
@@ -174,6 +178,13 @@ function App() {
                 <Route path="/purchases" element={<Purchases />} />
               </Route>
 
+              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_VIEW]} />}>
+                <Route path="/purchases-v2" element={<PurchasesV2 />} />
+              </Route>
+              <Route
+                path="/purchase-history"
+                element={<PurchaseHistory />}
+              />
               {/* Customers */}
               <Route element={<ProtectedRoute permissions={[PERMISSIONS.CUSTOMERS_VIEW]} />}>
                 <Route path="/customers" element={<Customers />} />

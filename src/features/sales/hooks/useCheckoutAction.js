@@ -5,6 +5,7 @@ export function useCheckoutAction({
 
   customerName,
   customerPhone,
+  saleDate,
 
   paymentMethod,
 
@@ -41,7 +42,7 @@ export function useCheckoutAction({
 
       customerName,
       customerPhone,
-
+      saleDate,
       paymentMethod,
       employeeId: selectedSeller?.id,
       employeeName: selectedSeller?.name,

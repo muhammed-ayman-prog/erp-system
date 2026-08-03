@@ -40,6 +40,7 @@ import {
   createBonusService,
   updateBonusService
 } from "../features/expenses/services/expensesService";
+import { isDateInRange } from "../utils/dateFilter";
 export default function Expenses() {
   const { t, tt, lang } = useTranslate();
   const { user } = useAuth();
@@ -381,27 +382,45 @@ const handleAddExpense = async () => {
     setIsAddingExpense(false);
   }
 };
-const isInRange = (date) => {
-  if (!date) return true;
 
-  const d = date?.seconds ? new Date(date.seconds * 1000) : new Date(date);
-
-  if (fromDate && new Date(fromDate) > d) return false;
-  if (toDate && new Date(toDate + "T23:59:59") < d) return false;
-
-  return true;
-};
 const totalExpenses = expenses
-  .filter(e => isInRange(e.createdAt))
+  .filter(e =>
+  (!fromDate && !toDate) ||
+  isDateInRange(
+    e.createdAt,
+    fromDate,
+    toDate
+  )
+)
   .reduce((acc, e) => acc + (e.amount || 0), 0);
 
 const totalLoans = loans
-  .filter(l => isInRange(l.createdAt))
-  .reduce((acc, l) => acc + (l.amount || 0), 0);
+  .filter(l =>
+    (!fromDate && !toDate) ||
+    isDateInRange(
+      l.createdAt,
+      fromDate,
+      toDate
+    )
+  )
+  .reduce(
+    (acc, l) => acc + (l.amount || 0),
+    0
+  );
 
 const totalBonus = bonuses
-  .filter(b => isInRange(b.createdAt))
-  .reduce((acc, b) => acc + (b.amount || 0), 0);
+  .filter(b =>
+    (!fromDate && !toDate) ||
+    isDateInRange(
+      b.createdAt,
+      fromDate,
+      toDate
+    )
+  )
+  .reduce(
+    (acc, b) => acc + (b.amount || 0),
+    0
+  );
 
   const formatMoney = (num) => {
   return new Intl.NumberFormat("en-US").format(num || 0);
@@ -497,30 +516,43 @@ useEffect(() => {
 const filteredExpenses = useMemo(() => {
 
   return expenses.filter(e =>
-  isInRange(e.createdAt) &&
-
-  (selectedCategory === "all" ||
-    e.category === selectedCategory) &&
 
   (
-    (
-  (e.note || "")
-    .toLowerCase()
-    .includes(search.toLowerCase())
-
-  ||
-
-  (e.category || "")
-    .toLowerCase()
-    .includes(search.toLowerCase())
-)
-  ||
-String(e.amount || "")
-  .includes(search)
+    (!fromDate && !toDate) ||
+    isDateInRange(
+      e.createdAt,
+      fromDate,
+      toDate
+    )
   )
+
+  &&
+
+  (selectedCategory === "all" ||
+    e.category === selectedCategory)
+
+  &&
+
+  (
+    (e.note || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+
+    ||
+
+    (e.category || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+
+    ||
+
+    String(e.amount || "")
+      .includes(search)
+  )
+
   );
 
-}, [
+},[
   expenses,
   fromDate,
   toDate,
@@ -587,7 +619,14 @@ const employeeNames = [
 
 const employeeLoans = loans.filter(
   l =>
-    isInRange(l.createdAt) &&
+    (
+      (!fromDate && !toDate) ||
+      isDateInRange(
+        l.createdAt,
+        fromDate,
+        toDate
+      )
+    ) &&
 
     (
       selectedEmployee === "all" ||
@@ -614,7 +653,14 @@ const employeeLoans = loans.filter(
 
 const employeeBonuses = bonuses.filter(
   b =>
-    isInRange(b.createdAt) &&
+    (
+      (!fromDate && !toDate) ||
+      isDateInRange(
+        b.createdAt,
+        fromDate,
+        toDate
+      )
+    ) &&
 
     (
       selectedEmployee === "all" ||

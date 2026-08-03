@@ -115,6 +115,7 @@ const selectedBranchData =
     branch => branch.id === selectedBranch
   ) || null;
   const [discount, setDiscount] = useState(0);
+  const [saleDate, setSaleDate] = useState("");
   const {
   user,
   loading
@@ -329,6 +330,7 @@ const {
   selectedSeller,
 
   selectedBranch,
+  saleDate,
   user,
 
   setToastText,
@@ -353,6 +355,7 @@ const salesContextValue = useMemo(() => ({
   selectedBranch: selectedBranchData,
   lang,
   isMobile,
+  showCart,
   setShowCart,
   productsWithStock,
   popupActions,
@@ -362,6 +365,8 @@ const salesContextValue = useMemo(() => ({
   setSelectedSeller,
   handleCheckoutAction,
   user,
+  saleDate,
+  setSaleDate,
   loading,
   inventoryMap,
   addToCart,
@@ -369,20 +374,22 @@ const salesContextValue = useMemo(() => ({
   setToastText,
   setShowToast
 }), [
-  t,
-  selectedBranchData,
-  lang,
-  isMobile,
-  productsWithStock,
-  popupActions,
-  customerState,
-  checkoutState,
-  handleCheckoutAction,
-  user,
-  loading,
-  inventoryMap,
-  addToCart,
-  getPrice
+ t,
+ selectedBranchData,
+ lang,
+ isMobile,
+ showCart,
+ productsWithStock,
+ popupActions,
+ customerState,
+ checkoutState,
+ handleCheckoutAction,
+ user,
+ loading,
+ inventoryMap,
+ addToCart,
+ getPrice,
+ saleDate
 ]);
 
 const cartContextValue = useMemo(() => ({

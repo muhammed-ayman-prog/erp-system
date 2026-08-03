@@ -863,15 +863,17 @@
             oilCategory:
               newOilCategory || null,
             category:
-              newProductType === "oil"
-                ? (
-                    newOilCategory === "French"
-                      ? "French"
-                    : newOilCategory === "Oriental"
-                      ? `Oriental-${newPricingTier}`
-                    : "Musk"
-                  )
-                : newProductCategory || null,
+  newProductType === "oil"
+    ? (
+        newOilCategory === "French"
+          ? "French"
+          : newOilCategory === "Oriental"
+          ? `Oriental-${newPricingTier}`
+          : "Musk"
+      )
+    : newProductType === "original"
+    ? "Original"
+    : newProductCategory || null,
             pricingTier:
               newPricingTier || null,
             muskType:
@@ -1005,7 +1007,17 @@
             type: newProductType,
 
             category:
-              newProductCategory || null,
+              newProductType === "oil"
+                ? (
+                    newOilCategory === "French"
+                      ? "French"
+                      : newOilCategory === "Oriental"
+                      ? `Oriental-${newPricingTier}`
+                      : "Musk"
+                  )
+                : newProductType === "original"
+                ? "Original"
+                : newProductCategory || null,
 
             subCategory:
               newProductSubCategory || null,
@@ -1320,48 +1332,32 @@ if (Object.keys(changedAfter).length === 0) {
   toast.error(t("operations.noChanges"));
   return;
 }
-      await updateDoc(
-  doc(
-    db,
-    "products",
-    editingProduct.id
-  ),
-  {
-    name: updatedData.name,
+      const updateData = {
+  name: updatedData.name,
+  type: updatedData.type,
+  category: updatedData.category,
+  subCategory: updatedData.subCategory,
+  oilCategory: updatedData.oilCategory,
+  pricingTier: updatedData.pricingTier,
+  muskType: updatedData.muskType,
+  costPrice: Number(updatedData.costPrice) || 0,
+  sellingPrice:
+    updatedData.sellingPrice == null
+      ? null
+      : Number(updatedData.sellingPrice),
+  minStock: Number(updatedData.minStock) || 0,
+};
 
-    type:
-      updatedData.type || null,
-
-    category:
-      updatedData.category || null,
-
-    subCategory:
-      updatedData.subCategory || null,
-
-    oilCategory:
-      updatedData.oilCategory || null,
-
-    pricingTier:
-      updatedData.pricingTier || null,
-
-    muskType:
-      updatedData.muskType || null,
-
-    costPrice:
-      Number(
-        updatedData.costPrice
-      ) || 0,
-
-    sellingPrice:
-  updatedData.sellingPrice == null
-    ? null
-    : Number(updatedData.sellingPrice),
-
-    minStock:
-      Number(
-        updatedData.minStock
-      ) || 0
+// احذف أي قيمة undefined فقط
+Object.keys(updateData).forEach((key) => {
+  if (updateData[key] === undefined) {
+    delete updateData[key];
   }
+});
+
+await updateDoc(
+  doc(db, "products", editingProduct.id),
+  updateData
 );
 await logAction({
   action: LOG_ACTIONS.UPDATE_PRODUCT,

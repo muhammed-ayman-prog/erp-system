@@ -20,6 +20,7 @@ export function useSales(
   const [cart, setCart] = useState(() => {
   return JSON.parse(localStorage.getItem("cart") || "[]");
 });
+
 useEffect(() => {
   localStorage.setItem("cart", JSON.stringify(cart));
 }, [cart]);
@@ -327,6 +328,7 @@ const handleCheckout = async (
   const {
     customerName,
     customerPhone,
+    saleDate,
     playCheckoutSound,
     employeeId,
     employeeName,
@@ -392,6 +394,7 @@ if (!employeeId || !employeeName?.trim()) {
 
       employeeId,
       employeeName,
+      saleDate,
       user
     });
 

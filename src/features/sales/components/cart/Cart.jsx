@@ -12,7 +12,7 @@ import {
 } from "../../context/SalesContext";
 
  export default function Cart() {
-  const {
+ const {
   theme,
   t,
   selectedSeller,
@@ -23,6 +23,9 @@ import {
   customerState,
   checkoutState,
   handleCheckoutAction,
+  saleDate,
+  setSaleDate,
+  user,
 } = useSalesContext();
   const {
   cart,
@@ -107,7 +110,58 @@ const {
             showErrors={showErrors}
             setShowErrors={setShowErrors}
           />
-      
+      {
+  user?.role === "owner" && (
+    <div
+      style={{
+        marginTop: 15,
+        padding: 12,
+        borderRadius: 12,
+        border: `1px solid ${theme.colors.border}`,
+        background: theme.colors.card,
+      }}
+    >
+
+      <label
+        style={{
+          display:"block",
+          marginBottom:8,
+          fontWeight:700,
+          color:theme.colors.text
+        }}
+      >
+        📅 تاريخ البيع
+      </label>
+
+
+      <input
+        type="date"
+
+        value={
+          saleDate || ""
+        }
+
+        onChange={(e)=>
+          setSaleDate(
+            e.target.value
+          )
+        }
+
+        style={{
+          width:"100%",
+          height:42,
+          borderRadius:10,
+          border:`1px solid ${theme.colors.border}`,
+          padding:"0 10px",
+          background:theme.colors.card,
+          color:theme.colors.text
+        }}
+      />
+
+
+    </div>
+  )
+}
 
           
     <CartSummary />

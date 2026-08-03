@@ -26,6 +26,10 @@
   import { DollarSign, Banknote, CreditCard, Smartphone } from "lucide-react";
   import logAction from "../utils/logAction";
   import { useAuth } from "../store/useAuth";
+  import { isDateInRange } from "../utils/dateFilter";
+  import {
+  getTodayRange
+} from "../utils/dateFilter";
   const branchNameMap = {
   "City Stars": "cityStars",
   "City Stars 2": "cityStars2",
@@ -73,11 +77,19 @@ useEffect(() => {
 
     const [sales, setSales] = useState([]);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
-
+    const [loadingSales, setLoadingSales] = useState(true);
     const [search, setSearch] = useState("");
-    const [fromDate, setFromDate] = useState("");
-    const [toDate, setToDate] = useState("");
+    const todayRange = getTodayRange();
 
+
+    const [fromDate,setFromDate] =
+     useState(todayRange.fromDate);
+
+
+    const [toDate,setToDate] =
+      useState(todayRange.toDate);
+    const [invoiceSearch,setInvoiceSearch] = useState("");
+    const [customerSearch,setCustomerSearch] = useState("");
     const [page, setPage] = useState(1);
     const pageSize = 10;
 
@@ -109,7 +121,31 @@ useEffect(() => {
     const [loading, setLoading] = useState(false);
     const [previousReturns, setPreviousReturns] = useState([]);
     const [salesFilter, setSalesFilter] = useState("");
+
+    const [selectedSeller, setSelectedSeller] = useState("all");
+
+    const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
+
+    const [paymentFilter, setPaymentFilter] = useState("all");
     const [cancelling, setCancelling] = useState(false);
+    const isFullyRefunded = (
+  refundedQty,
+  refundedMl,
+  totalProducts,
+  totalMl
+) => {
+
+  const productsDone =
+    totalProducts === 0 ||
+    refundedQty >= totalProducts;
+
+  const oilsDone =
+    totalMl === 0 ||
+    refundedMl >= totalMl;
+
+  return productsDone && oilsDone;
+
+};
     const handleRowHover = (e, active) => {
     if (!active) {
       e.currentTarget.style.transform = "scale(1.01)";
@@ -121,43 +157,81 @@ useEffect(() => {
     e.currentTarget.style.transform = "scale(1)";
     e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
   };
-    useEffect(() => {
+useEffect(() => {
 
   if (!selectedBranch) return;
 
-  const q = query(
-    collection(db, "sales"),
 
-    where(
-      "branchId",
-      "==",
-      selectedBranch
-    ),
+  let q;
 
-    orderBy(
-      "createdAt",
-      "desc"
-    )
-  );
+
+  if (selectedBranch === "all") {
+
+    q = query(
+      collection(db, "sales"),
+      orderBy(
+        "createdAt",
+        "desc"
+      )
+    );
+
+  } else {
+
+    q = query(
+      collection(db, "sales"),
+
+      where(
+        "branchId",
+        "==",
+        selectedBranch
+      ),
+
+      orderBy(
+        "createdAt",
+        "desc"
+      )
+    );
+
+  }
+
 
   const unsub = onSnapshot(
     q,
     (snap) => {
 
-      const data = snap.docs.map(
-        (d) => ({
-          id: d.id,
-          ...d.data(),
-        })
-      );
+      const data = snap.docs
+        .map(d => ({
+          id:d.id,
+          ...d.data()
+        }))
+        .sort((a,b)=>{
+
+          const dateA =
+            a.saleDate?.seconds ||
+            a.createdAt?.seconds ||
+            0;
+
+          const dateB =
+            b.saleDate?.seconds ||
+            b.createdAt?.seconds ||
+            0;
+
+
+          return dateB - dateA;
+
+        });
+
 
       setSales(data);
 
       setLoadingSales(false);
+
     }
   );
 
+
   return () => unsub();
+
 
 }, [selectedBranch]);
     useEffect(() => {
@@ -284,39 +358,184 @@ useEffect(() => {
     // 🔍 Filter
     const searchKey = (debouncedSearch || "").toLowerCase();
     const salesKey = (salesFilter || "").toLowerCase();
-    const filtered = useMemo(() => {
-    return sales.filter(s => {
-      const match =
-        (s.customerName || "").toLowerCase().includes(searchKey) ||
-        (s.customerPhone || "").includes(searchKey) ||
-        s.invoiceNumber?.toString().includes(searchKey);
+    const sellers = useMemo(() => {
 
-      const matchSales =
-  !salesKey ||
-  (s.employeeName || "")
+  const list = sales.map(s => {
+
+    return (
+      s.employeeName ||
+      s.items?.find(i => i.employeeName)?.employeeName
+    );
+
+  }).filter(Boolean);
+
+
+  return [...new Set(list)];
+
+}, [sales]);
+const filtered = useMemo(() => {
+
+return sales.filter(s => {
+
+
+const match =
+  (s.customerName || "")
     .toLowerCase()
-    .includes(salesKey);
+    .includes(searchKey) ||
 
-      const date = s.createdAt?.seconds
-        ? new Date(s.createdAt.seconds * 1000)
-        : null;
+  (s.customerPhone || "")
+    .includes(searchKey) ||
 
-      let ok = true;
+  s.invoiceNumber
+    ?.toString()
+    .includes(searchKey);
 
-      if (date) {
-        if (fromDate && date < new Date(fromDate)) ok = false;
-        if (toDate) {
-  const end = new Date(toDate);
-  end.setHours(23, 59, 59, 999);
 
-  if (date > end) ok = false;
+
+const matchSales =
+  selectedSeller === "all" ||
+
+  s.employeeName === selectedSeller ||
+
+  s.items?.some(
+    i => i.employeeName === selectedSeller
+  );
+
+
+
+const matchPayment =
+  paymentFilter === "all" ||
+
+  (s.paymentMethod || "cash")
+    .toLowerCase() === paymentFilter;
+
+
+
+const refundedQty =
+s.refundedQty || 0;
+
+
+const refundedMl =
+s.refundedMl || 0;
+
+
+const totalProducts =
+s.items
+?.filter(
+i =>
+(i.containerType || "")
+.toLowerCase() !== "oil"
+)
+.reduce(
+(sum,i)=>sum+i.qty,
+0
+) || 0;
+
+
+
+const totalMl =
+s.items
+?.filter(
+i =>
+(i.containerType || "")
+.toLowerCase() === "oil"
+)
+.reduce(
+(sum,i)=>sum+(i.oilQty*i.qty),
+0
+) || 0;
+
+
+
+const fullyRefunded =
+isFullyRefunded(
+refundedQty,
+refundedMl,
+totalProducts,
+totalMl
+);
+
+
+
+let matchStatus = true;
+
+
+if(invoiceStatusFilter !== "all"){
+
+
+if(invoiceStatusFilter === "completed"){
+
+matchStatus =
+s.status !== "cancelled" &&
+!fullyRefunded &&
+refundedQty === 0 &&
+refundedMl === 0;
+
 }
-      }
 
-      return match && matchSales && ok;
-    });
-  }, [sales, searchKey, salesKey, fromDate, toDate]);
-    const [loadingSales, setLoadingSales] = useState(true);
+
+
+if(invoiceStatusFilter === "partial"){
+
+matchStatus =
+refundedQty > 0 ||
+refundedMl > 0;
+
+}
+
+
+
+if(invoiceStatusFilter === "refunded"){
+
+matchStatus =
+fullyRefunded;
+
+}
+
+
+
+if(invoiceStatusFilter === "cancelled"){
+
+matchStatus =
+s.status === "cancelled";
+
+}
+
+
+}
+
+
+
+const matchDate = isDateInRange(
+s.saleDate || s.createdAt,
+fromDate,
+toDate
+);
+
+
+
+return (
+match &&
+matchSales &&
+matchPayment &&
+matchStatus &&
+matchDate
+);
+
+
+
+});
+
+},[
+sales,
+searchKey,
+selectedSeller,
+paymentFilter,
+invoiceStatusFilter,
+fromDate,
+toDate
+]);
+    
     const [cancelReason, setCancelReason] = useState("");
     const [cancelReasonType, setCancelReasonType] = useState("");
     const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -695,24 +914,7 @@ branchName: branchName || selectedBranch,
       return [...prev, { ...item, refundQty: q }];
     });
   };
-  const isFullyRefunded = (
-  refundedQty,
-  refundedMl,
-  totalProducts,
-  totalMl
-) => {
-
-  const productsDone =
-    totalProducts === 0 ||
-    refundedQty >= totalProducts;
-
-  const oilsDone =
-    totalMl === 0 ||
-    refundedMl >= totalMl;
-
-  return productsDone && oilsDone;
-
-};
+  
   const handlePartialRefund = async () => {
     if (loading) return;
     if (!selectedInvoice || !selectedInvoice.items) return;
@@ -956,7 +1158,9 @@ performedByName:
 
 refundDate: serverTimestamp(),
 
-originalSaleDate: selectedInvoice.createdAt,
+originalSaleDate:
+selectedInvoice.saleDate ||
+selectedInvoice.createdAt,
 
 createdAt: serverTimestamp()
     });
@@ -1235,6 +1439,24 @@ const modalBoxStyle = {
   ...modalBox,
   maxWidth: isMobile ? "92%" : "380px",
 };
+const filterInput = {
+width:"100%",
+padding:"10px 12px",
+borderRadius:"10px",
+border:`1px solid ${theme.colors.border}`,
+background:theme.colors.card,
+outline:"none",
+fontSize:"14px"
+};
+
+
+const filterLabel = {
+display:"block",
+fontSize:"12px",
+fontWeight:"600",
+marginBottom:"6px",
+color:theme.colors.textSecondary
+};
     return (
       <div style={{ padding: isMobile ? 12 : 20 }}>
   <div
@@ -1279,74 +1501,6 @@ const modalBoxStyle = {
       {t("common.back")}
     </button>
   </div>
-
-        {/* 🔥 HEADER */}
-        <div style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "15px",
-          flexWrap: "wrap"
-          }}>
-          <input
-    placeholder={t("invoices.search")}
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-        style={{
-      flex: 1,
-      padding: "10px 14px",
-      borderRadius: "10px",
-      border: `1px solid ${theme.colors.border}`,
-      outline: "none",
-      fontSize: "14px",
-      transition: "0.2s",
-      background: theme.colors.card,
-      minWidth: isMobile ? "100%" : "220px"
-    }}
-  />
-  <input
-    placeholder={t("invoices.filter.sales")}
-    value={salesFilter}
-    onChange={(e) => setSalesFilter(e.target.value)}
-        style={{
-      flex: 1,
-      padding: "10px 14px",
-      borderRadius: "10px",
-      border: `1px solid ${theme.colors.border}`,
-      marginTop: "8px",
-      fontSize: "14px",
-      transition: "0.2s",
-      background: theme.colors.card,
-      minWidth: isMobile ? "100%" : "220px"
-    }}
-  />
-
-          <input
-              type="date"
-              onChange={e => setFromDate(e.target.value)}
-              style={{
-              padding: "10px",
-              borderRadius: "10px",
-              border: `1px solid ${theme.colors.border}`,
-              transition: "0.2s",
-              background: theme.colors.card,
-              minWidth: isMobile ? "100%" : "220px"
-              }}
-          />
-            
-          <input
-              type="date"
-              onChange={e => setToDate(e.target.value)}
-              style={{
-              padding: "10px",
-              borderRadius: "10px",
-              border: `1px solid ${theme.colors.border}`,
-              transition: "0.2s",
-              background: theme.colors.card,
-              minWidth: isMobile ? "100%" : "220px"
-              }}
-          />
-          </div>
-
         {/* 💰 CARDS */}
         <div style={{ display: "grid",
           gridTemplateColumns:
@@ -1357,7 +1511,224 @@ const modalBoxStyle = {
           <Card title={t("common.cash")} value={totals.cash} type="cash" />
           <Card title={t("common.visa")} value={totals.visa} type="visa" />
           <Card title={t("common.instapay")} value={totals.instapay} type="instapay" />
+          
         </div>
+        {/* 🔎 Advanced Filters */}
+{/* Date Range */}
+
+<div
+style={{
+marginTop:"20px",
+marginBottom:"15px",
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",
+gap:"12px"
+}}
+>
+
+<div>
+
+<label style={filterLabel}>
+من تاريخ
+</label>
+
+<input
+type="date"
+value={fromDate}
+onChange={(e)=>setFromDate(e.target.value)}
+style={filterInput}
+/>
+
+</div>
+
+
+<div>
+
+<label style={filterLabel}>
+إلى تاريخ
+</label>
+
+<input
+type="date"
+value={toDate}
+onChange={(e)=>setToDate(e.target.value)}
+style={filterInput}
+/>
+
+</div>
+
+
+</div>
+<div
+style={{
+marginTop:"20px",
+marginBottom:"15px",
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",
+gap:"12px",
+alignItems:"end"
+}}
+>
+
+
+{/* Invoice */}
+<div>
+<label style={filterLabel}>
+الفاتورة
+</label>
+
+<input
+placeholder="رقم الفاتورة"
+value={search}
+onChange={(e)=>setSearch(e.target.value)}
+style={filterInput}
+/>
+
+</div>
+
+
+
+{/* Customer */}
+
+<div>
+
+<label style={filterLabel}>
+العميل
+</label>
+
+<input
+placeholder="اسم العميل"
+value={search}
+onChange={(e)=>setSearch(e.target.value)}
+style={filterInput}
+/>
+
+</div>
+
+
+
+
+
+
+
+{/* Payment */}
+
+<div>
+
+<label style={filterLabel}>
+طريقة الدفع
+</label>
+
+<select
+value={paymentFilter}
+onChange={(e)=>setPaymentFilter(e.target.value)}
+style={filterInput}
+>
+
+<option value="all">
+الكل
+</option>
+
+<option value="cash">
+كاش
+</option>
+
+<option value="visa">
+فيزا
+</option>
+
+<option value="instapay">
+Instapay
+</option>
+
+</select>
+
+
+</div>
+
+
+
+{/* Seller */}
+
+<div>
+
+<label style={filterLabel}>
+السيلز
+</label>
+
+
+<select
+value={selectedSeller}
+onChange={(e)=>setSelectedSeller(e.target.value)}
+style={filterInput}
+>
+
+<option value="all">
+كل الموظفين
+</option>
+
+
+{sellers.map(s=>(
+<option key={s} value={s}>
+{s}
+</option>
+))}
+
+</select>
+
+
+</div>
+
+
+
+
+{/* Status */}
+
+<div>
+
+<label style={filterLabel}>
+الحالة
+</label>
+
+
+<select
+value={invoiceStatusFilter}
+onChange={(e)=>setInvoiceStatusFilter(e.target.value)}
+style={filterInput}
+>
+
+<option value="all">
+كل الحالات
+</option>
+
+
+<option value="completed">
+مكتملة
+</option>
+
+<option value="partial">
+مرتجع جزئي
+</option>
+
+
+<option value="refunded">
+مرتجع كامل
+</option>
+
+
+<option value="cancelled">
+ملغي
+</option>
+
+
+</select>
+
+
+</div>
+
+
+</div>
+        
 
         <div style={{
           display: "flex",
@@ -1395,20 +1766,21 @@ const modalBoxStyle = {
     
   }}>
               <tr>
-    <th style={{ padding: "10px" }}>{t("invoices.invoice")}</th>
-    <th style={{ padding: "10px" }}>{t("customer.title")}</th>
-    <th style={{ padding: "10px" }}>{t("common.date")}</th>
-    <th style={{ padding: "10px" }}>{t("payment.method")}</th>
-    <th style={{ padding: "10px" }}>{t("invoices.type")}</th>
-    <th style={{ padding: "10px" }}>{t("cart.total")}</th>
-    <th style={{ padding: "10px" }}>{t("common.status")}</th>
-  </tr>
+  <th>{t("invoices.invoice")}</th>
+  <th>{t("customer.title")}</th>
+  <th>{t("branches.title")}</th>
+  <th>{t("common.date")}</th>
+  <th>{t("payment.method")}</th>
+  <th>{t("invoices.type")}</th>
+  <th>{t("cart.total")}</th>
+  <th>{t("common.status")}</th>
+</tr>
               </thead>
               <tbody>
                 {loadingSales
       ? Array.from({ length: 5 }).map((_, i) => (
           <tr key={i}>
-            <td colSpan="7" style={{ padding: "12px" }}>
+            <td colSpan="8" style={{ padding: "12px" }}>
               <div
                 style={{
                   height: "20px",
@@ -1423,7 +1795,7 @@ const modalBoxStyle = {
         
       : paginated.length === 0 ? (
     <tr>
-      <td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>
+      <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
         <div style={{ color: "#999" }}>
           📭 {t("common.noData")}
         </div>
@@ -1539,13 +1911,22 @@ const statusStyle =
 }}>
   {s.customerName || "-"}
 </td>
+<td style={{
+  padding: "14px 12px",
+  fontSize: "14px",
+  textAlign: "center"
+}}>
+  {s.branchName || "-"}
+</td>
 
 <td style={{
   padding: "14px 12px",
   fontSize: "14px",
   textAlign: "center"
 }}>
-  {formatDate(s.createdAt)}
+  {formatDate(
+  s.saleDate || s.createdAt
+)}
 </td>
 
 <td style={{
@@ -1731,13 +2112,22 @@ const statusStyle =
         {selectedInvoice.invoiceNumber}
       </h3>
 
-      <div style={{
-        fontSize: "12px",
-        color: theme.colors.textSecondary,
-        marginTop: "4px"
-      }}>
-        {formatDateTime(selectedInvoice.createdAt)}
-      </div>
+      <div>
+  {t("invoices.saleDate")} :
+  {" "}
+  {formatDateTime(
+    selectedInvoice.saleDate ||
+    selectedInvoice.createdAt
+  )}
+</div>
+
+<div>
+  {t("invoices.createdAt")} :
+  {" "}
+  {formatDateTime(
+    selectedInvoice.createdAt
+  )}
+</div>
     </div>
 
     {/* Actions */}

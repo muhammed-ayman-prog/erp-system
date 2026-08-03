@@ -14,13 +14,14 @@ export default function FloatingCart() {
 const {
   lang,
   isMobile,
+  showCart,
   setShowCart,
   theme
 } = useSalesContext();
 
-  if (!cart.length) {
-    return null;
-  }
+  if (!cart.length || showCart) {
+  return null;
+}
 
   return (
     <button

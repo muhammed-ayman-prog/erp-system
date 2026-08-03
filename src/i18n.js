@@ -1,5 +1,15 @@
 export const translations = {
   en: {
+    "purchaseHistory": {
+    "undo": "Undo Purchase",
+    "undoConfirm": "Are you sure you want to undo this purchase?",
+    "undoSuccess": "Purchase undone successfully",
+    "undoFailed": "Failed to undo purchase",
+     "undone": "Undone",
+     "totalItems": "Total Items",
+    "totalQuantity": "Total Quantity",
+    "undoneMessage": "This operation has been undone"
+  },
     sidebar: {
       main: "Main",
       operations: "Operations",
@@ -320,6 +330,23 @@ modules: {
 },
 
     common: {
+      "clearAll": "Clear All",
+       available: "Available",
+
+  lowStock: "Low Stock",
+
+  outOfStock: "Out of Stock",
+       "date": "Date",
+    "branch": "Branch",
+    "user": "User",
+    "quantity": "Quantity",
+    "details": "Details",
+    "noData": "No data found",
+      "from": "From",
+  "to": "To",
+      all: "All",
+clear: "Clear",
+quantity: "Quantity",
       user: "User",
       days: "days",
       save: "Save",
@@ -382,6 +409,14 @@ modules: {
       "updated": "Updated successfully"
       
     },
+
+    categories: {
+  french: "French",
+  oriental: "Oriental",
+  body: "Body",
+  original: "Original",
+  containers: "Containers",
+},
     
 
     navigation: {
@@ -501,6 +536,12 @@ productsManagement: "Products Management",
     },
 
     products: {
+      container: "Container",
+  french: "French",
+  oriental: "Oriental",
+  original: "Original",
+  musk: "Musk",
+      noProducts: "No products found",
       title: "Products",
       categoriesLabel: "Categories",
       search: "Search product...",
@@ -560,8 +601,9 @@ productsManagement: "Products Management",
     "categories": {
       "cream": "Cream",
       "makhmaria": "Makhmaria",
-      "original": "Original"
+      "original": "Original",
     },
+
 
     "oilCategories": {
       "french": "French",
@@ -588,6 +630,8 @@ productsManagement: "Products Management",
     },
 
     invoices: {
+      "saleDate": "Sale Date",
+      "createdAt": "Created At",
       title: "Invoices",
       view: "View Invoices",
       number: "Invoice Number",
@@ -622,7 +666,8 @@ productsManagement: "Products Management",
       },
       "cancelled": "Cancelled",
       "cancelReason": "Cancellation Reason",
-      "refundInfo": "Refund Information"
+      "refundInfo": "Refund Information",
+      "activityHistory": "Activity History"
     },
 
     inventory: {
@@ -696,7 +741,7 @@ productsManagement: "Products Management",
 
     roles: {
       seller: "Seller",
-
+      "manager": "Manager",
       owner: "Owner",
 
       supervisor: "Supervisor",
@@ -757,6 +802,16 @@ productsManagement: "Products Management",
       systemName: "ERP System"
     },
     stockEntry: {
+      addProductsToCart:
+  "Start adding products to create a purchase.",
+      cart: "Purchase Cart",
+emptyCart: "Cart is empty",
+totalQuantity: "Total Quantity",
+savePurchase: "Save Purchase",
+
+purchaseSaved: "Purchase saved successfully.",
+purchaseSaveFailed: "Failed to save purchase.",
+selectBranchFirst: "Please select a branch first.",
   title: "Stock Entry",
   subtitle: "Add products to inventory",
   addButton: "Add to Inventory",
@@ -949,6 +1004,16 @@ notesTitle:
   },
 
   ar: {
+    "purchaseHistory": {
+    "undo": "تراجع عن الشراء",
+    "undoConfirm": "هل تريد التراجع عن عملية الشراء؟",
+    "undoSuccess": "تم التراجع عن عملية الشراء بنجاح",
+    "undoFailed": "فشل التراجع عن عملية الشراء",
+    "undone": "تم التراجع",
+    "totalItems": "عدد الأصناف",
+    "totalQuantity": "إجمالي الكمية",
+    "undoneMessage": "تم التراجع عن هذه العملية"
+  },
     sidebar: {
       main: "الرئيسية",
       operations: "العمليات",
@@ -1067,7 +1132,23 @@ notesTitle:
 
     },
     common: {
-      user: "مستخدم",
+      "clearAll": "مسح الكل",
+      available: "متاح",
+
+  lowStock: "مخزون منخفض",
+
+  outOfStock: "نفد",
+      "date": "التاريخ",
+    "branch": "الفرع",
+    "user": "المستخدم",
+    "quantity": "الكمية",
+    "details": "التفاصيل",
+    "noData": "لا توجد بيانات",
+      "from": "من",
+  "to": "إلى",
+      all: "الكل",
+clear: "مسح",
+quantity: "الكمية",
       records: "سجل",
       days: "أيام",
       save: "حفظ",
@@ -1129,6 +1210,15 @@ notesTitle:
        "creating": "جاري الإنشاء..."
 
     },
+
+
+    categories: {
+  french: "فرنسي",
+  oriental: "شرقي",
+  body: "منتجات الجسم",
+  original: "أوريجنال",
+  containers: "العبوات",
+},
     logs: {
   title: "سجل المراجعة",
   metadata: "بيانات إضافية",
@@ -1472,6 +1562,12 @@ modules: {
     },
 
     products: {
+      container: "عبوة",
+  french: "فرنسي",
+  oriental: "شرقي",
+  original: "أوريجينال",
+  musk: "مسك",
+      noProducts: "لا توجد منتجات",
       title: "المنتجات",
       categoriesLabel: "الأقسام",
       search: "ابحث عن منتج...",
@@ -1538,7 +1634,7 @@ modules: {
       "oil": "زيت",
       "container": "عبوة",
       "product": "منتج",
-      "original": "خام",
+      "original": "اوريجنال",
       "packaging": "تغليف"
     },
 
@@ -1551,7 +1647,8 @@ modules: {
     "categories": {
       "cream": "كريم",
       "makhmaria": "مخمرية",
-      "original": "خام"
+      "original": "اوريجنال",
+      
     },
 
     "oilCategories": {
@@ -1582,6 +1679,8 @@ modules: {
     },
 
     invoices: {
+      "saleDate": "تاريخ البيع",
+      "createdAt": "تاريخ الإدخال",
       title: "الفواتير",
       view: "عرض الفواتير",
       number: "رقم الفاتورة",
@@ -1616,7 +1715,8 @@ modules: {
       },
       "cancelled": "ملغي",
       "cancelReason": "سبب الإلغاء",
-      "refundInfo": "بيانات  المرتجع"
+      "refundInfo": "بيانات  المرتجع",
+      "activityHistory": "سجل العمليات"
     },
 
     inventory: {
@@ -1667,7 +1767,7 @@ modules: {
     roles: {
 
       seller: "بائع",
-
+      "manager": "مدير فرع",
       owner: "مالك النظام",
 
       supervisor: "مشرف",
@@ -1727,6 +1827,16 @@ modules: {
       systemName: "نظام الإدارة"
     },
     stockEntry: {
+      addProductsToCart:
+  "ابدأ بإضافة منتجات لإنشاء عملية شراء.",
+      cart: "سلة المشتريات",
+emptyCart: "السلة فارغة",
+totalQuantity: "إجمالي الكمية",
+savePurchase: "حفظ المشتريات",
+
+purchaseSaved: "تم حفظ المشتريات بنجاح",
+purchaseSaveFailed: "فشل في حفظ المشتريات",
+selectBranchFirst: "يرجى اختيار الفرع أولاً",
   title: "إضافة للمخزون",
   subtitle: "إضافة منتجات إلى المخزن",
   addButton: "إضافة للمخزن",
@@ -1735,7 +1845,7 @@ modules: {
   quantity: "الكمية",
   items: "عدد الأصناف",
   totalQty: "إجمالي الكمية",
-  history: "السجل",
+  history: "سجل المشتريات",
   noData: "لا توجد عمليات",
   duplicateWarning: "في منتجات متكررة، متأكد؟",
   invalidQty: "الكمية لازم تكون أكبر من 0",

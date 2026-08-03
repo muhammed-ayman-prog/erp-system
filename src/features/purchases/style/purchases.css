@@ -1,0 +1,28 @@
+.purchase-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+.purchase-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.purchase-right {
+  position: sticky;
+  top: 16px;
+}
+
+@media (max-width: 1024px) {
+  .purchase-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-right {
+    position: static;
+  }
+}

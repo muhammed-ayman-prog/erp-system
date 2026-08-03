@@ -115,15 +115,8 @@ export default function ProductRow({
             setEditingProduct(product);
 
             setEditProductData({
-              name:
-                product.name || "",
-
-              costPrice:
-                product.costPrice || 0,
-
-              minStock:
-                product.minStock || 0,
-            });
+            ...product,
+          });
 
           }}
         >

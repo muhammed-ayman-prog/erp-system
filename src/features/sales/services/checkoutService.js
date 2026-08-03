@@ -9,7 +9,8 @@
     where,
     getDocs,
     updateDoc,
-    getDoc
+    getDoc,
+    Timestamp
   } from "firebase/firestore";
     import { db } from "../../../firebase";
     import logAction
@@ -25,7 +26,8 @@
       customerPhone,
       employeeId,
       employeeName,
-      user
+      user,
+      saleDate
     }) => {
       let branchName = "Unknown";
        let branchCode = "BRCH";
@@ -470,6 +472,13 @@ const saleType =
       branchName:
         branchName,
       createdAt: serverTimestamp(),
+
+saleDate:
+  user?.role === "owner" && saleDate
+    ? Timestamp.fromDate(
+        new Date(saleDate)
+      )
+    : serverTimestamp(),
       status: "completed",
 
       totalQty: cart.reduce(

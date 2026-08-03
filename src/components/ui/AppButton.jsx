@@ -1,4 +1,5 @@
 import { theme } from "../../theme";
+import { useTranslate } from "../../useTranslate";
 
 export default function AppButton({
   children,
@@ -15,65 +16,49 @@ export default function AppButton({
 
   loading = false,
 
+  leftIcon,
+
+  rightIcon,
+
   style = {},
 
   type = "button",
 }) {
+  const { t } = useTranslate();
 
   const variants = {
-
     primary: {
-      background:
-        theme.colors.primary,
-
-      color:
-        theme.colors.white,
-
+      background: theme.colors.primary,
+      color: theme.colors.white,
       border: "none",
     },
 
     secondary: {
-      background:
-        theme.colors.secondary,
-
-      color:
-        theme.colors.text,
-
-      border:
-        `1px solid ${theme.colors.border}`,
+      background: theme.colors.secondary,
+      color: theme.colors.text,
+      border: `1px solid ${theme.colors.border}`,
     },
 
     danger: {
-      background:
-        theme.colors.danger,
-
-      color:
-        theme.colors.white,
-
+      background: theme.colors.danger,
+      color: theme.colors.white,
       border: "none",
     },
 
     success: {
       background: "#16a34a",
-
       color: "#fff",
-
       border: "none",
     },
 
     ghost: {
       background: "transparent",
-
-      color:
-        theme.colors.text,
-
-      border:
-        `1px solid transparent`,
+      color: theme.colors.text,
+      border: `1px solid transparent`,
     },
   };
 
   const sizes = {
-
     sm: {
       padding: "8px 12px",
       fontSize: "13px",
@@ -94,43 +79,23 @@ export default function AppButton({
   };
 
   return (
-
     <button
       type={type}
-
-      disabled={
-        disabled || loading
-      }
-
+      disabled={disabled || loading}
       onClick={onClick}
-
       onMouseEnter={(e) => {
-
-        if (
-          disabled ||
-          loading
-        ) {
+        if (disabled || loading) {
           return;
         }
 
-        e.currentTarget.style.transform =
-          "translateY(-1px)";
-
-        e.currentTarget.style.filter =
-          "brightness(0.98)";
+        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.filter = "brightness(0.98)";
       }}
-
       onMouseLeave={(e) => {
-
-        e.currentTarget.style.transform =
-          "translateY(0px)";
-
-        e.currentTarget.style.filter =
-          "brightness(1)";
+        e.currentTarget.style.transform = "translateY(0px)";
+        e.currentTarget.style.filter = "brightness(1)";
       }}
-
       style={{
-
         display: "inline-flex",
 
         alignItems: "center",
@@ -141,23 +106,13 @@ export default function AppButton({
 
         fontWeight: "600",
 
-        width:
-          fullWidth
-            ? "100%"
-            : "auto",
+        width: fullWidth ? "100%" : "auto",
 
-        transition:
-          "0.2s ease",
+        transition: "0.2s ease",
 
-        opacity:
-          disabled
-            ? 0.5
-            : 1,
+        opacity: disabled ? 0.5 : 1,
 
-        cursor:
-          disabled
-            ? "not-allowed"
-            : "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
 
         boxShadow:
           variant === "primary"
@@ -171,13 +126,11 @@ export default function AppButton({
         ...style,
       }}
     >
+      {!loading && leftIcon}
 
-      {loading
-        ? "Loading..."
-        : children}
+      {loading ? t("common.loading") : children}
 
+      {!loading && rightIcon}
     </button>
-
   );
-
 }
