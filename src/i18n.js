@@ -628,7 +628,21 @@ productsManagement: "Products Management",
       visa: "Visa",
       instapay: "Instapay"
     },
+     "customers": {
+    "customer": "Customer"
+  },
 
+  "invoice": {
+    "salesType": "Sales Type",
+    "cash": "Cash",
+    "credit": "Credit",
+    "total": "Total",
+    "invoice": "Invoice",
+    "details": "Invoice Details",
+    "price": "Price",
+    "quantity": "Quantity",
+    "item": "Item"
+  },
     invoices: {
       "saleDate": "Sale Date",
       "createdAt": "Created At",
@@ -1677,7 +1691,21 @@ modules: {
       visa: "فيزا",
       instapay: "انستاباي"
     },
+    "customers": {
+    "customer": "العميل"
+  },
 
+  "invoice": {
+    "salesType": "نوع البيع",
+    "cash": "نقدي",
+    "credit": "آجل",
+    "total": "الإجمالي",
+    "invoice": "الفاتورة",
+    "details": "تفاصيل الفاتورة",
+    "price": "السعر",
+    "quantity": "الكمية",
+    "item": "الصنف"
+  },
     invoices: {
       "saleDate": "تاريخ البيع",
       "createdAt": "تاريخ الإدخال",

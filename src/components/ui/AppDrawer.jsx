@@ -54,8 +54,8 @@ export default function AppDrawer({
           background:
             theme.colors.card,
 
-          overflow:
-            "hidden",
+          overflowY:
+            "auto",
 
           boxSizing:
             "border-box",
