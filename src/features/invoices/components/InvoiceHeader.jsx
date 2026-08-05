@@ -5,178 +5,212 @@ import {
   MoreVertical,
 } from "lucide-react";
 
+import AppButton from "../../../components/ui/AppButton";
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
+
 export default function InvoiceHeader(props) {
   const {
     selectedInvoice,
     formatDateTime,
     isMobile,
-    theme,
     t,
     setDropdownOpen,
   } = props;
 
-  const infoStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 10px",
-    borderRadius: "10px",
-    background: theme.colors.cardSoft,
-    color: theme.colors.textSecondary,
-    fontSize: "13px",
-  };
+  const infoCard = (
+    icon,
+    label,
+    value
+  ) => (
+    <AppCard
+      padding="md"
+      style={{
+        background:
+          theme.colors.cardSoft,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: theme.spacing.md,
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+
+            borderRadius:
+              theme.radius.full,
+
+            display: "flex",
+            alignItems: "center",
+            justifyContent:
+              "center",
+
+            background:
+              theme.colors.primarySoft,
+
+            color:
+              theme.colors.primary,
+
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 12,
+              color:
+                theme.colors
+                  .textSecondary,
+              fontWeight: 600,
+            }}
+          >
+            {label}
+          </div>
+
+          <div
+            style={{
+              marginTop: 3,
+              fontWeight: 700,
+              color:
+                theme.colors.text,
+            }}
+          >
+            {value}
+          </div>
+        </div>
+      </div>
+    </AppCard>
+  );
 
   return (
     <div
       style={{
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: isMobile ? "flex-start" : "center",
-        flexDirection: isMobile ? "column" : "row",
-        gap: "18px",
-        marginBottom: "20px",
+        justifyContent:
+          "space-between",
+        alignItems: isMobile
+          ? "stretch"
+          : "flex-start",
+        flexDirection: isMobile
+          ? "column"
+          : "row",
+        gap: theme.spacing.xl,
+        marginBottom:
+          theme.spacing.xl,
       }}
     >
-      {/* Left */}
-      <div style={{ flex: 1, width: "100%" }}>
+      <div
+        style={{
+          flex: 1,
+        }}
+      >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "8px",
-            color: theme.colors.textSecondary,
-            fontSize: "13px",
-            fontWeight: "600",
+            gap: theme.spacing.sm,
+
+            color:
+              theme.colors
+                .textSecondary,
+
+            fontSize: 13,
+
+            fontWeight: 600,
           }}
         >
           <Receipt size={16} />
-          <span>{t("invoices.invoice") || "Invoice"}</span>
+
+          {t("invoices.invoice")}
         </div>
 
         <div
           style={{
-            fontSize: isMobile ? "28px" : "34px",
-            fontWeight: "800",
-            color: theme.colors.text,
-            marginTop: "6px",
-            letterSpacing: "-0.5px",
+            marginTop:
+              theme.spacing.sm,
+
+            fontSize: isMobile
+              ? 30
+              : 38,
+
+            fontWeight: 800,
+
+            color:
+              theme.colors.text,
           }}
         >
-          {selectedInvoice.invoiceNumber}
+          #
+          {
+            selectedInvoice.invoiceNumber
+          }
         </div>
-
-        <div
-          style={{
-            height: "1px",
-            background: theme.colors.border,
-            margin: "16px 0",
-          }}
-        />
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(2,1fr)",
-            gap: "10px",
+
+            gridTemplateColumns:
+              isMobile
+                ? "1fr"
+                : "repeat(2,1fr)",
+
+            gap: theme.spacing.md,
+
+            marginTop:
+              theme.spacing.xl,
           }}
         >
-          <div style={infoStyle}>
-            <CalendarDays
-              size={16}
-              color={theme.colors.primary}
-            />
+          {infoCard(
+            <CalendarDays size={18} />,
+            t("invoices.saleDate"),
+            formatDateTime(
+              selectedInvoice.saleDate ||
+                selectedInvoice.createdAt
+            )
+          )}
 
-            <div>
-              <div
-                style={{
-                  fontSize: "11px",
-                  opacity: 0.7,
-                }}
-              >
-                {t("invoices.saleDate")}
-              </div>
-
-              <div
-                style={{
-                  fontWeight: "600",
-                  color: theme.colors.text,
-                }}
-              >
-                {formatDateTime(
-                  selectedInvoice.saleDate ||
-                    selectedInvoice.createdAt
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div style={infoStyle}>
-            <Clock3
-              size={16}
-              color={theme.colors.primary}
-            />
-
-            <div>
-              <div
-                style={{
-                  fontSize: "11px",
-                  opacity: 0.7,
-                }}
-              >
-                {t("invoices.createdAt")}
-              </div>
-
-              <div
-                style={{
-                  fontWeight: "600",
-                  color: theme.colors.text,
-                }}
-              >
-                {formatDateTime(
-                  selectedInvoice.createdAt
-                )}
-              </div>
-            </div>
-          </div>
+          {infoCard(
+            <Clock3 size={18} />,
+            t("invoices.createdAt"),
+            formatDateTime(
+              selectedInvoice.createdAt
+            )
+          )}
         </div>
       </div>
 
-      {/* Actions */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setDropdownOpen((prev) => !prev);
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform =
-            "translateY(-2px)";
-          e.currentTarget.style.boxShadow =
-            "0 8px 20px rgba(0,0,0,0.15)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform =
-            "translateY(0)";
-          e.currentTarget.style.boxShadow = "none";
-        }}
+      <div
+        className="no-print"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "10px 16px",
-          borderRadius: "12px",
-          border: "none",
-          background: theme.colors.primary,
-          color: "#fff",
-          cursor: "pointer",
-          fontWeight: "600",
-          transition: "0.2s",
-          alignSelf: isMobile ? "stretch" : "flex-start",
+          alignSelf: isMobile
+            ? "stretch"
+            : "flex-start",
         }}
       >
-        <MoreVertical size={18} />
-        {t("common.actions")}
-      </button>
+        <AppButton
+          leftIcon={
+            <MoreVertical size={16} />
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+
+            setDropdownOpen(
+              (prev) => !prev
+            );
+          }}
+          fullWidth={isMobile}
+        >
+          {t("common.actions")}
+        </AppButton>
+      </div>
     </div>
   );
 }

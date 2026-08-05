@@ -1,5 +1,5 @@
-import { theme } from "../../../theme";
-import AppCard from "../AppCard";
+import { theme } from "../../theme";
+import AppCard from "./AppCard";
 
 export default function AppTable({
   columns = [],
@@ -54,41 +54,53 @@ export default function AppTable({
             }}
           >
             {columns.map((col) => (
-              <th
-                key={col.key}
-                style={{
-                  padding,
+            <th
+  key={col.key}
+  onClick={col.onClick ?? undefined}
+  onMouseEnter={(e) => {
+    if (col.onClick) {
+      e.currentTarget.style.background =
+        theme.colors.primarySoft;
+    }
+  }}
+  onMouseLeave={(e) => {
+    if (col.onClick) {
+      e.currentTarget.style.background =
+        theme.colors.cardSoft;
+    }
+  }}
+  style={{
+    padding,
+    width: col.width,
+    textAlign: col.align || "start",
 
-                  width: col.width,
+    position: stickyHeader
+      ? "sticky"
+      : "static",
 
-                  textAlign:
-                    col.align || "start",
+    top: 0,
+    zIndex: 1,
 
-                  position:
-                    stickyHeader
-                      ? "sticky"
-                      : "static",
+    background: theme.colors.cardSoft,
 
-                  top: 0,
+    fontSize: "13px",
+    fontWeight: "700",
 
-                  background:
-                    theme.colors.cardSoft,
+    color: theme.colors.textSecondary,
 
-                  zIndex: 1,
+    borderBottom: `1px solid ${theme.colors.border}`,
 
-                  fontSize: "13px",
+    cursor: col.onClick
+      ? "pointer"
+      : "default",
 
-                  fontWeight: "700",
+    userSelect: "none",
 
-                  color:
-                    theme.colors.textSecondary,
-
-                  borderBottom:
-                    `1px solid ${theme.colors.border}`,
-                }}
-              >
-                {col.title}
-              </th>
+    transition: theme.transition.normal,
+  }}
+>
+  {col.title}
+</th>
             ))}
           </tr>
         </thead>

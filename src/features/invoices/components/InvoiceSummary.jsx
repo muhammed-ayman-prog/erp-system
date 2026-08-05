@@ -1,8 +1,9 @@
-import AppCard from "../../../components/ui/AppCard";
 import AppBadge from "../../../components/ui/AppBadge";
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
 
-import InvoiceItemsTable from "./InvoiceItemsTable";
 import InvoiceInfoCards from "./InvoiceInfoCards";
+import InvoiceItemsTable from "./InvoiceItemsTable";
 import InvoiceTotalCard from "./InvoiceTotalCard";
 
 export default function InvoiceSummary(props) {
@@ -10,7 +11,6 @@ export default function InvoiceSummary(props) {
     selectedInvoice,
     branchName,
     branchNameMap,
-    theme,
     t,
     lang,
     isFullyRefunded,
@@ -27,7 +27,7 @@ export default function InvoiceSummary(props) {
   const totalProducts =
     selectedInvoice.items
       ?.filter(
-        i =>
+        (i) =>
           (i.containerType || "")
             .toLowerCase() !== "oil"
       )
@@ -39,13 +39,13 @@ export default function InvoiceSummary(props) {
   const totalMl =
     selectedInvoice.items
       ?.filter(
-        i =>
+        (i) =>
           (i.containerType || "")
             .toLowerCase() === "oil"
       )
       .reduce(
         (sum, i) =>
-          sum + (i.oilQty * i.qty),
+          sum + i.oilQty * i.qty,
         0
       ) || 0;
 
@@ -58,44 +58,61 @@ export default function InvoiceSummary(props) {
     );
 
   const saleTypeVariant =
-    selectedInvoice.saleType === "RETURN_RESALE"
+    selectedInvoice.saleType ===
+    "RETURN_RESALE"
       ? "warning"
-      : selectedInvoice.saleType === "MIXED"
+      : selectedInvoice.saleType ===
+        "MIXED"
       ? "purple"
       : "success";
 
   const saleTypeText =
-    selectedInvoice.saleType === "RETURN_RESALE"
+    selectedInvoice.saleType ===
+    "RETURN_RESALE"
       ? t("invoices.returnResale")
-      : selectedInvoice.saleType === "MIXED"
+      : selectedInvoice.saleType ===
+        "MIXED"
       ? t("invoices.mixed")
       : t("invoices.sale");
 
   let statusVariant = "success";
-  let statusText = t("invoices.completed");
+  let statusText = t(
+    "invoices.completed"
+  );
 
-  if (selectedInvoice.status === "cancelled") {
+  if (
+    selectedInvoice.status ===
+    "cancelled"
+  ) {
     statusVariant = "gray";
-    statusText = t("invoices.cancelled");
+    statusText = t(
+      "invoices.cancelled"
+    );
   } else if (fullyRefunded) {
     statusVariant = "danger";
-    statusText = t("invoices.refunded");
-  } else if (refunded > 0 || refundedMl > 0) {
+    statusText = t(
+      "invoices.refunded"
+    );
+  } else if (
+    refunded > 0 ||
+    refundedMl > 0
+  ) {
     statusVariant = "warning";
-    statusText = t("invoices.partialRefunded");
+    statusText = t(
+      "invoices.partialRefunded"
+    );
   }
 
   return (
     <AppCard
-      padding="lg"
+      padding="xl"
+      hover
       style={{
-        marginTop: theme.spacing.md,
-        background: theme.colors.cardSoft,
+        marginTop: theme.spacing.lg,
       }}
     >
       <InvoiceInfoCards
         selectedInvoice={selectedInvoice}
-        theme={theme}
         t={t}
         lang={lang}
         branchName={branchName}
@@ -105,16 +122,21 @@ export default function InvoiceSummary(props) {
       <div
         style={{
           display: "flex",
-          gap: theme.spacing.sm,
           flexWrap: "wrap",
-          marginBottom: theme.spacing.xl,
+          gap: theme.spacing.sm,
+          marginBottom:
+            theme.spacing.xl,
         }}
       >
-        <AppBadge variant={saleTypeVariant}>
+        <AppBadge
+          color={saleTypeVariant}
+        >
           {saleTypeText}
         </AppBadge>
 
-        <AppBadge variant={statusVariant}>
+        <AppBadge
+          color={statusVariant}
+        >
           {statusText}
         </AppBadge>
       </div>
@@ -124,13 +146,25 @@ export default function InvoiceSummary(props) {
         theme={theme}
       />
 
-      <InvoiceItemsTable
-        selectedInvoice={selectedInvoice}
-        theme={theme}
-        t={t}
-        lang={lang}
-        getKey={getKey}
-      />
+      <div
+        style={{
+          marginTop:
+            theme.spacing.xxl,
+          paddingTop:
+            theme.spacing.xl,
+          borderTop: `1px solid ${theme.colors.border}`,
+        }}
+      >
+        <InvoiceItemsTable
+          selectedInvoice={
+            selectedInvoice
+          }
+          theme={theme}
+          t={t}
+          lang={lang}
+          getKey={getKey}
+        />
+      </div>
     </AppCard>
   );
 }

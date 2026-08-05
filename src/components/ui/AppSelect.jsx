@@ -85,7 +85,10 @@ export default function AppSelect({
 
         paddingTop: inputSize.padding.split(" ")[0],
         paddingBottom: inputSize.padding.split(" ")[0],
-        paddingInlineStart: inputSize.padding.split(" ")[1],
+        direction: "rtl",
+
+        paddingInlineStart: "12px",
+
         paddingInlineEnd: "36px",
 
         fontSize: inputSize.fontSize,
@@ -96,7 +99,7 @@ export default function AppSelect({
 
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%2364748b' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 12px center",
+        backgroundPosition: "left 12px center",
 
         ...style,
       }}

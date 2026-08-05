@@ -17,6 +17,12 @@ export default function AppCard({
 
   clickable = false,
 
+  active = false,
+
+  accent = null,
+
+  activeColor = "primary",
+
   className,
 
   onClick,
@@ -36,13 +42,23 @@ export default function AppCard({
   const shadowValue =
     theme.shadow[shadow] ?? shadow;
 
+  const activeBorderColor =
+    theme.colors[activeColor] ??
+    theme.colors.primary;
+
+  const activeShadow =
+    theme.shadow.lg;
+
   const handleMouseEnter = (e) => {
     if (hover) {
-      e.currentTarget.style.transform =
-        "translateY(-4px)";
+      e.currentTarget.style.transform = active
+        ? "translateY(-2px)"
+        : "translateY(-4px)";
 
       e.currentTarget.style.boxShadow =
-        theme.shadow.lg;
+        active
+          ? activeShadow
+          : theme.shadow.lg;
     }
 
     onMouseEnter?.(e);
@@ -54,7 +70,9 @@ export default function AppCard({
         "translateY(0)";
 
       e.currentTarget.style.boxShadow =
-        shadowValue;
+        active
+          ? activeShadow
+          : shadowValue;
     }
 
     onMouseLeave?.(e);
@@ -68,23 +86,59 @@ export default function AppCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
+        position: "relative",
+
+        overflow: "hidden",
+
         background: theme.colors.card,
+
         padding: paddingValue,
+
         borderRadius: radiusValue,
+
         border: bordered
-          ? `1px solid ${theme.colors.cardBorder}`
+          ? `1px solid ${
+              active
+                ? activeBorderColor
+                : theme.colors.cardBorder
+            }`
           : "none",
-        boxShadow: shadowValue,
-        transition:
-          "transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease, border-color .28s ease",
+
+        boxShadow: active
+          ? activeShadow
+          : shadowValue,
+
         cursor:
           clickable || onClick
             ? "pointer"
             : "default",
+
+        transition:
+          "transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease, border-color .28s ease",
+
         willChange: "transform",
+
         ...style,
       }}
     >
+      {accent && (
+        <div
+          style={{
+            position: "absolute",
+
+            top: 0,
+
+            insetInline: 0,
+
+            height: 4,
+
+            background:
+              theme.colors[accent] ??
+              theme.colors.primary,
+          }}
+        />
+      )}
+
       {children}
     </div>
   );

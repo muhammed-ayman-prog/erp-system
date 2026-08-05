@@ -330,6 +330,14 @@ modules: {
 },
 
     common: {
+      clearFilters: "Clear Filters",
+      search: "Search...",
+  records: "Records",
+      exportExcel: "Export Excel",
+amount: "Amount",
+note: "Note",
+      "fromDate": "From Date",
+    "toDate": "To Date",
       "clearAll": "Clear All",
        available: "Available",
 
@@ -472,6 +480,7 @@ productsManagement: "Products Management",
     subtitle: "ERP System",
 },
     cart: {
+      "price": "Price",
       title: "Cart",
       empty: "Cart Empty",
       subtotal: "Subtotal",
@@ -485,7 +494,52 @@ productsManagement: "Products Management",
       "noSellers": "No Sellers",
       "seller": "Seller"
     },
+    employees: {
+      employee: "Employee",
+      selectEmployee: "Select Employee"
+    },
     expenses: {
+      "averageLoan": "Average Loan",
+"largestLoan": "Largest Loan",
+"totalTransactions": "Transactions",
+"totalLoans": "Total Loans",
+      totalTransactions: "Transactions",
+averageExpense: "Average Expense",
+      title: "Expenses Management",
+subtitle: "Manage Expenses, Loans & Bonuses",
+
+tabs: {
+  expenses: "Expenses",
+  expensesSubtitle: "Manage branch expenses",
+  loans: "Loans",
+  loansSubtitle: "Manage employee loans",
+  bonus: "Bonuses",
+  bonusSubtitle: "Manage employee bonuses"
+},
+
+filters: {
+  allCategories: "All Categories",
+  allEmployees: "All Employees"
+},
+
+addExpense: "Add Expense",
+addLoan: "Add Loan",
+addBonus: "Add Bonus",
+
+totalExpenses: "Total Expenses",
+totalLoans: "Total Loans",
+totalBonuses: "Total Bonuses",
+
+topCategory: "Top Category",
+
+category: "Category",
+
+noLoans: "No Loans",
+noBonuses: "No Bonuses",
+
+editExpense: "Edit Expense",
+editLoan: "Edit Loan",
+editBonus: "Edit Bonus",
       amount: "Amount",
       note: "Note",
       add: "Add Expense",
@@ -504,6 +558,7 @@ productsManagement: "Products Management",
     },
 
     customer: {
+      "customer": "cutomer",
       info: "Customer Info",
       name: "Customer Name",
       phone: "Phone",
@@ -644,6 +699,7 @@ productsManagement: "Products Management",
     "item": "Item"
   },
     invoices: {
+      "saleType": "Sale Type",
       "saleDate": "Sale Date",
       "createdAt": "Created At",
       title: "Invoices",
@@ -741,6 +797,7 @@ productsManagement: "Products Management",
     },
 
     users: {
+      "sales": "Seller",
       admin: "Admin",
       employee: "Employee",
       "title": "Users",
@@ -1146,6 +1203,14 @@ notesTitle:
 
     },
     common: {
+      clearFilters: "مسح الفلاتر",
+      search: "بحث...",
+  records: "سجل",
+      exportExcel: "تصدير Excel",
+amount: "المبلغ",
+note: "الملاحظة",
+       "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
       "clearAll": "مسح الكل",
       available: "متاح",
 
@@ -1512,6 +1577,7 @@ modules: {
     },
 
     cart: {
+      "price": "السعر",
       title: "الكارت",
       empty: "الكارت فاضي",
       subtotal: "الإجمالي قبل الخصم",
@@ -1525,7 +1591,54 @@ modules: {
       "selectSeller": "اختر البائع",
       "noSellers": "لا يوجد بائعين",
       },
+      employees: {
+  employee: "الموظف",
+  selectEmployee: "اختر الموظف"
+},
       expenses: {
+        "totalEmployees": "Employees",
+        "totalEmployees": "عدد الموظفين",
+        "averageLoan": "متوسط السلفة",
+"largestLoan": "أكبر سلفة",
+"totalTransactions": "عدد العمليات",
+"totalLoans": "إجمالي السلف",
+        totalTransactions: "عدد العمليات",
+averageExpense: "متوسط المصروف",
+        title: "إدارة المصروفات",
+subtitle: "إدارة المصروفات والسلف والحوافز",
+
+tabs: {
+  expenses: "المصروفات",
+  expensesSubtitle: "إدارة مصروفات الفرع",
+  loans: "السلف",
+  loansSubtitle: "إدارة سلف الموظفين",
+  bonus: "الحوافز",
+  bonusSubtitle: "إدارة حوافز الموظفين"
+},
+
+filters: {
+  allCategories: "كل التصنيفات",
+  allEmployees: "كل الموظفين"
+},
+
+addExpense: "إضافة مصروف",
+addLoan: "إضافة سلفة",
+addBonus: "إضافة حافز",
+
+totalExpenses: "إجمالي المصروفات",
+totalLoans: "إجمالي السلف",
+totalBonuses: "إجمالي الحوافز",
+
+topCategory: "أعلى تصنيف",
+
+category: "التصنيف",
+
+noLoans: "لا توجد سلف",
+noBonuses: "لا توجد حوافز",
+
+editExpense: "تعديل مصروف",
+editLoan: "تعديل سلفة",
+editBonus: "تعديل حافز",
       amount: "المبلغ",
       note: "ملاحظة",
       add: "إضافة مصروف",
@@ -1544,6 +1657,7 @@ modules: {
       history: "سجل الهدر"
     },
     customer: {
+      "customer": "العميل",
       info: "بيانات العميل",
       name: "اسم العميل",
       phone: "رقم التليفون",
@@ -1707,6 +1821,7 @@ modules: {
     "item": "الصنف"
   },
     invoices: {
+       "saleType": "نوع البيع",
       "saleDate": "تاريخ البيع",
       "createdAt": "تاريخ الإدخال",
       title: "الفواتير",
@@ -1780,6 +1895,7 @@ modules: {
     },
 
     users: {
+      "sales": "البائع",
       admin: "مدير",
       employee: "موظف",
       "title": "المستخدمين",

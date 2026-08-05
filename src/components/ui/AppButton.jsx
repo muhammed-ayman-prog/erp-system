@@ -46,7 +46,7 @@ export default function AppButton({
     },
 
     success: {
-      background: "#16a34a",
+      background: theme.colors.success,
       color: "#fff",
       border: "none",
     },

@@ -37,6 +37,25 @@ export const colors = {
   cardBorder: "#e5e7eb",
 
   overlay: "rgba(0,0,0,.4)",
+  primaryLight: "#eff6ff",
+primaryBorder: "#bfdbfe",
 
+successBorder: "#86efac",
+warningBorder: "#fcd34d",
+dangerBorder: "#fca5a5",
+infoBorder: "#7dd3fc",
+purpleBorder: "#d8b4fe",
+
+hover: "#f8fafc",
+active: "#eef2ff",
+
+tableHeader: "#f8fafc",
+tableHover: "#f8fbff",
+
+inputHover: "#f8fafc",
+
+badgeBackground: "#f1f5f9",
+
+divider: "#edf2f7",
   white: "#ffffff",
 };

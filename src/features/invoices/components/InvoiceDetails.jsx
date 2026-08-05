@@ -1,7 +1,12 @@
+import AppButton from "../../../components/ui/AppButton";
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
+
 import InvoiceActivityTimeline from "./InvoiceActivityTimeline/InvoiceActivityTimeline";
-import InvoiceSummary from "./InvoiceSummary";
 import InvoiceActionsDropdown from "./InvoiceActionsDropdown";
 import InvoiceHeader from "./InvoiceHeader";
+import InvoiceSummary from "./InvoiceSummary";
+
 export default function InvoiceDetails(props) {
   const {
     selectedInvoice,
@@ -10,7 +15,7 @@ export default function InvoiceDetails(props) {
     showDetails,
     setShowDetails,
     isFullyRefunded,
-    theme,
+
     t,
     lang,
 
@@ -35,87 +40,125 @@ export default function InvoiceDetails(props) {
 
     branchName,
     branchNameMap,
-     getKey,
+
+    getKey,
   } = props;
 
   return (
     <>
-  {isMobile && (
-    <button
-      type="button"
-      onClick={() => setShowDetails(prev => !prev)}
-      style={{
-        width: "100%",
-        marginBottom: "10px",
-        padding: "10px",
-        borderRadius: "10px",
-        border: "none",
-        background: theme.colors.primary,
-        color: "#fff",
-        fontWeight: "600"
-      }}
-    >
-      {showDetails
-        ? t("common.hide")
-        : t("common.show")}
-    </button>
-  )}
+      {isMobile && (
+        <AppButton
+          fullWidth
+          style={{
+            marginBottom:
+              theme.spacing.md,
+          }}
+          onClick={() =>
+            setShowDetails(
+              (prev) => !prev
+            )
+          }
+        >
+          {showDetails
+            ? t("common.hide")
+            : t("common.show")}
+        </AppButton>
+      )}
 
-  {(!isMobile || showDetails) && (
-    <div
-      id="invoice-print"
-      style={{ position: "relative" }}
-    >
+      {(!isMobile || showDetails) && (
+        <AppCard
+          id="invoice-print"
+          className="invoice-print"
+          padding="xl"
+          style={{
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+            }}
+          >
+            <InvoiceHeader
+              selectedInvoice={
+                selectedInvoice
+              }
+              formatDateTime={
+                formatDateTime
+              }
+              isMobile={isMobile}
+              t={t}
+              setDropdownOpen={
+                setDropdownOpen
+              }
+            />
 
-      <InvoiceHeader
-  selectedInvoice={selectedInvoice}
-  formatDateTime={formatDateTime}
-  isMobile={isMobile}
-  theme={theme}
-  t={t}
-  setDropdownOpen={setDropdownOpen}
-/>
+            <InvoiceActionsDropdown
+              dropdownOpen={
+                dropdownOpen
+              }
+              selectedInvoice={
+                selectedInvoice
+              }
+              cancelling={
+                cancelling
+              }
+              setRefundItems={
+                setRefundItems
+              }
+              setShowRefundPopup={
+                setShowRefundPopup
+              }
+              setAction={setAction}
+              setShowConfirm={
+                setShowConfirm
+              }
+              handlePrint={
+                handlePrint
+              }
+              setDropdownOpen={
+                setDropdownOpen
+              }
+              theme={theme}
+              t={t}
+            />
+          </div>
 
-      <InvoiceActionsDropdown
-  dropdownOpen={dropdownOpen}
-  selectedInvoice={selectedInvoice}
-  cancelling={cancelling}
-  setRefundItems={setRefundItems}
-  setShowRefundPopup={setShowRefundPopup}
-  setAction={setAction}
-  setShowConfirm={setShowConfirm}
-  handlePrint={handlePrint}
-  setDropdownOpen={setDropdownOpen}
-  theme={theme}
-  t={t}
-/>
-      
+          <InvoiceSummary
+            selectedInvoice={
+              selectedInvoice
+            }
+            branchName={branchName}
+            branchNameMap={
+              branchNameMap
+            }
+            t={t}
+            lang={lang}
+            isFullyRefunded={
+              isFullyRefunded
+            }
+            netTotal={netTotal}
+            getKey={getKey}
+          />
 
-    <InvoiceSummary
-  selectedInvoice={selectedInvoice}
-  branchName={branchName}
-  branchNameMap={branchNameMap}
-  theme={theme}
-  t={t}
-  lang={lang}
-  isFullyRefunded={isFullyRefunded}
-  netTotal={netTotal}
-  getKey={getKey}
-/>
-
-
-<InvoiceActivityTimeline
-  previousReturns={previousReturns}
-  groupedReturns={groupedReturns}
-  selectedInvoice={selectedInvoice}
-  formatDateTime={formatDateTime}
-  theme={theme}
-  t={t}
-/>
-</div>
-  )}
-  
-</>
-
+          <InvoiceActivityTimeline
+            previousReturns={
+              previousReturns
+            }
+            groupedReturns={
+              groupedReturns
+            }
+            selectedInvoice={
+              selectedInvoice
+            }
+            formatDateTime={
+              formatDateTime
+            }
+            theme={theme}
+            t={t}
+          />
+        </AppCard>
+      )}
+    </>
   );
 }

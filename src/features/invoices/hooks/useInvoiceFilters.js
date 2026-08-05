@@ -9,9 +9,7 @@ import {
 export default function useInvoiceFilters({
   sales,
 
-  invoiceSearch,
-  customerSearch,
-  phoneSearch,
+  searchKey,
 
   selectedSeller,
   paymentFilter,
@@ -34,22 +32,23 @@ export default function useInvoiceFilters({
 
   const filteredInvoices = useMemo(() => {
     return sales.filter((s) => {
-      const matchInvoice =
-        !invoiceSearch ||
-        s.invoiceNumber
-          ?.toString()
-          .includes(invoiceSearch);
+      const searchableText = [
+  s.invoiceNumber,
+  s.customerName,
+  s.customerPhone,
+  s.employeeName,
+  s.branchName,
+  s.paymentMethod,
+  s.total,
+]
+  .filter(Boolean)
+  .join(" ")
+  .toLowerCase();
 
-      const matchCustomer =
-        !customerSearch ||
-        (s.customerName || "")
-          .toLowerCase()
-          .includes(customerSearch.toLowerCase());
 
-      const matchPhone =
-        !phoneSearch ||
-        (s.customerPhone || "")
-          .includes(phoneSearch);
+const matchSearch =
+  !searchKey ||
+  searchableText.includes(searchKey);
 
       const matchSales =
         selectedSeller === "all" ||
@@ -139,9 +138,7 @@ export default function useInvoiceFilters({
       );
 
       return (
-        matchInvoice &&
-        matchCustomer &&
-        matchPhone &&
+        matchSearch &&
         matchSales &&
         matchPayment &&
         matchStatus &&
@@ -150,9 +147,7 @@ export default function useInvoiceFilters({
     });
   }, [
     sales,
-    invoiceSearch,
-    customerSearch,
-    phoneSearch,
+    searchKey,
     selectedSeller,
     paymentFilter,
     invoiceStatusFilter,

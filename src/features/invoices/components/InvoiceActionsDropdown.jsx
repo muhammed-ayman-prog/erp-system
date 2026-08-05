@@ -1,3 +1,13 @@
+import {
+  Ban,
+  Printer,
+  RotateCcw,
+} from "lucide-react";
+
+import AppButton from "../../../components/ui/AppButton";
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
+
 export default function InvoiceActionsDropdown(props) {
   const {
     dropdownOpen,
@@ -9,100 +19,112 @@ export default function InvoiceActionsDropdown(props) {
     setShowConfirm,
     handlePrint,
     setDropdownOpen,
-    theme,
     t,
   } = props;
 
   if (!dropdownOpen) return null;
 
+  const actions = [
+    ...(selectedInvoice?.status !== "cancelled"
+      ? [
+          {
+            key: "refund",
+            label: t("invoices.refund"),
+            color: "warning",
+            icon: <RotateCcw size={16} />,
+          },
+        ]
+      : []),
+
+    ...(selectedInvoice?.status !== "cancelled"
+      ? [
+          {
+            key: "cancel",
+            label: t("common.cancel"),
+            color: "danger",
+            icon: <Ban size={16} />,
+          },
+        ]
+      : []),
+
+    {
+      key: "print",
+      label: t("invoices.print"),
+      color: "primary",
+      icon: <Printer size={16} />,
+    },
+  ];
+
+  const handleAction = (key) => {
+    if (
+      key !== "print" &&
+      (selectedInvoice.status ===
+        "cancelled" ||
+        cancelling)
+    ) {
+      return;
+    }
+
+    switch (key) {
+      case "refund":
+        setRefundItems([]);
+        setShowRefundPopup(true);
+        break;
+
+      case "cancel":
+        setAction("cancel");
+        setShowConfirm(true);
+        break;
+
+      case "print":
+        handlePrint();
+        break;
+
+      default:
+        break;
+    }
+
+    setDropdownOpen(false);
+  };
+
   return (
-    <div
-      onClick={(e) => e.stopPropagation()}
+    <AppCard
+      className="no-print"
+      padding="sm"
+      shadow="lg"
       style={{
         position: "absolute",
-        top: "40px",
-        right: "10px",
-        background: theme.colors.card,
-        border: `1px solid ${theme.colors.border}`,
-        borderRadius: "12px",
-        padding: "6px 0",
-        boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
-        overflow: "hidden",
+        top: 54,
+        left: 0,
+        minWidth: 190,
         zIndex: 1000,
-        minWidth: "150px"
       }}
+      onClick={(e) =>
+        e.stopPropagation()
+      }
     >
-      {[
-        ...(selectedInvoice?.status !== "cancelled"
-          ? [{
-              key: "refund",
-              label: t("invoices.refund"),
-              color: theme.colors.warning
-            }]
-          : []),
-
-        ...(selectedInvoice?.status !== "cancelled"
-          ? [{
-              key: "cancel",
-              label: t("common.cancel"),
-              color: theme.colors.danger
-            }]
-          : []),
-
-        {
-          key: "print",
-          label: t("invoices.print"),
-          color: theme.colors.primary
-        }
-      ].map(a => (
-        <div
-          key={a.key}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = "#f8fafc";
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = "transparent";
-          }}
-          onClick={() => {
-
-            if (
-              a.key !== "print" &&
-              (
-                selectedInvoice.status === "cancelled" ||
-                cancelling
-              )
-            ) {
-              return;
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.xs,
+        }}
+      >
+        {actions.map((action) => (
+          <AppButton
+            key={action.key}
+            variant={`${action.color}-ghost`}
+            justify="flex-start"
+            leftIcon={action.icon}
+            fullWidth
+            onClick={() =>
+              handleAction(action.key)
             }
-
-            if (a.key === "refund") {
-
-              setRefundItems([]);
-              setShowRefundPopup(true);
-
-            } else if (a.key === "cancel") {
-
-              setAction("cancel");
-              setShowConfirm(true);
-
-            } else if (a.key === "print") {
-
-              handlePrint();
-
-            }
-
-            setDropdownOpen(false);
-          }}
-          style={{
-            padding: "10px 14px",
-            cursor: "pointer",
-            color: a.color,
-            fontWeight: "500"
-          }}
-        >
-          {a.label}
-        </div>
-      ))}
-    </div>
+          >
+            {action.label}
+          </AppButton>
+        ))}
+      </div>
+    </AppCard>
   );
 }

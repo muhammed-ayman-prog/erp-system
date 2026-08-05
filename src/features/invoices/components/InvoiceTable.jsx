@@ -1,3 +1,10 @@
+import AppBadge from "../../../components/ui/AppBadge";
+import AppButton from "../../../components/ui/AppButton";
+import { theme } from "../../../theme";
+import {
+  getInvoiceStatus,
+  getSaleType,
+} from "../utils/invoiceHelpers";
 export default function InvoiceTable(props) {
   const {
     isMobile,
@@ -5,7 +12,6 @@ export default function InvoiceTable(props) {
     paginated,
     selectedInvoice,
     setSelectedInvoice,
-    theme,
     t,
     page,
     setPage,
@@ -13,9 +19,6 @@ export default function InvoiceTable(props) {
     handleRowHover,
     handleRowLeave,
     formatDate,
-    isFullyRefunded,
-    lang,
-    dropdownOpen,
     setDropdownOpen,
   } = props;
 
@@ -69,7 +72,7 @@ export default function InvoiceTable(props) {
                       style={{
                         height: "20px",
                         borderRadius: "6px",
-                        background: "#f1f5f9",
+                        background: theme.colors.cardSoft,
                         animation: "pulse 1.5s infinite"
                       }}
                     />
@@ -80,76 +83,27 @@ export default function InvoiceTable(props) {
             : paginated.length === 0 ? (
           <tr>
             <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
-              <div style={{ color: "#999" }}>
-                📭 {t("common.noData")}
-              </div>
+              <div
+  style={{
+    color: theme.colors.textSecondary,
+    padding: 24,
+    textAlign: "center",
+    fontWeight: 500,
+  }}
+>
+  {t("common.noData")}
+</div>
             </td>
           </tr>
         ) : (
           paginated.map(s => {
           
       
-        const refundedQty = s.refundedQty || 0;
-      const refundedMl = s.refundedMl || 0;
-      
-      const totalProducts =
-        s.items
-          ?.filter(
-            i =>
-              (i.containerType || "")
-                .toLowerCase() !== "oil"
-          )
-          .reduce(
-            (sum, i) => sum + i.qty,
-            0
-          ) || 0;
-      
-      const totalMl =
-        s.items
-          ?.filter(
-            i =>
-              (i.containerType || "")
-                .toLowerCase() === "oil"
-          )
-          .reduce(
-            (sum, i) =>
-              sum + (i.oilQty * i.qty),
-            0
-          ) || 0;
-      
-      const fullyRefunded =
-        isFullyRefunded(
-          refundedQty,
-          refundedMl,
-          totalProducts,
-          totalMl
-        );
-      const saleTypeStyle =
-        s.saleType === "RETURN_RESALE"
-          ? {
-              bg: "#fff7ed",
-              color: "#c2410c",
-              text: `🔄 ${t("invoices.returnResale")}`
-            }
-          : s.saleType === "MIXED"
-          ? {
-              bg: "#f3e8ff",
-              color: "#7e22ce",
-              text: `🟣 ${t("invoices.mixed")}`
-            }
-          : {
-              bg: "#dcfce7",
-              color: "#166534",
-              text: `🟢 ${t("invoices.sale")}`
-            };
-      const statusStyle =
-        s.status === "cancelled"
-          ? { bg: "#e5e7eb", color: "#374151" }
-          : fullyRefunded
-          ? { bg: "#fee2e2", color: "#dc2626" }
-          : refundedQty > 0 || refundedMl > 0
-          ? { bg: "#fef9c3", color: "#ca8a04" }
-          : { bg: "#dcfce7", color: "#16a34a" };
+        const status =
+  getInvoiceStatus(s, t);
+
+const saleType =
+  getSaleType(s, t);
       
       
         return ( 
@@ -174,7 +128,10 @@ export default function InvoiceTable(props) {
             boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
             borderRadius: "12px",
             overflow: "hidden",
-            opacity: s.status === "cancelled" ? 0.75 : 1,
+            opacity:
+              status.color === "gray"
+                ? 0.75
+                : 1,
           }}
           onMouseEnter={e => handleRowHover(e, false)}
         onMouseLeave={handleRowLeave}
@@ -213,39 +170,29 @@ export default function InvoiceTable(props) {
       )}
       </td>
       
-      <td style={{
-        padding: "14px 12px",
-        fontSize: "14px",
-        textAlign: "center"
-      }}>
-              <span style={{
-          padding: "4px 10px",
-          borderRadius: "999px",
-          background: "#f1f5f9",
-          fontSize: "12px",
-          fontWeight: "500"
-        }}>
-          {t(`common.${(s.paymentMethod || "").toLowerCase()}`)}
-        </span>
-            </td>
+      <td
+  style={{
+    padding: "14px 12px",
+    textAlign: "center",
+  }}
+>
+  <AppBadge color="secondary">
+    {t(
+      `common.${(
+        s.paymentMethod || ""
+      ).toLowerCase()}`
+    )}
+  </AppBadge>
+</td>
             <td
         style={{
           padding: "12px",
           textAlign: "center"
         }}
       >
-        <span
-          style={{
-            background: saleTypeStyle.bg,
-            color: saleTypeStyle.color,
-            padding: "5px 10px",
-            borderRadius: "999px",
-            fontSize: "12px",
-            fontWeight: "600"
-          }}
-        >
-          {saleTypeStyle.text}
-        </span>
+        <AppBadge color={saleType.color}>
+  {saleType.text}
+</AppBadge>
       </td>
             {/* Total */}
             <td style={{
@@ -262,26 +209,9 @@ export default function InvoiceTable(props) {
               fontSize: "14px",
               textAlign: "center"
             }}>
-              <span
-                style={{
-                  background: statusStyle.bg,
-                  color: statusStyle.color,
-                  padding: "5px 10px",
-                  borderRadius: "999px",
-                  fontSize: "12px",
-                  fontWeight: "600"
-                }}
-              >
-                {
-          s.status === "cancelled"
-            ? t("invoices.cancelled")
-            : fullyRefunded
-            ? t("invoices.refunded")
-            : refundedQty > 0 || refundedMl > 0
-            ? t("invoices.partialRefunded")
-            : t("invoices.completed")
-        }
-              </span>
+              <AppBadge color={status.color}>
+  {status.text}
+</AppBadge>
             </td>
             
             
@@ -300,39 +230,31 @@ export default function InvoiceTable(props) {
           justifyContent: "space-between",
           alignItems: "center"
         }}>
-          <button
-          type="button"
-            disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: `1px solid ${theme.colors.border}`,
-              background: theme.colors.card,
-              cursor: "pointer"
-            }}
-          >
-            {t("common.prev")}
-          </button>
+          <AppButton
+  size="sm"
+  variant="secondary"
+  disabled={page === 1}
+  onClick={() =>
+    setPage((p) => p - 1)
+  }
+>
+  {t("common.prev")}
+</AppButton>
       
           <span style={{ fontSize: "13px" }}>
-            {t("common.page")} {page} of {totalPages}
+            {t("common.page")} {page} / {totalPages}
           </span>
       
-          <button
-          type="button"
-            disabled={page === totalPages}
-            onClick={() => setPage(p => p + 1)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: `1px solid ${theme.colors.border}`,
-              background: theme.colors.card,
-              cursor: "pointer"
-            }}
-          >
-            {t("common.next")}
-          </button>
+          <AppButton
+  size="sm"
+  variant="secondary"
+  disabled={page === totalPages}
+  onClick={() =>
+    setPage((p) => p + 1)
+  }
+>
+  {t("common.next")}
+</AppButton>
         </div>
                 </div>
     </>

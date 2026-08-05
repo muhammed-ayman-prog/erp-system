@@ -1,40 +1,73 @@
+import { Wallet } from "lucide-react";
+
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
+
 export default function InvoiceTotalCard({
   netTotal,
-  theme,
 }) {
   return (
-    <div
+    <AppCard
+      hover
       style={{
-        margin: "20px 0",
-        borderRadius: 18,
-        padding: "28px",
+        margin: `${theme.spacing.lg} 0`,
         textAlign: "center",
-        background:
-          "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-        border: "1px solid #bbf7d0",
       }}
     >
       <div
         style={{
-          fontSize: 12,
-          letterSpacing: 2,
-          color: "#16a34a",
-          fontWeight: 700,
-          marginBottom: 8,
+          width: 72,
+          height: 72,
+
+          margin: "0 auto",
+
+          borderRadius: theme.radius.full,
+
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+
+          background:
+            theme.colors.successSoft,
+
+          color: theme.colors.success,
+
+          marginBottom: theme.spacing.lg,
         }}
       >
-        TOTAL
+        <Wallet size={34} />
       </div>
 
       <div
         style={{
-          fontSize: 38,
-          fontWeight: 800,
-          color: "#16a34a",
+          fontSize: 13,
+          fontWeight: 700,
+          letterSpacing: 1,
+
+          textTransform: "uppercase",
+
+          color:
+            theme.colors.textSecondary,
         }}
       >
-        {netTotal.toLocaleString()} EGP
+        Total Amount
       </div>
-    </div>
+
+      <div
+        style={{
+          marginTop: theme.spacing.sm,
+
+          fontSize: 36,
+
+          fontWeight: 800,
+
+          color: theme.colors.success,
+
+          lineHeight: 1.2,
+        }}
+      >
+        {Number(netTotal).toLocaleString()} EGP
+      </div>
+    </AppCard>
   );
 }

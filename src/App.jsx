@@ -12,7 +12,7 @@ import Branches from "./pages/Branches";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Operations from "./pages/Operations";
-import Expenses from "./pages/Expenses";
+import Expenses from "./features/expenses";
 import Waste from "./pages/Waste";
 import Returns from "./pages/Returns";
 import Layout from "./components/Layout";
@@ -174,13 +174,23 @@ function App() {
               </Route>
 
               {/* Purchases */}
-              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_VIEW]} />}>
-                <Route path="/purchases" element={<Purchases />} />
-              </Route>
+              <Route
+                element={
+                  <ProtectedRoute
+                    permissions={[PERMISSIONS.INVENTORY_VIEW]}
+                  />
+                }
+                >
+                  <Route
+                    path="/purchases"
+                    element={<PurchasesV2 />}
+                  />
 
-              <Route element={<ProtectedRoute permissions={[PERMISSIONS.INVENTORY_VIEW]} />}>
-                <Route path="/purchases-v2" element={<PurchasesV2 />} />
-              </Route>
+                  <Route
+                    path="/purchases-v2"
+                    element={<Navigate to="/purchases" replace />}
+                  />
+                </Route>
               <Route
                 path="/purchase-history"
                 element={<PurchaseHistory />}

@@ -1,145 +1,142 @@
 import { theme } from "../../theme";
 
-const variants = {
-  primary: {
-    background: theme.colors.primarySoft,
-    color: theme.colors.primary,
-  },
-
-  success: {
-    background: theme.colors.successSoft,
-    color: theme.colors.success,
-  },
-
-  warning: {
-    background: theme.colors.warningSoft,
-    color: theme.colors.warning,
-  },
-
-  danger: {
-    background: theme.colors.dangerSoft,
-    color: theme.colors.danger,
-  },
-
-  info: {
-    background: theme.colors.infoSoft,
-    color: theme.colors.info,
-  },
-
-  purple: {
-    background: theme.colors.purpleSoft,
-    color: theme.colors.purple,
-  },
-
-  gray: {
-    background: theme.colors.graySoft,
-    color: theme.colors.gray,
-  },
-
-  outline: {
-    background: "transparent",
-    color: theme.colors.text,
-    border: `1px solid ${theme.colors.border}`,
-  },
-};
-
-const sizes = {
-  sm: {
-    padding: "4px 10px",
-    fontSize: "11px",
-  },
-
-  md: {
-    padding: "6px 12px",
-    fontSize: "12px",
-  },
-
-  lg: {
-    padding: "8px 16px",
-    fontSize: "13px",
-  },
-};
-
 export default function AppBadge({
   children,
 
-  variant = "primary",
+  color = "primary",
+
+  variant = "soft",
 
   size = "md",
 
+  icon,
+
   rounded = true,
-
-  fullWidth = false,
-
-  clickable = false,
-
-  disabled = false,
 
   dot = false,
 
-  icon,
-
-  className,
-
   onClick,
-
-  style = {},
 }) {
-  const badge = variants[variant] || variants.primary;
+  const colors = {
+    primary: {
+      bg: theme.colors.primarySoft,
+      text: theme.colors.primary,
+      border: theme.colors.primaryBorder,
+    },
+
+    success: {
+      bg: theme.colors.successSoft,
+      text: theme.colors.success,
+      border: theme.colors.successBorder,
+    },
+
+    warning: {
+      bg: theme.colors.warningSoft,
+      text: theme.colors.warning,
+      border: theme.colors.warningBorder,
+    },
+
+    danger: {
+      bg: theme.colors.dangerSoft,
+      text: theme.colors.danger,
+      border: theme.colors.dangerBorder,
+    },
+
+    info: {
+      bg: theme.colors.infoSoft,
+      text: theme.colors.info,
+      border: theme.colors.infoBorder,
+    },
+
+    purple: {
+      bg: theme.colors.purpleSoft,
+      text: theme.colors.purple,
+      border: theme.colors.purpleBorder,
+    },
+
+    gray: {
+      bg: theme.colors.graySoft,
+      text: theme.colors.gray,
+      border: theme.colors.border,
+    },
+  };
+
+  const current =
+    colors[color] || colors.primary;
+
+  const sizes = {
+    sm: {
+      padding: "4px 8px",
+      fontSize: 11,
+    },
+
+    md: {
+      padding: "6px 10px",
+      fontSize: 12,
+    },
+
+    lg: {
+      padding: "8px 14px",
+      fontSize: 13,
+    },
+  };
+
+  const currentSize =
+    sizes[size] || sizes.md;
 
   return (
-    <span
-      className={className}
-      onClick={disabled ? undefined : onClick}
+    <div
+      onClick={onClick}
       style={{
         display: "inline-flex",
+
         alignItems: "center",
-        justifyContent: "center",
-        gap: "6px",
 
-        width: fullWidth ? "100%" : "fit-content",
+        gap: 6,
 
-        cursor:
-          clickable && !disabled
-            ? "pointer"
-            : "default",
+        padding: currentSize.padding,
 
-        opacity: disabled ? 0.55 : 1,
+        fontSize: currentSize.fontSize,
 
-        userSelect: "none",
-
-        transition:
-"transform .25s ease, background-color .25s ease, color .25s ease",
-
-        fontWeight: "600",
-
-        whiteSpace: "nowrap",
+        fontWeight: 700,
 
         borderRadius: rounded
           ? theme.radius.full
           : theme.radius.md,
 
-        border: badge.border || "none",
+        cursor: onClick
+          ? "pointer"
+          : "default",
 
-        ...sizes[size],
+        transition: theme.transition.normal,
 
-        background: badge.background,
+        border: `1px solid ${current.border}`,
 
-        color: badge.color,
+        background:
+          variant === "solid"
+            ? current.text
+            : current.bg,
 
-        ...style,
+        color:
+          variant === "solid"
+            ? theme.colors.white
+            : current.text,
+
+        userSelect: "none",
+
+        whiteSpace: "nowrap",
       }}
       onMouseEnter={(e) => {
-        if (!clickable || disabled) return;
+        if (!onClick) return;
 
         e.currentTarget.style.transform =
           "translateY(-1px)";
       }}
       onMouseLeave={(e) => {
-        if (!clickable || disabled) return;
+        if (!onClick) return;
 
         e.currentTarget.style.transform =
-          "translateY(0px)";
+          "translateY(0)";
       }}
     >
       {dot && (
@@ -148,7 +145,10 @@ export default function AppBadge({
             width: 8,
             height: 8,
             borderRadius: "50%",
-            background: badge.color,
+            background:
+              variant === "solid"
+                ? theme.colors.white
+                : current.text,
           }}
         />
       )}
@@ -156,6 +156,6 @@ export default function AppBadge({
       {icon}
 
       {children}
-    </span>
+    </div>
   );
 }

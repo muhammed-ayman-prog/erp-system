@@ -1,17 +1,17 @@
 import {
   UserRound,
-  Phone,
   Store,
   CreditCard,
   BadgeCheck,
   ShoppingBag,
   UserCog,
-  Monitor,
 } from "lucide-react";
+
+import AppCard from "../../../components/ui/AppCard";
+import { theme } from "../../../theme";
 
 export default function InvoiceInfoCards({
   selectedInvoice,
-  theme,
   t,
   lang,
   branchName,
@@ -19,69 +19,85 @@ export default function InvoiceInfoCards({
 }) {
   const cards = [
     {
-      icon: <UserRound size={18} color={theme.colors.primary} />,
+      icon: <UserRound size={20} />,
       title: t("customers.customer"),
       value:
         selectedInvoice.customerName ||
-        (lang === "ar" ? "عميل نقدي" : "Walk In"),
+        (lang === "ar"
+          ? "عميل نقدي"
+          : "Walk In"),
       sub:
         selectedInvoice.customerPhone ||
-        (lang === "ar" ? "بدون رقم" : "No Phone"),
+        (lang === "ar"
+          ? "بدون رقم"
+          : "No Phone"),
+      color: "primary",
     },
 
     {
-      icon: <UserCog size={18} color={theme.colors.primary} />,
+      icon: <UserCog size={20} />,
       title: t("invoices.salesName"),
       value:
-        selectedInvoice.items?.find(i => i.employeeName)?.employeeName ||
+        selectedInvoice.items?.find(
+          (i) => i.employeeName
+        )?.employeeName ||
         selectedInvoice.employeeName ||
         "-",
       sub:
-        selectedInvoice.enteredBy ||
-        "-",
+        selectedInvoice.enteredBy || "-",
+      color: "info",
     },
 
     {
-      icon: <Store size={18} color={theme.colors.primary} />,
+      icon: <Store size={20} />,
       title: t("branches.title"),
-      value:
-        branchNameMap?.[branchName]
-          ? t(`branchNames.${branchNameMap[branchName]}`)
-          : branchName,
-      sub: "",
+      value: branchNameMap?.[branchName]
+        ? t(
+            `branchNames.${branchNameMap[branchName]}`
+          )
+        : branchName,
+      color: "warning",
     },
 
     {
-      icon: <CreditCard size={18} color={theme.colors.primary} />,
+      icon: <CreditCard size={20} />,
       title: t("payment.method"),
       value: t(
         `common.${(
-          selectedInvoice.paymentMethod || "cash"
+          selectedInvoice.paymentMethod ||
+          "cash"
         ).toLowerCase()}`
       ),
-      sub: "",
+      color: "purple",
     },
 
     {
-      icon: <ShoppingBag size={18} color={theme.colors.primary} />,
+      icon: <ShoppingBag size={20} />,
       title: t("invoices.saleType"),
       value:
-        selectedInvoice.saleType === "RETURN_RESALE"
+        selectedInvoice.saleType ===
+        "RETURN_RESALE"
           ? t("invoices.returnResale")
-          : selectedInvoice.saleType === "MIXED"
+          : selectedInvoice.saleType ===
+            "MIXED"
           ? t("invoices.mixed")
           : t("invoices.sale"),
-      sub: "",
+      color: "primary",
     },
 
     {
-      icon: <BadgeCheck size={18} color="#22c55e" />,
+      icon: <BadgeCheck size={20} />,
       title: t("common.status"),
       value:
-        selectedInvoice.status === "cancelled"
+        selectedInvoice.status ===
+        "cancelled"
           ? t("invoices.cancelled")
           : t("invoices.completed"),
-      sub: "",
+      color:
+        selectedInvoice.status ===
+        "cancelled"
+          ? "danger"
+          : "success",
     },
   ];
 
@@ -90,70 +106,106 @@ export default function InvoiceInfoCards({
       style={{
         display: "grid",
         gridTemplateColumns:
-          "repeat(auto-fit,minmax(220px,1fr))",
-        gap: 14,
-        marginTop: 18,
-        marginBottom: 18,
+          "repeat(auto-fit,minmax(240px,1fr))",
+        gap: theme.spacing.md,
+        marginTop: theme.spacing.lg,
+        marginBottom: theme.spacing.lg,
       }}
     >
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          style={{
-            background: theme.colors.card,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: 16,
-            padding: 16,
-            transition: ".2s",
-            boxShadow:
-              "0 2px 10px rgba(0,0,0,.04)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 12,
-            }}
+      {cards.map((card, index) => {
+        const color =
+          theme.colors[card.color] ||
+          theme.colors.primary;
+
+        const soft =
+          theme.colors[
+            `${card.color}Soft`
+          ] || theme.colors.primarySoft;
+
+        return (
+          <AppCard
+            key={index}
+            hover
+            padding="lg"
           >
-            {card.icon}
-
-            <span
-              style={{
-                fontSize: 12,
-                color:
-                  theme.colors.textSecondary,
-                fontWeight: 600,
-              }}
-            >
-              {card.title}
-            </span>
-          </div>
-
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            {card.value}
-          </div>
-
-          {card.sub && (
             <div
               style={{
-                marginTop: 5,
-                fontSize: 12,
-                color:
-                  theme.colors.textSecondary,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: theme.spacing.md,
               }}
             >
-              {card.sub}
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+
+                  borderRadius:
+                    theme.radius.full,
+
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent:
+                    "center",
+
+                  background: soft,
+
+                  color,
+                  flexShrink: 0,
+                }}
+              >
+                {card.icon}
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color:
+                      theme.colors
+                        .textSecondary,
+                    marginBottom: 6,
+                  }}
+                >
+                  {card.title}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color:
+                      theme.colors.text,
+                    wordBreak:
+                      "break-word",
+                  }}
+                >
+                  {card.value}
+                </div>
+
+                {card.sub && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 12,
+                      color:
+                        theme.colors
+                          .textSecondary,
+                    }}
+                  >
+                    {card.sub}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      ))}
+          </AppCard>
+        );
+      })}
     </div>
   );
 }
