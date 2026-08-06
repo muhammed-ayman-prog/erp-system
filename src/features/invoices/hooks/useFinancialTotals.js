@@ -46,9 +46,13 @@ export default function useFinancialTotals({
     });
 
     returns.forEach((refund) => {
-      const amount =
-        Number(refund.price || 0) *
-        Number(refund.quantity || 0);
+      const isOil =
+  (refund.container || refund.containerType || "")
+    .toLowerCase() === "oil";
+
+const amount = isOil
+  ? Number(refund.price || 0)
+  : Number(refund.price || 0) * Number(refund.quantity || 0);
 
       refundTotal += amount;
 
