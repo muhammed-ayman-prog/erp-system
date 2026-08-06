@@ -26,7 +26,6 @@ const migrateOne = async () => {
 
     await setDoc(doc(db, "inventory", d.id), newData);
 
-    console.log("Migrated:", d.id);
 
     break; // 👈 مهم جدًا (يقف بعد واحد)
   }

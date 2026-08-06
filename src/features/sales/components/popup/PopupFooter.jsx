@@ -109,6 +109,10 @@ export default function PopupFooter({
 
           const profit =
             price - unitCost;
+          const pricePerMl =
+            containerType === "oil" && oilQty > 0
+              ? price / oilQty
+              : 0;
 
           const margin =
 
@@ -125,94 +129,80 @@ export default function PopupFooter({
               : 0;
 
           const item = {
+  id: selectedProduct.id,
 
-            id: selectedProduct.id,
+  name: selectedProduct.name,
 
-            name:
-              selectedProduct.name,
+  category: selectedProduct.category || "",
 
-            category:
-              selectedProduct.category || "",
+  subCategory: selectedProduct.subCategory || "",
 
-            subCategory:
-              selectedProduct.subCategory || "",
+  type: selectedProduct.type || "",
 
-            type:
-              selectedProduct.type || "",
+  stockQuantity: selectedProduct.quantity || 0,
 
-            stockQuantity:
-              selectedProduct.quantity || 0,
+  itemType: "BLENDED_ITEM",
 
-            itemType:
-              "BLENDED_ITEM",
+  saleMode:
+    saleModeMap[
+      containerType
+    ] || "UNKNOWN",
 
-            saleMode:
-              saleModeMap[
-                containerType
-              ] || "UNKNOWN",
+  oilId: selectedProduct.id,
 
-            oilId:
-              selectedProduct.id,
+  oilName: selectedProduct.name,
 
-            oilName:
-              selectedProduct.name,
+  oilCategory: selectedProduct.category || "",
 
-            oilCategory:
-              selectedProduct.category || "",
+  oilQtyML: oilQty || 0,
 
-            oilQtyML:
-              oilQty || 0,
+  size:
+    selectedSize?.size ||
+    selectedSize?.name ||
+    "",
 
-            size:
-              selectedSize?.size ||
-              selectedSize?.name ||
-              "",
+  containerType,
 
-            containerType,
+  containerName:
+  containerType === "oil"
+    ? "Pure Oil"
+    : selectedSize?.name?.trim() || containerType,
 
-            containerName:
+  containerId:
+    containerType === "oil"
+      ? null
+      : selectedSize?.id || null,
 
-              containerType === "oil"
+  unitPrice: price || 0,
 
-                ? `Pure Oil ${oilQty}ml`
+  price: price || 0,
 
-                : selectedSize?.name?.trim() ||
+  oilCostPerML,
 
-                  containerType,
+  oilCost,
 
-            containerId:
+  containerCost,
 
-              containerType === "oil"
+  overheadCost,
 
-                ? null
+  unitCost,
 
-                : selectedSize?.id || null,
+  profit,
 
-            unitPrice:
-              price || 0,
+  margin,
 
-            price:
-              price || 0,
+  qty: 1,
 
-            oilCostPerML,
+  oilQty:
+    oilQty || 0,
+  selectedMl:
+    containerType === "oil"
+      ? oilQty
+      : null,
 
-            oilCost,
-
-            containerCost,
-
-            overheadCost,
-
-            unitCost,
-
-            profit,
-
-            margin,
-
-            qty: 1,
-
-            oilQty:
-              oilQty || 0
-          };
+  // جديد
+  pricePerMl
+};
 
           const name =
             addToCart(item);

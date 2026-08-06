@@ -23,62 +23,80 @@ export default function LoanForm({
   const { t } = useTranslate();
 
   return (
-    <AppCard>
-      <h3 style={{ marginBottom: 16 }}>
+    <AppCard
+      padding="lg"
+      style={{
+        marginBottom: 20,
+      }}
+    >
+      <h3
+        style={{
+          marginBottom: 18,
+        }}
+      >
         {t("expenses.addLoan")}
       </h3>
 
-      <AppSelect
-        value={selectedLoanEmployee?.id || ""}
-        disabled={branchEmployees.length === 0}
-        onChange={(e) => {
-          const employee = branchEmployees.find(
-            (emp) => emp.id === e.target.value
-          );
-
-          setSelectedLoanEmployee(employee || null);
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
         }}
       >
-        <option value="">
-          {branchEmployees.length === 0
-            ? t("employees.noEmployees")
-            : t("employees.selectEmployee")}
-        </option>
+        <AppSelect
+          value={selectedLoanEmployee?.id || ""}
+          disabled={branchEmployees.length === 0}
+          onChange={(e) => {
+            const employee = branchEmployees.find(
+              (emp) => emp.id === e.target.value
+            );
 
-        {branchEmployees.map((employee) => (
-          <option
-            key={employee.id}
-            value={employee.id}
-          >
-            {employee.name}
+            setSelectedLoanEmployee(employee || null);
+          }}
+        >
+          <option value="">
+            {branchEmployees.length === 0
+              ? t("employees.noEmployees")
+              : t("employees.selectEmployee")}
           </option>
-        ))}
-      </AppSelect>
 
-      <AppInput
-        type="number"
-        placeholder={t("common.amount")}
-        value={loanAmount}
-        onChange={(e) =>
-          setLoanAmount(e.target.value)
-        }
-      />
+          {branchEmployees.map((employee) => (
+            <option
+              key={employee.id}
+              value={employee.id}
+            >
+              {employee.name}
+            </option>
+          ))}
+        </AppSelect>
 
-      <AppInput
-        placeholder={t("common.note")}
-        value={loanNote}
-        onChange={(e) =>
-          setLoanNote(e.target.value)
-        }
-      />
+        <AppInput
+          type="number"
+          inputMode="decimal"
+          placeholder={t("common.amount")}
+          value={loanAmount}
+          onChange={(e) =>
+            setLoanAmount(e.target.value)
+          }
+        />
 
-      <AppButton
-        fullWidth
-        loading={loading}
-        onClick={onSubmit}
-      >
-        {t("expenses.addLoan")}
-      </AppButton>
+        <AppInput
+          placeholder={t("common.note")}
+          value={loanNote}
+          onChange={(e) =>
+            setLoanNote(e.target.value)
+          }
+        />
+
+        <AppButton
+          fullWidth
+          loading={loading}
+          onClick={onSubmit}
+        >
+          {t("expenses.addLoan")}
+        </AppButton>
+      </div>
     </AppCard>
   );
 }

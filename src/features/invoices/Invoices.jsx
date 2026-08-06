@@ -15,7 +15,8 @@ import AppCard from "../../components/ui/AppCard";
   writeBatch,
   query,
   where,
-  collection
+  collection,
+  onSnapshot,
 } from "firebase/firestore";
   import {
     useNavigate,
@@ -33,7 +34,7 @@ import AppCard from "../../components/ui/AppCard";
   import InvoiceDetails from "./components/InvoiceDetails";
   import handleCancel from "./services/cancelInvoice";
   import useInvoiceFilters from "./hooks/useInvoiceFilters";
-  import useInvoiceTotals from "./hooks/useInvoiceTotals";
+  import useFinancialTotals from "./hooks/useFinancialTotals";
   import useInvoiceReturns from "./hooks/useInvoiceReturns";
   import useRefund from "./hooks/useRefund";
   import usePagination from "./hooks/usePagination";
@@ -49,6 +50,8 @@ import {
   formatDateTime
 } from "./utils/invoiceHelpers";
 import useDropdown from "./hooks/useDropdown";
+import useReturns from "./hooks/useReturns";
+import useReturnFilters from "./hooks/useReturnFilters";
   const branchNameMap = {
   "City Stars": "cityStars",
   "City Stars 2": "cityStars2",
@@ -65,6 +68,9 @@ import useDropdown from "./hooks/useDropdown";
     const {
       selectedBranch
     } = useApp();
+    const showBranchFilter =
+  user?.role === "owner" &&
+  selectedBranch === "all";
 
     const { t, lang } = useTranslate();
     const isMobile = useResponsive();
@@ -74,6 +80,7 @@ import useDropdown from "./hooks/useDropdown";
     useParams();
     
     const [branchName, setBranchName] = useState("");
+    const [branches, setBranches] = useState([]);
    const {
     invoices:sales,
     loading:loadingSales,
@@ -87,6 +94,10 @@ user?.role==="owner" &&
 selectedBranch==="all"
 
 });
+const {
+  returns,
+  loadingReturns,
+} = useReturns();
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const todayRange = getTodayRange();
     const [fromDate,setFromDate] =
@@ -102,6 +113,7 @@ selectedBranch==="all"
     const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
 
     const [paymentFilter, setPaymentFilter] = useState("all");
+    const [branchFilter, setBranchFilter] = useState("all");
     const [cancelling, setCancelling] = useState(false);
     
     const handleRowHover = (e, active) => {
@@ -179,6 +191,28 @@ selectedBranch==="all"
       document.head.removeChild(style);
     };
   }, []);
+  useEffect(() => {
+  const unsubscribe = onSnapshot(
+    collection(db, "branches"),
+    (snap) => {
+      const data = snap.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter(
+          (b) => b.isArchived !== true
+        )
+        .sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+
+      setBranches(data);
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
 
 const {
   dropdownOpen,
@@ -201,6 +235,24 @@ const {
   invoiceStatusFilter,
   fromDate,
   toDate,
+
+  branchFilter,
+  showBranchFilter,
+});
+const filteredReturns = useReturnFilters({
+  returns,
+
+  searchKey,
+
+  paymentFilter,
+
+  selectedSeller,
+
+  fromDate,
+  toDate,
+
+  branchFilter,
+  showBranchFilter,
 });
  const {
       page,
@@ -214,9 +266,11 @@ const {
     const [cancelReasonType, setCancelReasonType] = useState("");
 
     // 💰 totals
-   const totals = useInvoiceTotals(filteredInvoices)
+  const totals = useFinancialTotals({
+  sales: filteredInvoices,
+  returns: filteredReturns,
+});
 
-    // 🧠 helpers
   
 
    
@@ -261,6 +315,12 @@ const {
       setCancelReason("");
       setCancelReasonType("");
     };
+ const {
+  previousReturns,
+  setPreviousReturns,
+  groupedReturns,
+  liveReturns,
+} = useInvoiceReturns(selectedInvoice);
 const {
   loading,
 
@@ -271,6 +331,9 @@ const {
   hasValidRefund,
 
   handleRefundQty,
+
+  refundPaymentMethod,
+  setRefundPaymentMethod,
 
   executeRefund,
 } = useRefund({
@@ -283,14 +346,25 @@ const {
 
   writeBatch,
   collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
   doc,
   increment,
+  updateDoc,
   serverTimestamp,
 
   setInvoices,
+  setSelectedInvoice,
+  setShowRefundPopup,
+  setPreviousReturns,
 
   branchName,
   selectedBranch,
+
+  getKey,
+  isFullyRefunded,
 
   logAction,
 });
@@ -300,11 +374,7 @@ const {
     (selectedInvoice?.total || 0) -
     (selectedInvoice?.refundedAmount || 0)
   );
-  const {
-  previousReturns,
-  groupedReturns,
-  liveReturns,
-} = useInvoiceReturns(selectedInvoice);
+ 
 
     return (
       <div style={{ padding: isMobile ? 12 : 20 }}>
@@ -318,7 +388,7 @@ const {
           totals={totals}
           t={t}
         />
-      <AppFilterBar>
+      
       <InvoiceFilters
   fromDate={fromDate}
   setFromDate={setFromDate}
@@ -333,9 +403,13 @@ const {
   sellers={sellers}
   invoiceStatusFilter={invoiceStatusFilter}
   setInvoiceStatusFilter={setInvoiceStatusFilter}
+  showBranchFilter={showBranchFilter}
+  branchFilter={branchFilter}
+  setBranchFilter={setBranchFilter}
+  branches={branches}
   t={t}
 />
-</AppFilterBar>
+
         
 
         <div style={{
@@ -447,6 +521,8 @@ transition:"0.3s"
   hasValidRefund={hasValidRefund}
   setShowRefundPopup={setShowRefundPopup}
   setRefundItems={setRefundItems}
+  refundPaymentMethod={refundPaymentMethod}
+  setRefundPaymentMethod={setRefundPaymentMethod}
 />
         {/* 🔴 CONFIRM MODAL */}
         <CancelModal

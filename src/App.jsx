@@ -66,7 +66,6 @@ const Pricing = lazy(() =>
 );
 function App() {
   const { user, loading } = useAuth();
-  console.log("🔥 CURRENT USER:", user);
   if (loading) return <div>Loading...</div>;
 
   return (

@@ -4,21 +4,42 @@ import handlePartialRefund from "../services/handlePartialRefund";
 
 export default function useRefund({
   selectedInvoice,
+
   db,
   user,
   toast,
   t,
+
   writeBatch,
   collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
   doc,
   increment,
+  updateDoc,
   serverTimestamp,
+
   setInvoices,
+  setSelectedInvoice,
+  setShowRefundPopup,
+  setPreviousReturns,
+
   branchName,
   selectedBranch,
+
+  getKey,
+  isFullyRefunded,
+
   logAction,
 }) {
   const [loading, setLoading] = useState(false);
+
+  const [
+    refundPaymentMethod,
+    setRefundPaymentMethod,
+  ] = useState("cash");
 
   const {
     refundItems,
@@ -29,44 +50,60 @@ export default function useRefund({
   } = useInvoiceActions();
 
   const executeRefund = () =>
-    handlePartialRefund({
-      selectedInvoice,
-
-      refundItems,
-      setRefundItems,
-
-      setLoading,
-
-      db,
-      user,
-      toast,
-      t,
-
-      writeBatch,
-      collection,
-      doc,
-      increment,
-      serverTimestamp,
-
-      setInvoices,
-
-      branchName,
-      selectedBranch,
-
-      logAction,
-    });
-
-  return {
+  handlePartialRefund({
     loading,
+    setLoading,
+
+    selectedInvoice,
 
     refundItems,
+    refundPaymentMethod,
+
+    setInvoices,
+    setSelectedInvoice,
     setRefundItems,
+    setShowRefundPopup,
+    setPreviousReturns,
 
-    refundMap,
-    hasValidRefund,
+    db,
+    user,
+    t,
+    toast,
 
-    handleRefundQty,
+    writeBatch,
+    query,
+    collection,
+    where,
+    getDocs,
+    getDoc,
+    doc,
+    increment,
+    updateDoc,
+    serverTimestamp,
 
-    executeRefund,
-  };
+    branchName,
+    selectedBranch,
+
+    getKey,
+    isFullyRefunded,
+
+    logAction,
+  });
+
+  return {
+  loading,
+  setLoading,
+  refundItems,
+  setRefundItems,
+
+  refundMap,
+  hasValidRefund,
+
+  handleRefundQty,
+
+  refundPaymentMethod,
+  setRefundPaymentMethod,
+
+  executeRefund,
+};
 }

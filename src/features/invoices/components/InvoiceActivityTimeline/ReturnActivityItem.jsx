@@ -9,22 +9,9 @@ export default function ReturnActivityItem({
     (item.container || item.containerType || "")
       .toLowerCase() === "oil";
 
-  const price = (() => {
-    if (isOil) {
-      const totalMl =
-        (item.originalOilQty || parseInt(item.size) || 1) *
-        (item.originalQty || 1);
-
-      const pricePerMl =
-        totalMl > 0
-          ? (item.price || 0) / totalMl
-          : 0;
-
-      return pricePerMl * item.quantity;
-    }
-
-    return (item.price || 0) * (item.quantity || 0);
-  })();
+const price = isOil
+  ? (item.price || 0)
+  : (item.price || 0) * (item.quantity || 0);
 
   return (
     <div
@@ -64,9 +51,7 @@ export default function ReturnActivityItem({
         </div>
 
         <AppBadge variant="primary">
-          {item.unit === "ml"
-            ? `${item.quantity} ml`
-            : item.quantity}
+          {`${item.quantity}${isOil ? " ml" : ""}`}
         </AppBadge>
       </div>
 

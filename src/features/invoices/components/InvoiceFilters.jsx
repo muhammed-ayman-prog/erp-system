@@ -27,17 +27,22 @@ export default function InvoiceFilters(props) {
     invoiceStatusFilter,
     setInvoiceStatusFilter,
 
+    showBranchFilter,
+    branchFilter,
+    setBranchFilter,
+    branches,
+
     t,
   } = props;
 
   return (
     <AppFilterBar>
       <AppFormField
-  label={t("common.search")}
-  style={{
-    gridColumn: "1 / -1",
-  }}
->
+        label={t("common.search")}
+        style={{
+          gridColumn: "1 / -1",
+        }}
+      >
         <AppInput
           value={search}
           startIcon={<Search size={18} />}
@@ -49,55 +54,56 @@ export default function InvoiceFilters(props) {
       </AppFormField>
 
       <AppFormField
-        label={t("payment.method")}
+        label={t("common.from")}
       >
-        <AppSelect
-          value={paymentFilter}
+        <AppInput
+          type="date"
+          value={fromDate}
           onChange={(e) =>
-            setPaymentFilter(e.target.value)
+            setFromDate(e.target.value)
           }
-        >
-          <option value="all">
-            {t("common.all")}
-          </option>
-
-          <option value="cash">
-            {t("common.cash")}
-          </option>
-
-          <option value="visa">
-            {t("common.visa")}
-          </option>
-
-          <option value="instapay">
-            {t("common.instapay")}
-          </option>
-        </AppSelect>
+        />
       </AppFormField>
 
       <AppFormField
-        label={t("users.sales")}
+        label={t("common.to")}
       >
-        <AppSelect
-          value={selectedSeller}
+        <AppInput
+          type="date"
+          value={toDate}
           onChange={(e) =>
-            setSelectedSeller(e.target.value)
+            setToDate(e.target.value)
           }
-        >
-          <option value="all">
-            {t("common.all")}
-          </option>
-
-          {sellers.map((seller) => (
-            <option
-              key={seller}
-              value={seller}
-            >
-              {seller}
-            </option>
-          ))}
-        </AppSelect>
+        />
       </AppFormField>
+
+      {showBranchFilter && (
+        <AppFormField
+          label={t("branches.branch")}
+        >
+          <AppSelect
+            value={branchFilter}
+            onChange={(e) =>
+              setBranchFilter(
+                e.target.value
+              )
+            }
+          >
+            <option value="all">
+              {t("common.all")}
+            </option>
+
+            {branches.map((branch) => (
+              <option
+                key={branch.id}
+                value={branch.id}
+              >
+                {branch.name}
+              </option>
+            ))}
+          </AppSelect>
+        </AppFormField>
+      )}
 
       <AppFormField
         label={t("common.status")}
@@ -133,27 +139,54 @@ export default function InvoiceFilters(props) {
       </AppFormField>
 
       <AppFormField
-        label={t("common.from")}
+        label={t("users.sales")}
       >
-        <AppInput
-          type="date"
-          value={fromDate}
+        <AppSelect
+          value={selectedSeller}
           onChange={(e) =>
-            setFromDate(e.target.value)
+            setSelectedSeller(e.target.value)
           }
-        />
+        >
+          <option value="all">
+            {t("common.all")}
+          </option>
+
+          {sellers.map((seller) => (
+            <option
+              key={seller}
+              value={seller}
+            >
+              {seller}
+            </option>
+          ))}
+        </AppSelect>
       </AppFormField>
 
       <AppFormField
-        label={t("common.to")}
+        label={t("payment.method")}
       >
-        <AppInput
-          type="date"
-          value={toDate}
+        <AppSelect
+          value={paymentFilter}
           onChange={(e) =>
-            setToDate(e.target.value)
+            setPaymentFilter(e.target.value)
           }
-        />
+        >
+          <option value="all">
+            {t("common.all")}
+          </option>
+
+          <option value="cash">
+            {t("common.cash")}
+          </option>
+
+          <option value="visa">
+            {t("common.visa")}
+          </option>
+
+          <option value="instapay">
+            {t("common.instapay")}
+          </option>
+        </AppSelect>
       </AppFormField>
     </AppFilterBar>
   );

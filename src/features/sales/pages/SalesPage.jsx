@@ -413,6 +413,7 @@ const cartContextValue = useMemo(() => ({
   decreaseQty,
   removeItem
 ]);
+
 return (
   <SalesProvider
   value={salesContextValue}

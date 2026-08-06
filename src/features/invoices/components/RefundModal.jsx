@@ -18,7 +18,10 @@ export default function RefundModal(props) {
   hasValidRefund,
   setShowRefundPopup,
   setRefundItems,
+  refundPaymentMethod,
+  setRefundPaymentMethod,
 } = props;
+
   return (
     <>
       {showRefundPopup && (
@@ -57,12 +60,20 @@ export default function RefundModal(props) {
     const isOil =
     (item.containerType || "").toLowerCase().trim() === "oil";
 
-  const remaining = Math.max(
+ const totalOilMl =
+  item.selectedMl ??
+  ((item.oilQty || 0) * (item.qty || 0));
+
+const remaining = Math.max(
   0,
   isOil
-    ? ((item.oilQty || 0) * (item.qty || 0)) - alreadyRefunded
+    ? totalOilMl - alreadyRefunded
     : item.qty - alreadyRefunded
 );
+const totalQty = isOil
+  ? (item.selectedMl ??
+      ((item.oilQty || 0) * (item.qty || 0)))
+  : item.qty;
 
     return (
       <div key={`${getKey(item)}_${i}`} style={{ marginBottom: "10px" }}>
@@ -97,8 +108,8 @@ export default function RefundModal(props) {
 
           <span style={{ fontSize: "12px", marginLeft: "6px" }}>
             {isOil
-              ? `${remaining} / ${remaining + alreadyRefunded} ml ${t("common.available")}`
-              : `${remaining} / ${remaining + alreadyRefunded} ${t("common.available")}`
+              ? `${remaining} / ${totalQty} ml ${t("common.available")}`
+              : `${remaining} / ${totalQty} ${t("common.available")}`
             }
           </span>
 
@@ -177,7 +188,46 @@ export default function RefundModal(props) {
       </div>
     );
   })}
+  <div style={{ marginTop: "18px" }}>
+  <div
+    style={{
+      marginBottom: "6px",
+      fontSize: "13px",
+      fontWeight: "600",
+      color: theme.colors.text,
+    }}
+  >
+    {t("payment.method")}
+  </div>
 
+  <select
+    value={refundPaymentMethod}
+    onChange={(e) =>
+      setRefundPaymentMethod(e.target.value)
+    }
+    style={{
+      width: "100%",
+      padding: "10px 12px",
+      borderRadius: "10px",
+      border: `1px solid ${theme.colors.border}`,
+      background: "#fff",
+      outline: "none",
+      fontSize: "14px",
+    }}
+  >
+    <option value="cash">
+      {t("common.cash")}
+    </option>
+
+    <option value="visa">
+      {t("common.visa")}
+    </option>
+
+    <option value="instapay">
+      {t("common.instapay")}
+    </option>
+  </select>
+</div>
           <button
           type="button"
             onClick={handlePartialRefund}

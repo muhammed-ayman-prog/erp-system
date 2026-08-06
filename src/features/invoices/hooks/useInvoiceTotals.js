@@ -1,17 +1,17 @@
 import { useMemo } from "react";
 
 export default function useInvoiceTotals(filtered) {
-
   return useMemo(() => {
-
     let total = 0;
     let cash = 0;
     let visa = 0;
     let instapay = 0;
+    let refunds = 0;
 
-    filtered.forEach(i => {
-
+    filtered.forEach((i) => {
       if (i.status === "cancelled") return;
+
+      refunds += i.refundedAmount || 0;
 
       let net =
         (i.total || 0) -
@@ -23,9 +23,9 @@ export default function useInvoiceTotals(filtered) {
 
       total += net;
 
-      const method =
-        (i.paymentMethod || "cash")
-          .toLowerCase();
+      const method = (
+        i.paymentMethod || "cash"
+      ).toLowerCase();
 
       if (method === "cash") {
         cash += net;
@@ -38,7 +38,6 @@ export default function useInvoiceTotals(filtered) {
       if (method === "instapay") {
         instapay += net;
       }
-
     });
 
     return {
@@ -46,8 +45,7 @@ export default function useInvoiceTotals(filtered) {
       cash,
       visa,
       instapay,
+      refunds,
     };
-
   }, [filtered]);
-
 }

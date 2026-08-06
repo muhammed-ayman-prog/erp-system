@@ -104,8 +104,12 @@ export default function InvoiceTable(props) {
 
 const saleType =
   getSaleType(s, t);
+const displayTotal =
+  s.status === "cancelled"
+    ? 0
+    : (s.newTotal ?? s.total ?? 0);
       
-      
+
         return ( 
                   
           <tr
@@ -200,7 +204,7 @@ const saleType =
               fontWeight: "600",
               textAlign: "center"
             }}>
-              {s.total?.toLocaleString()} EGP
+              {Number(displayTotal).toLocaleString()} EGP
             </td>
                 
             {/* Status */}

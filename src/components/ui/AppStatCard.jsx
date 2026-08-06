@@ -1,9 +1,17 @@
 import { theme } from "../../theme";
-import AppSkeleton from "./AppSkeleton";
+
 import AppBadge from "./AppBadge";
+import AppCard from "./AppCard";
+import AppNumber from "./AppNumber";
+import AppProgress from "./AppProgress";
+import AppSkeleton from "./AppSkeleton";
+
 export default function AppStatCard({
   title,
-  value,
+
+  value = 0,
+
+  currency,
 
   subtitle,
 
@@ -13,9 +21,15 @@ export default function AppStatCard({
 
   trend,
 
-  onClick,
+  progress,
 
   loading = false,
+
+  onClick,
+
+  valueStyle = {},
+
+  children,
 }) {
   const colors = {
     primary: {
@@ -63,38 +77,14 @@ export default function AppStatCard({
   }
 
   return (
-    <div
+    <AppCard
       onClick={onClick}
+      padding="none"
       style={{
-        position: "relative",
-
         overflow: "hidden",
-
-        background: theme.colors.card,
-
-        border: `1px solid ${theme.colors.border}`,
-
-        borderRadius: theme.radius.xl,
-
-        boxShadow: theme.shadow.sm,
-
-        cursor: onClick ? "pointer" : "default",
-
-        transition: theme.transition.normal,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform =
-          "translateY(-5px)";
-
-        e.currentTarget.style.boxShadow =
-          theme.shadow.hover;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform =
-          "translateY(0)";
-
-        e.currentTarget.style.boxShadow =
-          theme.shadow.sm;
+        cursor: onClick
+          ? "pointer"
+          : "default",
       }}
     >
       {/* Top Accent */}
@@ -111,12 +101,17 @@ export default function AppStatCard({
           padding: theme.spacing.xxl,
         }}
       >
+        {/* Header */}
+
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: theme.spacing.lg,
+            justifyContent:
+              "space-between",
+            alignItems:
+              "flex-start",
+            marginBottom:
+              theme.spacing.lg,
           }}
         >
           {icon && (
@@ -125,17 +120,22 @@ export default function AppStatCard({
                 width: 56,
                 height: 56,
 
-                borderRadius: theme.radius.full,
+                borderRadius:
+                  theme.radius.full,
 
-                background: current.bg,
+                background:
+                  current.bg,
 
-                color: current.text,
+                color:
+                  current.text,
 
                 display: "flex",
 
-                justifyContent: "center",
+                justifyContent:
+                  "center",
 
-                alignItems: "center",
+                alignItems:
+                  "center",
 
                 flexShrink: 0,
               }}
@@ -145,52 +145,90 @@ export default function AppStatCard({
           )}
 
           {trend && (
-  <AppBadge color={color}>
-    {trend}
-  </AppBadge>
-)}
+            <AppBadge color={color}>
+              {trend}
+            </AppBadge>
+          )}
         </div>
+
+        {/* Title */}
 
         <div
           style={{
             ...theme.typography.caption,
 
             color:
-              theme.colors.textSecondary,
+              theme.colors
+                .textSecondary,
           }}
         >
           {title}
         </div>
 
+        {/* Value */}
+
         <div
           style={{
-            marginTop: theme.spacing.sm,
-
-            fontSize: 30,
-
-            fontWeight: 800,
-
-            color: theme.colors.text,
+            marginTop:
+              theme.spacing.sm,
+            ...valueStyle,
           }}
         >
-          {value}
+          {typeof value ===
+          "number" ? (
+            <AppNumber
+              value={value}
+              currency={currency}
+              size={30}
+              weight={800}
+            />
+          ) : (
+            value
+          )}
         </div>
+
+        {/* Subtitle */}
 
         {subtitle && (
           <div
             style={{
-              marginTop: theme.spacing.md,
+              marginTop:
+                theme.spacing.md,
 
-              ...theme.typography.caption,
+              ...theme.typography
+                .caption,
 
               color:
-                theme.colors.textSecondary,
+                theme.colors
+                  .textSecondary,
             }}
           >
             {subtitle}
           </div>
         )}
+
+        {/* Progress */}
+
+        {typeof progress ===
+          "number" && (
+          <div
+            style={{
+              marginTop:
+                theme.spacing.lg,
+            }}
+          >
+            <AppProgress
+              value={progress}
+              color={
+                current.border
+              }
+              showLabel
+            />
+          </div>
+        )}
+
+        {children}
       </div>
-    </div>
+    </AppCard>
   );
 }

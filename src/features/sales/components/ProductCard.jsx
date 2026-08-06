@@ -1,213 +1,199 @@
 import {
   memo,
   useCallback,
-  useMemo
+  useMemo,
 } from "react";
 
-import AppCard
-from "../../../components/ui/AppCard";
+import { ArrowRight } from "lucide-react";
+
+import AppCard from "../../../components/ui/AppCard";
+import AppNumber from "../../../components/ui/AppNumber";
 
 function ProductCard({
   p,
   isRTL,
-
   onSelectProduct,
-
   theme,
-  t
+  t,
 }) {
+  const quantity =
+    Number(p.quantity) || 0;
 
   const isOut =
-    p.quantity <= 0;
-const handleClick = useCallback(() => {
+    quantity <= 0;
 
-  if (isOut) return;
+  const isLow =
+    quantity > 0 &&
+    quantity < 5;
 
-  onSelectProduct(p);
+  const hasFixedPrice =
+    Number(p.price) > 0;
 
-}, [
-  isOut,
-  onSelectProduct,
-  p
-]);
+  const handleClick =
+    useCallback(() => {
+      if (isOut) return;
 
-const handleKeyDown = useCallback((e) => {
+      onSelectProduct(p);
+    }, [
+      isOut,
+      onSelectProduct,
+      p,
+    ]);
 
-  if (
-    e.key === "Enter" ||
-    e.key === " "
-  ) {
+  const handleKeyDown =
+    useCallback(
+      (e) => {
+        if (
+          e.key === "Enter" ||
+          e.key === " "
+        ) {
+          e.preventDefault();
 
-    if (isOut) return;
+          if (isOut) return;
 
-    onSelectProduct(p);
-  }
+          onSelectProduct(p);
+        }
+      },
+      [
+        isOut,
+        onSelectProduct,
+        p,
+      ]
+    );
 
-}, [
-  isOut,
-  onSelectProduct,
-  p
-]);
-const cardStyle = useMemo(() => ({
-  cursor:
-    isOut
-      ? "not-allowed"
-      : "pointer",
+  
 
-  textAlign:
-    isRTL
-      ? "right"
-      : "left",
+  const cardStyle =
+    useMemo(
+      () => ({
+        textAlign: isRTL
+          ? "right"
+          : "left",
 
-  opacity:
-    isOut ? 0.5 : 1,
+        opacity: isOut
+          ? 0.55
+          : 1,
 
-  filter:
-    isOut
-      ? "grayscale(20%)"
-      : "none",
-
-  border:
-    isOut
-      ? `1px solid ${theme.colors.borderLight}`
-      : `1px solid ${theme.colors.border}`,
-
-  background:
-    isOut
-      ? theme.colors.cardSoft
-      : theme.colors.card
-
-}), [
-  isOut,
-  isRTL,
-  theme
-]);
-
+        filter: isOut
+          ? "grayscale(15%)"
+          : "none",
+      }),
+      [
+        isRTL,
+        isOut,
+      ]
+    );
 
   return (
-
     <AppCard
+      clickable={!isOut}
+      hover={!isOut}
+      padding="sm"
+      className={`product-card ${
+        isOut
+          ? "stock-out"
+          : isLow
+          ? "stock-low"
+          : "stock-in"
+      }`}
+      style={cardStyle}
       role="button"
-
-      aria-label={p.name}
-
-      aria-disabled={isOut}
-
       tabIndex={
         isOut ? -1 : 0
       }
-
-      className="product-card"
-
-      style={cardStyle}
-
+      aria-label={p.name}
+      aria-disabled={isOut}
       onClick={handleClick}
-
-      onKeyDown={handleKeyDown}
+      onKeyDown={
+        handleKeyDown
+      }
     >
-
-      <div className="product-top">
-
-        <div
-          className="product-category"
-
-          style={{
-            color:
-              theme.colors.textSecondary
-          }}
-        >
-
-          {p.category}
-
-        </div>
-
-        <div
-          className={`stock-badge ${
-            isOut
-
-              ? "out"
-
-              : p.quantity < 5
-
-              ? "low"
-
-              : "in"
-          }`}
-        >
-
-          {p.quantity}
-
-        </div>
-      </div>
-
-      <div
-        className="product-name"
-
-        style={{
-          color:
-            theme.colors.textPrimary
-        }}
-      >
-
+      <div className="product-name">
         {p.name}
+      </div>
+
+      <div className="product-footer">
+
+  <div className="product-price-wrap">
+
+    {hasFixedPrice ? (
+
+      <div className="product-price">
+
+        <AppNumber value={p.price} />
 
       </div>
 
-      <div className="product-status-wrap">
+    ) : isOut ? (
 
-        {isOut ? (
+      <div className="product-out">
 
-          <div className="product-status out">
-
-            {t("products.outOfStock")}
-
-          </div>
-
-        ) : p.quantity < 5 ? (
-
-          <div className="product-status low">
-
-            {t("products.low")}
-            {" "}
-            ({p.quantity})
-
-          </div>
-
-        ) : null}
+        {t("products.outOfStock")}
 
       </div>
 
-      <div
-        className="product-price"
+    ) : (
 
+      <div className="product-select">
+
+        <span>
+
+          {t("products.chooseContainer")}
+
+        </span>
+
+        <ArrowRight
+          size={12}
+          strokeWidth={2.5}
+        />
+
+      </div>
+
+    )}
+
+    <div className="product-stock">
+
+      <span
+        className="stock-dot"
         style={{
-          color:
-            theme.colors.primary
+          background: isOut
+            ? theme.colors.danger
+            : isLow
+            ? theme.colors.warning
+            : theme.colors.success,
+        }}
+      />
+
+      <span
+        className="stock-count"
+        style={{
+          color: isOut
+            ? theme.colors.danger
+            : theme.colors.text,
         }}
       >
+        {quantity}
+      </span>
 
-        {p.price
-          ? `${p.price} EGP`
-          : ""}
+    </div>
 
-      </div>
+  </div>
+
+</div>
 
     </AppCard>
   );
 }
 
-
 export default memo(
   ProductCard,
-  (prev, next) => {
-
-    return (
-      prev.p.id === next.p.id &&
-      prev.p.quantity === next.p.quantity &&
-      prev.p.price === next.p.price &&
-      prev.p.name === next.p.name &&
-      prev.isRTL === next.isRTL &&
-      prev.theme === next.theme
-    );
-  }
+  (prev, next) =>
+    prev.p.id === next.p.id &&
+    prev.p.name === next.p.name &&
+    prev.p.quantity === next.p.quantity &&
+    prev.p.price === next.p.price &&
+    prev.isRTL === next.isRTL &&
+    prev.theme === next.theme &&
+    prev.onSelectProduct ===
+      next.onSelectProduct
 );

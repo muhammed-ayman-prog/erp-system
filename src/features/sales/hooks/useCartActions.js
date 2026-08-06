@@ -25,10 +25,8 @@ export default function useCartActions({
   }
 
   function handleCheckoutClick() {
-    console.log("🔥 BUTTON CLICKED");
     setShowErrors(true);
     if (!selectedSeller) {
-      console.log("❌ NO SELLER");
       return;
     }
     handleCheckout();

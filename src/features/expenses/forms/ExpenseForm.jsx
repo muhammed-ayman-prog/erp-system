@@ -26,55 +26,79 @@ export default function ExpenseForm({
   const { t } = useTranslate();
 
   return (
-    <AppCard style={{ marginBottom: 20 }}>
-      <h3 style={{ marginBottom: 20 }}>
+    <AppCard
+      padding="lg"
+      style={{
+        marginBottom: 20,
+      }}
+    >
+      <h3
+        style={{
+          marginBottom: 18,
+        }}
+      >
         {t("expenses.addExpense")}
       </h3>
 
-      <AppInput
-        type="number"
-        value={amount}
-        placeholder={t("expenses.amount")}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-
-      <AppSelect
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}
       >
-        {expenseCategories.map((item) => (
-          <option
-            key={item}
-            value={item}
-          >
-            {item}
-          </option>
-        ))}
-      </AppSelect>
-
-      {category === "➕ تصنيف جديد" && (
-        <AppInput
-          value={customCategory}
-          placeholder={t("expenses.newCategory")}
+        <AppSelect
+          value={category}
           onChange={(e) =>
-            setCustomCategory(e.target.value)
+            setCategory(e.target.value)
+          }
+        >
+          {expenseCategories.map((item) => (
+            <option
+              key={item}
+              value={item}
+            >
+              {item}
+            </option>
+          ))}
+        </AppSelect>
+
+        <AppInput
+          type="number"
+          inputMode="decimal"
+          value={amount}
+          placeholder={t("expenses.amount")}
+          onChange={(e) =>
+            setAmount(e.target.value)
           }
         />
-      )}
 
-      <AppInput
-        value={note}
-        placeholder={t("expenses.note")}
-        onChange={(e) => setNote(e.target.value)}
-      />
+        {category === "➕ تصنيف جديد" && (
+          <AppInput
+            value={customCategory}
+            placeholder={t("expenses.newCategory")}
+            onChange={(e) =>
+              setCustomCategory(e.target.value)
+            }
+          />
+        )}
 
-      <AppButton
-        fullWidth
-        loading={loading}
-        onClick={onSubmit}
-      >
-        {t("expenses.addExpense")}
-      </AppButton>
+        <AppInput
+          value={note}
+          placeholder={t("expenses.note")}
+          onChange={(e) =>
+            setNote(e.target.value)
+          }
+        />
+
+        <AppButton
+          fullWidth
+          loading={loading}
+          onClick={onSubmit}
+        >
+          {t("expenses.addExpense")}
+        </AppButton>
+      </div>
     </AppCard>
   );
 }

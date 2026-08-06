@@ -310,7 +310,7 @@ export default function EditProductModal({
       }}
     >
       <option value="Cream">
-        {t("products.categories.cream")}
+        {t("products.subCategories.cream")}
       </option>
 
       <option value="Makhmaria">

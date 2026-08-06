@@ -2,8 +2,10 @@ import {
   FlaskConical,
   Leaf,
   Sparkles,
-  Star
+  Star,
 } from "lucide-react";
+
+import AppButton from "../../../components/ui/AppButton";
 
 export default function SalesCategories({
   isMobile,
@@ -12,90 +14,112 @@ export default function SalesCategories({
   setSubTab,
   setPopupStep,
   setShowPopup,
-  t
+  t,
 }) {
+  const categories = [
+    {
+      key: "french",
+      label: t("products.french"),
+      icon: <FlaskConical size={20} />,
+      onClick: () => {
+        setMainTab("french");
+        setSubTab(null);
+      },
+    },
+
+    {
+      key: "oriental",
+      label: t("products.oriental"),
+      icon: <Leaf size={20} />,
+      onClick: () => {
+        setPopupStep("oriental");
+        setShowPopup(true);
+      },
+    },
+
+    {
+      key: "body",
+      label: t("products.body"),
+      icon: <Sparkles size={20} />,
+      onClick: () => {
+        setPopupStep("body");
+        setShowPopup(true);
+      },
+    },
+
+    {
+      key: "original",
+      label: t("products.original"),
+      icon: <Star size={20} />,
+      onClick: () => {
+        setMainTab("original");
+        setSubTab(null);
+      },
+    },
+  ];
 
   return (
     <div
       className="hide-scroll"
       style={{
         display: "flex",
-        flexDirection:
-          isMobile ? "row" : "column",
 
-        overflowX:
-          isMobile ? "auto" : "visible",
+        flexDirection: isMobile
+          ? "row"
+          : "column",
+
+        gap: 12,
+
+        overflowX: isMobile
+          ? "auto"
+          : "visible",
 
         scrollbarWidth: "none",
 
         msOverflowStyle: "none",
 
-        gap: "8px",
-
-        scrollBehavior: "smooth"
+        paddingBottom: isMobile
+          ? 4
+          : 0,
       }}
     >
+      {categories.map((item) => {
+        const active =
+          mainTab === item.key;
 
-      <div
-        className={`cat-item ${
-          mainTab === "french"
-            ? "active"
-            : ""
-        }`}
-        onClick={() => {
-          setMainTab("french");
-          setSubTab(null);
-        }}
-      >
-        <FlaskConical size={16} />
-        {t("products.french")}
-      </div>
+        return (
+          <AppButton
+            key={item.key}
+            size="lg"
+            leftIcon={item.icon}
+            justify="flex-start"
+            fullWidth={!isMobile}
+            variant={
+              active
+                ? "primary"
+                : "secondary"
+            }
+            onClick={item.onClick}
+            style={{
+              flexShrink: 0,
 
-      <div
-        className={`cat-item ${
-          mainTab === "oriental"
-            ? "active"
-            : ""
-        }`}
-        onClick={() => {
-          setPopupStep("oriental");
-          setShowPopup(true);
-        }}
-      >
-        <Leaf size={16} />
-        {t("products.oriental")}
-      </div>
+              minWidth: isMobile
+                ? 165
+                : "100%",
 
-      <div
-        className={`cat-item ${
-          mainTab === "body"
-            ? "active"
-            : ""
-        }`}
-        onClick={() => {
-          setPopupStep("body");
-          setShowPopup(true);
-        }}
-      >
-        <Sparkles size={16} />
-        {t("products.body")}
-      </div>
+              fontWeight: active
+                ? 700
+                : 600,
 
-      <div
-        className={`cat-item ${
-          mainTab === "original"
-            ? "active"
-            : ""
-        }`}
-        onClick={() => {
-          setMainTab("original");
-          setSubTab(null);
-        }}
-      >
-        <Star size={16} />
-        {t("products.original")}
-      </div>
-
+              boxShadow: active
+                ? "0 10px 28px rgba(37,99,235,.18)"
+                : undefined,
+            }}
+          >
+            {item.label}
+          </AppButton>
+        );
+      })}
     </div>
   );
 }

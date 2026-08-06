@@ -38,7 +38,6 @@ export default function Layout() {
 
   useEffect(() => {
     if (user?.status === "disabled") {
-      console.log("🚫 USER DISABLED → LOGOUT");
       logout();
     }
   }, [user?.status]);

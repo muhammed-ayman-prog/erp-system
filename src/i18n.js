@@ -1,239 +1,246 @@
 export const translations = {
   en: {
-    "purchaseHistory": {
-    "undo": "Undo Purchase",
-    "undoConfirm": "Are you sure you want to undo this purchase?",
-    "undoSuccess": "Purchase undone successfully",
-    "undoFailed": "Failed to undo purchase",
-     "undone": "Undone",
-     "totalItems": "Total Items",
-    "totalQuantity": "Total Quantity",
-    "undoneMessage": "This operation has been undone"
-  },
+    purchaseHistory: {
+      undo: "Undo Purchase",
+      undoConfirm: "Are you sure you want to undo this purchase?",
+      undoSuccess: "Purchase undone successfully",
+      undoFailed: "Failed to undo purchase",
+      undone: "Undone",
+      undoneMessage: "This operation has been undone",
+      totalItems: "Total Items",
+      totalQuantity: "Total Quantity",
+    },
+
     sidebar: {
       main: "Main",
       operations: "Operations",
       management: "Management",
-    
+
       dashboard: "Dashboard",
       sales: "Sales",
       expenses: "Expenses",
       returns: "Returns",
+
       inventory: "Inventory",
       purchases: "Purchases",
       waste: "Waste",
       pricing: "Pricing",
+
       reports: "Reports",
+
       customers: "Customers",
       branches: "Branches",
       users: "Users",
+
       logs: "Logs",
+
       operationsPage: "Operations",
       finance: "Finance",
 
-      dailyClosing:
-        "Daily Closing",
-
-      dailyClosingHistory:
-        "Closing History",
+      dailyClosing: "Daily Closing",
+      dailyClosingHistory: "Closing History",
     },
+
     logs: {
-      
-  title: "Audit Trail",
-  metadata: "Metadata",
-  close: "Close",
-  totalLogs: "Total Logs",
-  todayLogs: "Today",
-  failedLogs: "Failed",
-  criticalLogs: "Critical",
+      title: "Audit Trail",
 
-  search: "Search logs...",
+      metadata: "Metadata",
+      close: "Close",
 
-  allModules: "All Modules",
-  allActions: "All Actions",
-  allStatus: "All Status",
-  allSeverity: "All Severity",
+      totalLogs: "Total Logs",
+      todayLogs: "Today",
+      failedLogs: "Failed",
+      criticalLogs: "Critical",
 
-  action: "Action",
-  module: "Module",
-  user: "User",
-  target: "Target",
-  status: "Status",
-  severity: "Severity",
-  time: "Time",
+      search: "Search logs...",
 
-  success: "Success",
-  error: "Error",
-  pending: "Pending",
+      allModules: "All Modules",
+      allActions: "All Actions",
+      allStatus: "All Status",
+      allSeverity: "All Severity",
 
-  info: "Info",
-  warning: "Warning",
-  danger: "Danger",
+      action: "Action",
+      module: "Module",
+      user: "User",
+      target: "Target",
+      status: "Status",
+      severity: "Severity",
+      time: "Time",
 
-  details: "Details",
-  summary: "Summary",
+      success: "Success",
+      error: "Error",
+      pending: "Pending",
 
-  before: "Before",
-  after: "After",
+      info: "Info",
+      warning: "Warning",
+      danger: "Danger",
 
-  changes: "Changed Fields",
+      details: "Details",
+      summary: "Summary",
 
-  noLogs: "No Logs Found",
+      before: "Before",
+      after: "After",
 
-  auditDetails: "Audit Details",
-  auditRecords: "Audit Records",
-  branch: "Branch",
-createdAt: "Created At",
-performedBy: "Performed By",
-total: "Total",
-  cost: "Cost",
-  profit: "Profit",
-  invoiceNumber: "Invoice Number",
-customerName: "Customer Name",
-customerPhone: "Customer Phone",
-seller: "Seller",
-paymentMethod: "Payment Method",
-paymentCategory: "Payment Category",
-overallMargin: "Overall Margin",
-totalItems: "Total Items",
-totalQty: "Total Quantity",
-totalProfit: "Total Profit",
-totalCost: "Total Cost",
-"activity": "Activity Logs",
-    "products": "Product Logs",
-    "reversed": "REVERSED",
-    "search": "Search logs...",
-    "allActions": "All Actions",
-    "create": "Create",
-    "archive": "Archive",
-    "restore": "Restore",
-    "edit": "Edit",
-    "productCreated": "Product Created",
-    "productArchived": "Product Archived",
-    "productRestored": "Product Restored",
-    "productEdited": "Product Edited",
-    "transferId": "Transfer ID",
-    "adjustmentId": "Adjustment ID",
+      changes: "Changed Fields",
 
-    "fromBranch": "Source Branch",
-    "fromBranchName": "Source Branch Name",
+      noLogs: "No Logs Found",
 
-    "toBranch": "Destination Branch",
-    "toBranchName": "Destination Branch Name",
+      auditDetails: "Audit Details",
+      auditRecords: "Audit Records",
 
-    "activityId": "Activity ID",
-    "activityType": "Activity Type",
+      branch: "Branch",
+      createdAt: "Created At",
+      performedBy: "Performed By",
 
-    "reason": "Reason",
-    "adjustType": "Adjustment Type",
+      total: "Total",
+      cost: "Cost",
+      profit: "Profit",
 
-    "transfer": "Stock Transfer",
-    "adjust": "Inventory Adjustment",
-logActions: {
-  CREATE_USER: "Create User",
-  UPDATE_USER: "Update User",
-  DELETE_USER: "Delete User",
-  TOGGLE_USER_STATUS: "Toggle User Status",
+      invoiceNumber: "Invoice Number",
+      customerName: "Customer Name",
+      customerPhone: "Customer Phone",
+      seller: "Seller",
 
-  CREATE_INVOICE: "Create Invoice",
-  "FULL_REFUND": "Full Refund",
-  "PARTIAL_REFUND": "Partial Refund",
-  "CANCEL_INVOICE": "Cancel Invoice",
-  RETURN_RESALE: "Return & Resale",
+      paymentMethod: "Payment Method",
+      paymentCategory: "Payment Category",
 
-  TRANSFER_STOCK: "Transfer Stock",
-  UNDO_TRANSFER: "Undo Transfer",
-  ADJUST_STOCK: "Adjust Stock",
-  UNDO_ADJUSTMENT: "Undo Adjustment",
-  EDIT_ACTIVITY: "Edit Activity",
+      overallMargin: "Overall Margin",
 
-  CREATE_PRODUCT: "Create Product",
-  UPDATE_PRODUCT: "Update Product",
-  ARCHIVE_PRODUCT: "Archive Product",
-  RESTORE_PRODUCT: "Restore Product",
+      totalItems: "Total Items",
+      totalQty: "Total Quantity",
+      totalProfit: "Total Profit",
+      totalCost: "Total Cost",
 
-  CREATE_PURCHASE: "Create Purchase",
-  UNDO_PURCHASE: "Undo Purchase",
+      activity: "Activity Logs",
+      products: "Product Logs",
 
-  CREATE_WASTE: "Create Waste",
+      reversed: "REVERSED",
 
-  CREATE_EXPENSE: "Create Expense",
-  ADD_EXPENSE: "Add Expense",
+      create: "Create",
+      archive: "Archive",
+      restore: "Restore",
+      edit: "Edit",
 
-  CREATE_LOAN: "Create Loan",
-  ADD_LOAN: "Add Loan",
+      productCreated: "Product Created",
+      productArchived: "Product Archived",
+      productRestored: "Product Restored",
+      productEdited: "Product Edited",
 
-  CREATE_BONUS: "Create Bonus",
-  ADD_BONUS: "Add Bonus",
+      transferId: "Transfer ID",
+      adjustmentId: "Adjustment ID",
 
-  PRICE_UPDATE: "Price Update",
-  UPDATE_PRICE: "Update Price",
+      fromBranch: "Source Branch",
+      fromBranchName: "Source Branch Name",
 
-  CREATE_BRANCH: "Create Branch",
-  UPDATE_BRANCH: "Update Branch",
-  ENABLE_BRANCH: "Enable Branch",
-  DISABLE_BRANCH: "Disable Branch",
+      toBranch: "Destination Branch",
+      toBranchName: "Destination Branch Name",
 
-  CREATE_CUSTOMER: "Create Customer",
-  UPDATE_CUSTOMER: "Update Customer",
-  ADD_CUSTOMER_NOTE: "Add Customer Note",
+      activityId: "Activity ID",
+      activityType: "Activity Type",
 
-  DAILY_CLOSING: "Daily Closing",
+      reason: "Reason",
+      adjustType: "Adjustment Type",
 
-  CHANGE_PASSWORD: "Change Password",
-  UPDATE_PROFILE: "Update Profile",
+      transfer: "Stock Transfer",
+      adjust: "Inventory Adjustment",
+      logActions: {
+        CREATE_USER: "Create User",
+        UPDATE_USER: "Update User",
+        DELETE_USER: "Delete User",
+        TOGGLE_USER_STATUS: "Toggle User Status",
 
-  RESET_SYSTEM: "Reset System",
+        LOGIN_SUCCESS: "Login Success",
+        LOGIN_FAILED: "Login Failed",
+        LOGOUT: "Logout",
 
-  LOGIN_SUCCESS: "Login Success",
-  LOGIN_FAILED: "Login Failed",
-  LOGOUT: "Logout",
-  DELETE_CUSTOMER: "Delete Customer",
+        CREATE_INVOICE: "Create Invoice",
+        UPDATE_INVOICE: "Update Invoice",
+        CANCEL_INVOICE: "Cancel Invoice",
 
-  UPDATE_INVOICE: "Update Invoice",
+        FULL_REFUND: "Full Refund",
+        PARTIAL_REFUND: "Partial Refund",
+        RETURN_RESALE: "Return & Resale",
 
-  DELETE_PRODUCT: "Delete Product",
+        CREATE_PRODUCT: "Create Product",
+        UPDATE_PRODUCT: "Update Product",
+        DELETE_PRODUCT: "Delete Product",
+        ARCHIVE_PRODUCT: "Archive Product",
+        RESTORE_PRODUCT: "Restore Product",
 
-  UPDATE_PURCHASE: "Update Purchase",
-  DELETE_PURCHASE: "Delete Purchase",
+        CREATE_PURCHASE: "Create Purchase",
+        UPDATE_PURCHASE: "Update Purchase",
+        DELETE_PURCHASE: "Delete Purchase",
+        UNDO_PURCHASE: "Undo Purchase",
 
-  UPDATE_WASTE: "Update Waste",
-  DELETE_WASTE: "Delete Waste",
+        TRANSFER_STOCK: "Transfer Stock",
+        UNDO_TRANSFER: "Undo Transfer",
 
-  UPDATE_EXPENSE: "Update Expense",
-  DELETE_EXPENSE: "Delete Expense",
+        ADJUST_STOCK: "Adjust Stock",
+        UNDO_ADJUSTMENT: "Undo Adjustment",
 
-  UPDATE_LOAN: "Update Loan",
-  DELETE_LOAN: "Delete Loan",
+        EDIT_ACTIVITY: "Edit Activity",
 
-  UPDATE_BONUS: "Update Bonus",
-  DELETE_BONUS: "Delete Bonus",
+        CREATE_WASTE: "Create Waste",
+        UPDATE_WASTE: "Update Waste",
+        DELETE_WASTE: "Delete Waste",
 
-  ARCHIVE_BRANCH: "Archive Branch",
-  RESTORE_BRANCH: "Restore Branch",
+        CREATE_EXPENSE: "Create Expense",
+        ADD_EXPENSE: "Add Expense",
+        UPDATE_EXPENSE: "Update Expense",
+        DELETE_EXPENSE: "Delete Expense",
 
-  CREATE_DAILY_CLOSING: "Create Daily Closing",
-  UPDATE_DAILY_CLOSING: "Update Daily Closing",
-  DELETE_DAILY_CLOSING: "Delete Daily Closing",
+        CREATE_LOAN: "Create Loan",
+        ADD_LOAN: "Add Loan",
+        UPDATE_LOAN: "Update Loan",
+        DELETE_LOAN: "Delete Loan",
 
-  EXPORT_REPORT: "Export Report",
+        CREATE_BONUS: "Create Bonus",
+        ADD_BONUS: "Add Bonus",
+        UPDATE_BONUS: "Update Bonus",
+        DELETE_BONUS: "Delete Bonus",
 
-  UPDATE_SETTINGS: "Update Settings",
-  UPDATE_PRICE: "Update Price"
-},
-modules: {
-    Users: "Users",
-    Sales: "Sales",
-    Inventory: "Inventory",
-    Customers: "Customers",
-    Branches: "Branches",
-    Pricing: "Pricing",
-    Expenses: "Expenses",
-    Reports: "Reports",
-    Waste: "Waste",
-    Operations: "Operations",
-    Finance: "Finance"
-  },
+        CREATE_BRANCH: "Create Branch",
+        UPDATE_BRANCH: "Update Branch",
+        ENABLE_BRANCH: "Enable Branch",
+        DISABLE_BRANCH: "Disable Branch",
+        ARCHIVE_BRANCH: "Archive Branch",
+        RESTORE_BRANCH: "Restore Branch",
+
+        CREATE_CUSTOMER: "Create Customer",
+        UPDATE_CUSTOMER: "Update Customer",
+        DELETE_CUSTOMER: "Delete Customer",
+        ADD_CUSTOMER_NOTE: "Add Customer Note",
+
+        PRICE_UPDATE: "Price Update",
+        UPDATE_PRICE: "Update Price",
+
+        DAILY_CLOSING: "Daily Closing",
+        CREATE_DAILY_CLOSING: "Create Daily Closing",
+        UPDATE_DAILY_CLOSING: "Update Daily Closing",
+        DELETE_DAILY_CLOSING: "Delete Daily Closing",
+
+        EXPORT_REPORT: "Export Report",
+
+        CHANGE_PASSWORD: "Change Password",
+        UPDATE_PROFILE: "Update Profile",
+        UPDATE_SETTINGS: "Update Settings",
+
+        RESET_SYSTEM: "Reset System",
+      },
+
+      modules: {
+        Users: "Users",
+        Sales: "Sales",
+        Inventory: "Inventory",
+        Customers: "Customers",
+        Branches: "Branches",
+        Pricing: "Pricing",
+        Expenses: "Expenses",
+        Reports: "Reports",
+        Waste: "Waste",
+        Operations: "Operations",
+        Finance: "Finance",
+      },
   
 },
 
@@ -244,8 +251,9 @@ modules: {
       english: "English",
       arabic: "Arabic",
       settings: "Settings",
-      logout: "Logout"
+      logout: "Logout",
     },
+
     branchNames: {
       abbasAkkad1: "Abbas Akkad 1",
       abbasAkkad2: "Abbas Akkad 2",
@@ -253,8 +261,9 @@ modules: {
       cityStars: "City Stars",
       cityStars2: "City Stars 2",
       elObour: "El Obour",
-      elRehab: "El Rehab"
+      elRehab: "El Rehab",
     },
+
     dashboard: {
       title: "Dashboard",
 
@@ -262,600 +271,734 @@ modules: {
 
       noSales: "No sales data in selected period",
 
-      profit: "Profit",
-
-      avgMargin: "Avg Margin",
+      sales: "Sales",
+      orders: "Orders",
+      invoices: "Invoices",
 
       today: "Today",
+      todaySales: "Today's Sales",
 
+      profit: "Profit",
+      avgMargin: "Avg Margin",
       avgOrder: "Avg Order",
-
       growth: "Growth",
 
       branchPerformance: "Branch Performance",
-
       profitableBranches: "Most Profitable Branches",
-
       noBranchData: "No branch data",
-      sales: "Sales",
-      "orders": "Orders",
-      invoices: "Invoices",
 
-      todaySales: "Today's Sales",
       fastMoving: "Fast Moving",
-
       deadStock: "Dead Stock",
+      neverSold: "Never Sold",
 
       recentActivity: "Recent Activity",
-      neverSold: "Never Sold",
+      noActivity: "No recent activity",
+
       criticalStock: "Critical Stock",
       criticalOils: "Critical Oils",
-
       criticalContainers: "Critical Containers",
-
       criticalOriginals: "Critical Originals",
-
       criticalProducts: "Critical Body Products",
-      noActivity:
-        "No recent activity",
-      "bestBranch": "Best Branch",
-      "ofTotalSales": "of total sales",
 
-      "branches": "branches",
+      bestBranch: "Best Branch",
+      ofTotalSales: "of total sales",
+      branches: "branches",
 
-      "threshold": "Threshold",
-      "outOfStock": "Out Of Stock",
-      "critical": "Critical",
-      "low": "Low",
+      threshold: "Threshold",
+      outOfStock: "Out Of Stock",
+      critical: "Critical",
+      low: "Low",
 
-      "mostProfitableProducts": "Most Profitable Products",
+      mostProfitableProducts: "Most Profitable Products",
+      mostConsumedOils: "Most Consumed Oils",
+      mostProfitableOils: "Most Profitable Oils",
 
-      "mostConsumedOils": "Most Consumed Oils",
-
-      "mostProfitableOils": "Most Profitable Oils",
-
-      "branchStock": "Branch Stock"
-        
-      
+      branchStock: "Branch Stock",
     },
+
     activity: {
-
       sale: "Sale",
-
       return: "Return",
-
       partialReturn: "Partial Return",
-      
-
-},
+    },
 
     common: {
       clearFilters: "Clear Filters",
+      clearAll: "Clear All",
+      clear: "Clear",
+
       search: "Search...",
-  records: "Records",
-      exportExcel: "Export Excel",
-amount: "Amount",
-note: "Note",
-      "fromDate": "From Date",
-    "toDate": "To Date",
-      "clearAll": "Clear All",
-       available: "Available",
 
-  lowStock: "Low Stock",
+      from: "From",
+      to: "To",
 
-  outOfStock: "Out of Stock",
-       "date": "Date",
-    "branch": "Branch",
-    "user": "User",
-    "quantity": "Quantity",
-    "details": "Details",
-    "noData": "No data found",
-      "from": "From",
-  "to": "To",
+      fromDate: "From Date",
+      toDate: "To Date",
+
+      date: "Date",
+
       all: "All",
-clear: "Clear",
-quantity: "Quantity",
-      user: "User",
-      days: "days",
+
+      add: "Add",
+      edit: "Edit",
+      delete: "Delete",
       save: "Save",
       cancel: "Cancel",
-      delete: "Delete",
-      edit: "Edit",
-      add: "Add",
-      search: "Search...",
-      processing: "Processing...",
-      noData: "No data found",
-      excel: "Excel",
-      pdf: "PDF",
-      loading: "Loading...",
-      notFound: "Not found",
-      qty: "Qty",
-      unknown: "Unknown",
-      error: "Something went wrong",
-      date: "Date",
-      back: "Back",
-      prev: "Prev",
-      next: "Next",
-      page: "Page",
-      status: "Status",
-      actions: "Actions",
+      close: "Close",
+
       confirm: "Confirm",
       confirmAction: "Are you sure?",
-      price: "Price",
-      close: "Close",
+
+      processing: "Processing...",
+      loading: "Loading...",
+      creating: "Creating...",
+
       success: "Success",
       warning: "Warning",
-      yes: "Yes",
-      no: "No",
+      error: "Something went wrong",
+
       retry: "Retry",
       refresh: "Refresh",
       done: "Done",
-      archive: "Archive",
-      restore: "Restore",
+
+      show: "Show",
+      hide: "Hide",
+
       active: "Active",
       inactive: "Inactive",
+      disabled: "Disabled",
+      disable: "Disable",
+      activate: "Activate",
+
+      available: "Available",
       notAvailable: "Not Available",
-      "show": "Show",
-      "hide": "Hide",
+
+      quantity: "Quantity",
+      qty: "Qty",
+
+      amount: "Amount",
+      price: "Price",
+
+      note: "Note",
+
       name: "Name",
       email: "Email",
       password: "Password",
-      disabled: "Disabled",
-      "disable": "Disable",
-      "activate": "Activate",
-      "currency": "EGP",
+
+      branch: "Branch",
+      user: "User",
+
+      status: "Status",
+      actions: "Actions",
+
+      records: "Records",
+
+      noData: "No data found",
+      notFound: "Not found",
+
+      page: "Page",
+      prev: "Prev",
+      next: "Next",
+
+      archive: "Archive",
+      restore: "Restore",
+
+      yes: "Yes",
+      no: "No",
+
+      excel: "Excel",
+      pdf: "PDF",
+
+      currency: "EGP",
+
       cash: "Cash",
       visa: "Visa",
       instapay: "Instapay",
-      available: "Available",
+
+      lowStock: "Low Stock",
+      outOfStock: "Out of Stock",
+
       max: "Max",
       ml: "ml",
-      records: "records",
-      pdf:
-        "PDF",
-        "creating": "Creating...",
-      "updated": "Updated successfully"
-      
+
+      unknown: "Unknown",
+
+      days: "days",
+
+      updated: "Updated successfully",
     },
 
-    categories: {
-  french: "French",
-  oriental: "Oriental",
-  body: "Body",
-  original: "Original",
-  containers: "Containers",
-},
-    
-
-    navigation: {
-      dashboard: "Dashboard",
-      sales: "Sales",
-      expenses: "Expenses",
-      waste: "Waste",
-      inventory: "Inventory",
-      purchases: "Purchases",
-      reports: "Reports",
-      customers: "Customers",
-      branches: "Branches",
-      users: "Users",
-      settings: "Settings",
-      main: "Main",
-      returns: "Returns",
-      logs: "Logs",
-      operations: "Operations",
-      management: "Management",
-      pricing: "Pricing",
-    },
-    operations: {
-      title: "Operations",
-      transfer: "Transfer",
-      adjust: "Adjust Inventory",
-      fromBranch: "From Branch",
-      toBranch: "To Branch",
-      selectProduct: "Select Product",
-      available: "Available",
-      quantity: "Quantity",
-      reason: "Reason (optional)",
-      type: "Type",
-      increase: "Increase",
-      decrease: "Decrease",
-      activityLog: "Activity Log",
-      noResults: "No results found",
-      exceedStock: "Exceeds available quantity",
-      loadingTransfer: "Transferring...",
-      loadingAdjust: "Adjusting...",
-      transferSuccess: "Transfer completed successfully 🔥",
-      sameBranch: "Cannot transfer to the same branch ❌",
-      notEnoughStock: "Not enough stock ❌",
-      "product": "Product",
-      "undo": "Undo",
-      "undoSuccess": "Undo successful",
-      "noChanges": "No changes detected",
-      products: "Products",
-addProduct: "Add Product",
-productsManagement: "Products Management",
-    },
-    system: {
-    name: "A Perfume Story",
-    subtitle: "ERP System",
-},
-    cart: {
-      "price": "Price",
-      title: "Cart",
-      empty: "Cart Empty",
-      subtotal: "Subtotal",
-      discount: "Discount",
-      total: "Total",
-      checkout: "Checkout",
-      clear: "Clear Cart",
-      added: "added 🔥",
-      add: "Add To Cart",
-      "selectSeller": "Select Seller",
-      "noSellers": "No Sellers",
-      "seller": "Seller"
-    },
-    employees: {
-      employee: "Employee",
-      selectEmployee: "Select Employee"
-    },
-    expenses: {
-      "averageLoan": "Average Loan",
-"largestLoan": "Largest Loan",
-"totalTransactions": "Transactions",
-"totalLoans": "Total Loans",
-      totalTransactions: "Transactions",
-averageExpense: "Average Expense",
-      title: "Expenses Management",
-subtitle: "Manage Expenses, Loans & Bonuses",
-
-tabs: {
-  expenses: "Expenses",
-  expensesSubtitle: "Manage branch expenses",
-  loans: "Loans",
-  loansSubtitle: "Manage employee loans",
-  bonus: "Bonuses",
-  bonusSubtitle: "Manage employee bonuses"
-},
-
-filters: {
-  allCategories: "All Categories",
-  allEmployees: "All Employees"
-},
-
-addExpense: "Add Expense",
-addLoan: "Add Loan",
-addBonus: "Add Bonus",
-
-totalExpenses: "Total Expenses",
-totalLoans: "Total Loans",
-totalBonuses: "Total Bonuses",
-
-topCategory: "Top Category",
-
-category: "Category",
-
-noLoans: "No Loans",
-noBonuses: "No Bonuses",
-
-editExpense: "Edit Expense",
-editLoan: "Edit Loan",
-editBonus: "Edit Bonus",
-      amount: "Amount",
-      note: "Note",
-      add: "Add Expense",
-      noExpenses: "No expenses yet",
-      enterAmount: "Enter amount"
-    },
-    waste: {
-      add: "Add Waste",
-      addItem: "Add Item",
-      addItems: "Add items first",
-      success: "Waste recorded successfully",
-      productNotFound: "Product not found",
-      qtyExceeded: "Quantity exceeds stock",
-      reason: "Waste reason (optional)",
-      history: "Waste History"
-    },
-
-    customer: {
-      "customer": "cutomer",
-      info: "Customer Info",
-      name: "Customer Name",
-      phone: "Phone",
-      noName: "No Name",
-      type: "Type",
-      avgOrder: "Avg Order",
-      inactive: "Inactive customer",
-      totalSpent: "Total Spent",
-      orders: "Orders",
-      lastVisit: "Last Visit",
-      purchases: "Purchases",
-      noPurchases: "No purchases yet",
-      title: "Customers",
-      grossRevenue: "Gross Revenue",
-      refunded: "Refunded",
-      netSpending: "Net Spending",
-      whatsapp: "WhatsApp",
-      notesTags: "Notes & Tags",
-      addTag: "Add Tag",
-      saveNotes: "Save Notes",
-      searchCustomers: "Search by name or phone...",
-      mostSpending: "Most Spending",
-      mostOrders: "Most Orders",
-      latestVisit: "Latest Visit",
-      new: "New",
-      loyal: "Loyal",
-      vip: "VIP",
-      elite: "Elite",
-      addCustomerNotes: "Add customer notes...",
-    },
-
-    products: {
-      container: "Container",
-  french: "French",
-  oriental: "Oriental",
-  original: "Original",
-  musk: "Musk",
-      noProducts: "No products found",
-      title: "Products",
-      categoriesLabel: "Categories",
-      search: "Search product...",
-      outOfStock: "Out of stock",
-      inStock: "In stock",
-      lowStock: "Low stock",
+    subCategories: {
       french: "French",
       oriental: "Oriental",
       body: "Body",
       original: "Original",
+      containers: "Containers",
+    },
+
+    navigation: {
+      main: "Main",
+      management: "Management",
+      operations: "Operations",
+
+      dashboard: "Dashboard",
+      sales: "Sales",
+      expenses: "Expenses",
+      returns: "Returns",
+
+      inventory: "Inventory",
+      purchases: "Purchases",
+      waste: "Waste",
+      pricing: "Pricing",
+
+      reports: "Reports",
+
+      customers: "Customers",
+      branches: "Branches",
+      users: "Users",
+
+      logs: "Logs",
+      settings: "Settings",
+    },
+
+    operations: {
+      title: "Operations",
+
+      transfer: "Transfer",
+      adjust: "Adjust Inventory",
+
+      fromBranch: "From Branch",
+      toBranch: "To Branch",
+
+      selectProduct: "Select Product",
+
+      product: "Product",
+      products: "Products",
+      addProduct: "Add Product",
+      productsManagement: "Products Management",
+
+      available: "Available",
+      quantity: "Quantity",
+
+      reason: "Reason (optional)",
+      type: "Type",
+
+      increase: "Increase",
+      decrease: "Decrease",
+
+      activityLog: "Activity Log",
+
+      noResults: "No results found",
+      noChanges: "No changes detected",
+
+      exceedStock: "Exceeds available quantity",
+      notEnoughStock: "Not enough stock ❌",
+      sameBranch: "Cannot transfer to the same branch ❌",
+
+      loadingTransfer: "Transferring...",
+      loadingAdjust: "Adjusting...",
+
+      transferSuccess: "Transfer completed successfully 🔥",
+
+      undo: "Undo",
+      undoSuccess: "Undo successful",
+    },
+
+    system: {
+      name: "A Perfume Story",
+      subtitle: "ERP System",
+    },
+        cart: {
+      title: "Cart",
+
+      price: "Price",
+
+      empty: "Cart Empty",
+
+      subtotal: "Subtotal",
+      discount: "Discount",
+      total: "Total",
+
+      add: "Add To Cart",
+      added: "Added 🔥",
+
+      checkout: "Checkout",
+      clear: "Clear Cart",
+
+      seller: "Seller",
+      selectSeller: "Select Seller",
+      noSellers: "No Sellers",
+    },
+
+    employees: {
+      employee: "Employee",
+      selectEmployee: "Select Employee",
+    },
+
+    expenses: {
+      title: "Expenses Management",
+      subtitle: "Manage Expenses, Loans & Bonuses",
+
+      tabs: {
+        expenses: "Expenses",
+        expensesSubtitle: "Manage branch expenses",
+
+        loans: "Loans",
+        loansSubtitle: "Manage employee loans",
+
+        bonus: "Bonuses",
+        bonusSubtitle: "Manage employee bonuses",
+      },
+
+      filters: {
+        allCategories: "All Categories",
+        allEmployees: "All Employees",
+      },
+
+      add: "Add Expense",
+      addExpense: "Add Expense",
+      addLoan: "Add Loan",
+      addBonus: "Add Bonus",
+
+      editExpense: "Edit Expense",
+      editLoan: "Edit Loan",
+      editBonus: "Edit Bonus",
+
+      amount: "Amount",
+      note: "Note",
+
+      category: "Category",
+      newCategory: "New Category",
+
+      totalExpenses: "Total Expenses",
+      totalLoans: "Total Loans",
+      totalBonuses: "Total Bonuses",
+      totalTransactions: "Transactions",
+
+      averageExpense: "Average Expense",
+      averageLoan: "Average Loan",
+      largestLoan: "Largest Loan",
+
+      topCategory: "Top Category",
+
+      noExpenses: "No expenses yet",
+      noLoans: "No Loans",
+      noBonuses: "No Bonuses",
+
+      enterAmount: "Enter amount",
+    },
+
+    waste: {
+      add: "Add Waste",
+      addItem: "Add Item",
+      addItems: "Add items first",
+
+      success: "Waste recorded successfully",
+
+      productNotFound: "Product not found",
+      qtyExceeded: "Quantity exceeds stock",
+
+      reason: "Waste reason (optional)",
+
+      history: "Waste History",
+    },
+
+    customer: {
+      customer: "Customer",
+
+      title: "Customers",
+
+      info: "Customer Info",
+
+      name: "Customer Name",
+      phone: "Phone",
+
+      noName: "No Name",
+
+      type: "Type",
+
+      avgOrder: "Avg Order",
+
+      inactive: "Inactive customer",
+
+      totalSpent: "Total Spent",
+      grossRevenue: "Gross Revenue",
+      refunded: "Refunded",
+      netSpending: "Net Spending",
+
+      orders: "Orders",
+      purchases: "Purchases",
+
+      lastVisit: "Last Visit",
+      latestVisit: "Latest Visit",
+
+      noPurchases: "No purchases yet",
+
+      whatsapp: "WhatsApp",
+
+      notesTags: "Notes & Tags",
+      addTag: "Add Tag",
+      saveNotes: "Save Notes",
+      addCustomerNotes: "Add customer notes...",
+
+      searchCustomers: "Search by name or phone...",
+
+      mostSpending: "Most Spending",
+      mostOrders: "Most Orders",
+
+      new: "New",
+      loyal: "Loyal",
+      vip: "VIP",
+      elite: "Elite",
+    },
+
+    products: {
+      title: "Products",
+
+      categories: "Categories",
+      categoriesLabel: "Categories",
+
+      search: "Search product...",
+
+      noProducts: "No products found",
+
       select: "Select product",
+
+      french: "French",
+      oriental: "Oriental",
+      body: "Body",
+      original: "Original",
+      musk: "Musk",
+
+      container: "Container",
+
       oil: "Oil",
       cream: "Cream",
       makhmaria: "Makhmaria",
-      musk: "Musk",
-      chooseType: "Choose Type",
+
       ready: "Ready",
       standard: "Standard",
+
+      chooseType: "Choose Type",
       chooseGrade: "Choose Grade",
       chooseContainer: "Choose Container",
+
       availableOptions: "Available Options",
+
       bottle: "Bottle",
       box: "Box",
       samples: "Samples",
+      sample: "Sample",
+
       pureOil: "Pure Oil",
-      available: "available",
+
+      available: "Available",
+
       size: "Size",
+
+      inStock: "In stock",
+      lowStock: "Low stock",
+      outOfStock: "Out of stock",
       low: "Low",
+
       oilQty: "Oil quantity (ml)",
-      "editProduct": "Edit Product",
-    "productType": "Product Type",
-    "oilCategory": "Oil Category",
-    "pricingTier": "Pricing Tier",
-    "containerType": "Container Type",
-    "minStock": "Minimum Stock Alert",
-    "category": "Category",
-    "sample": "Sample",
-    "addProduct": "Add Product",
-    "productName": "Product Name",
-    "selectType": "Select Type",
-    "selectSubCategory": "Select SubCategory",
-    "selectCategory": "Select Category",
-    "selectOilCategory": "Select Oil Category",
-    "selectPricingTier": "Select Pricing Tier",
-    "costPrice": "Cost Price",
-    "sellingPrice": "Selling Price",
-    "createProduct": "Create Product",
-    archivedProducts: "Archived Products",
-    noArchivedProducts: "No archived products",
-    "types": {
-      "product": "Product",
-      "original": "Original",
-      "oil": "Oil",
-      "container": "Container",
-      "packaging": "Packaging"
-    },
-    "categories": {
-      "cream": "Cream",
-      "makhmaria": "Makhmaria",
-      "original": "Original",
+
+      addProduct: "Add Product",
+      editProduct: "Edit Product",
+      createProduct: "Create Product",
+
+      productName: "Product Name",
+      productType: "Product Type",
+
+      category: "Category",
+
+      selectCategory: "Select Category",
+      selectSubCategory: "Select SubCategory",
+      selectType: "Select Type",
+
+      oilCategory: "Oil Category",
+      selectOilCategory: "Select Oil Category",
+
+      pricingTier: "Pricing Tier",
+      selectPricingTier: "Select Pricing Tier",
+
+      containerType: "Container Type",
+
+      costPrice: "Cost Price",
+      sellingPrice: "Selling Price",
+
+      minStock: "Minimum Stock Alert",
+
+      archivedProducts: "Archived Products",
+      noArchivedProducts: "No archived products",
+
+      types: {
+        product: "Product",
+        original: "Original",
+        oil: "Oil",
+        container: "Container",
+        packaging: "Packaging",
+      },
+
+      categoriesMap: {
+        cream: "Cream",
+        makhmaria: "Makhmaria",
+        original: "Original",
+      },
+
+      oilCategories: {
+        french: "French",
+        oriental: "Oriental",
+        musk: "Musk",
+      },
+
+      pricing: {
+        french: "French",
+        orientalA: "Oriental A",
+        orientalB: "Oriental B",
+        orientalC: "Oriental C",
+        tahara: "Tahara",
+        rumman: "Rumman",
+        crystal: "Crystal",
+      },
     },
 
-
-    "oilCategories": {
-      "french": "French",
-      "oriental": "Oriental",
-      "musk": "Musk"
-    },
-       "pricing": {
-      "french": "French",
-      "orientalA": "Oriental A",
-      "orientalB": "Oriental B",
-      "orientalC": "Oriental C",
-      "tahara": "Tahara",
-      "rumman": "Rumman",
-      "crystal": "Crystal"
-    }
-  
-    },
-
-    payment: {
+        payment: {
       method: "Payment Method",
       cash: "Cash",
       visa: "Visa",
-      instapay: "Instapay"
+      instapay: "Instapay",
     },
-     "customers": {
-    "customer": "Customer"
-  },
 
-  "invoice": {
-    "salesType": "Sales Type",
-    "cash": "Cash",
-    "credit": "Credit",
-    "total": "Total",
-    "invoice": "Invoice",
-    "details": "Invoice Details",
-    "price": "Price",
-    "quantity": "Quantity",
-    "item": "Item"
-  },
+    customers: {
+      customer: "Customer",
+    },
+
+    invoice: {
+      invoice: "Invoice",
+      details: "Invoice Details",
+
+      item: "Item",
+      quantity: "Quantity",
+      price: "Price",
+      total: "Total",
+
+      salesType: "Sales Type",
+      cash: "Cash",
+      credit: "Credit",
+    },
+
     invoices: {
-      "saleType": "Sale Type",
-      "saleDate": "Sale Date",
-      "createdAt": "Created At",
       title: "Invoices",
+      subtitle: "Manage and track all sales invoices",
+
       view: "View Invoices",
+      select: "Select invoice",
+
       number: "Invoice Number",
+      invoice: "Invoice",
+
+      saleType: "Sale Type",
+      saleDate: "Sale Date",
+      createdAt: "Created At",
+
       total: "Total",
       date: "Date",
-      subtitle: "Manage and track all sales invoices",
+
       search: "Search by name / phone...",
-      invoice: "Invoice",
+
       refunded: "Refunded",
       partialRefunded: "Partial Refunded",
       completed: "Completed",
-      select: "Select invoice",
+      cancelled: "Cancelled",
+
       refund: "Refund",
       exchange: "Exchange",
-      print: "Print Invoice",
+
       refundItems: "Refund Items",
       confirmRefund: "Confirm Refund",
-      closed: "Invoice fully refunded",
-      selectQty: "Select quantity",
-      "salesName": "Seller",
-      "enteredBy": "Entered by",
-      maxRefundExceeded: "Quantity exceeds available amount",
+
       returnedItems: "Returned Items",
+
       refundSuccess: "Refund completed successfully",
       cancelSuccess: "Invoice cancelled successfully",
-      "type": "Invoice Type",
-      "sale": "Sale",
-      "returnResale": "Return Resale",
-      "mixed": "Mixed",
-      "filter": {
-        "sales": "Filter by sales"
+
+      closed: "Invoice fully refunded",
+
+      selectQty: "Select quantity",
+      maxRefundExceeded: "Quantity exceeds available amount",
+
+      salesName: "Seller",
+      enteredBy: "Entered by",
+
+      type: "Invoice Type",
+      sale: "Sale",
+      returnResale: "Return Resale",
+      mixed: "Mixed",
+
+      cancelReason: "Cancellation Reason",
+      refundInfo: "Refund Information",
+      activityHistory: "Activity History",
+
+      filter: {
+        sales: "Filter by sales",
       },
-      "cancelled": "Cancelled",
-      "cancelReason": "Cancellation Reason",
-      "refundInfo": "Refund Information",
-      "activityHistory": "Activity History"
     },
 
     inventory: {
       title: "Inventory",
+
       stock: "Stock",
       addStock: "Add Stock",
+
+      productsAvailable: "Products Available",
+
       lowStock: "Low Stock",
       outOfStock: "Out of Stock",
-      productsAvailable: "Products Available",
-      "oil": "Oil",
-      "container": "Container",
-      "product": "Product",
-      "original": "Original",
 
+      oil: "Oil",
+      container: "Container",
+      product: "Product",
+      original: "Original",
     },
 
     reports: {
       title: "Reports",
-      expenses: "Expenses Report",
-      profits: "Profits",
-      dateFrom: "From",
-      dateTo: "To",
-      exportByBranch: "Export by Branch",
+
       sales: "Sales",
       invoices: "Invoices",
+      expenses: "Expenses Report",
+      profits: "Profits",
+
+      dateFrom: "From",
+      dateTo: "To",
+
+      exportByBranch: "Export by Branch",
+
       best: "Best Branch",
       worst: "Worst Branch",
+
       salesOverTime: "Sales Over Time",
-      topCustomers: "Top Customers",
-      oilUsage: "Oil Usage",
-      insights: "Insights",
+      spendingTrend: "Spending Trend",
+
       topProducts: "Top Products",
-      spendingTrend: "Spending Trend"
+      topCustomers: "Top Customers",
+
+      oilUsage: "Oil Usage",
+
+      netRevenue: "Net Revenue",
+
+      insights: "Insights",
     },
+
+    sales: {
+      totalSales: "Total Sales",
+    },
+
     returns: {
       title: "Returns",
-      invoice: "Invoice",
-      product: "Product",
-      type: "Type",
-      title: "Returns",
       subtitle: "Track all returned and exchanged items",
+
+      total: "Total Returns",
+
+      totalRefunds: "Total Refunds",
+      cashRefunds: "Cash Refunds",
+      visaRefunds: "Visa Refunds",
+      instapayRefunds: "Instapay Refunds",
+
       invoice: "Invoice",
       product: "Product",
       type: "Type",
-      total: "Total Returns",
+
       items: "Returned Items",
-      sold: "Resold",
+
       returned: "Returned",
-      search: "Search by invoice, product or branch...",
-      selectReturn: "Select a return to view details",
-      container: "Container",
-      noReturns: "No returns yet",
+      sold: "Resold",
+
       refund: "Refund",
       exchange: "Exchange",
-      "selectReturnDescription": "Click any return to view its details."
 
+      container: "Container",
+
+      search: "Search by invoice, product or branch...",
+
+      noReturns: "No returns yet",
+
+      selectReturn: "Select a return to view details",
+      selectReturnDescription:
+        "Click any return to view its details.",
     },
 
     users: {
-      "sales": "Seller",
+      title: "Users",
+      subtitle: "Manage users and permissions",
+
+      addUser: "Add User",
+
+      search: "Search users",
+
+      user: "User",
+      sales: "Seller",
+
+      role: "Role",
+      branch: "Branches",
+
       admin: "Admin",
       employee: "Employee",
-      "title": "Users",
-      "subtitle": "Manage users and permissions",
-      "addUser": "Add User",
-      "search": "Search users",
-      "user": "User",
-      "role": "Role",
-      "branch": "Branches",
+
       permissions: "Permissions",
     },
 
-    roles: {
-      seller: "Seller",
-      "manager": "Manager",
+       roles: {
       owner: "Owner",
-
+      manager: "Manager",
       supervisor: "Supervisor",
-
-      branchManager:
-        "Branch Manager",
-
-      assistantManager:
-        "Assistant Manager",
-
-      sales: "Sales"
+      branchManager: "Branch Manager",
+      assistantManager: "Assistant Manager",
+      seller: "Seller",
+      sales: "Sales",
     },
 
     branches: {
+      title: "Branches",
+      subtitle: "Manage company branches",
+
+      all: "All Branches",
+      single: "Branch",
+      branch: "Branch",
+
+      select: "Select a branch first",
+
+      search: "Search branches...",
+
+      add: "Add Branch",
+      addBranch: "Add Branch",
+      editBranch: "Edit Branch",
+
+      manageBranches: "Manage branches and employees",
+
+      empty: "No branches found",
+
+      activeBranches: "Active Branches",
+
+      salesToday: "Sales Today",
+
+      users: "Users",
+      employees: "Employees",
+      employeeName: "Employee Name",
+      addEmployee: "Add Employee",
+
+      archiveConfirm: "Archive {{name}} ?",
+
       abbasAkkad1: "Abbas Akkad 1",
       abbasAkkad2: "Abbas Akkad 2",
       abbasAkkad3: "Abbas Akkad 3",
       cityStars: "City Stars",
       elObour: "El Obour",
       elRehab: "El Rehab",
-      title: "Branches",
-      all: "All Branches",
-      single: "Branch",
-      select: "Select a branch first",
-      subtitle: "Manage company branches",
-      activeBranches: "Active Branches",
-      search: "Search branches...",
-      add: "Add Branch",
-      empty: "No branches found",
-      users: "Users",
-      salesToday: "Sales Today",
-      archiveConfirm: "Archive {{name}} ?",
-      branch: "Branch",
-      employees: "Employees",
-      employeeName: "Employee Name",
-      addEmployee: "Add Employee",
-      "addBranch": "Add Branch",
-      "editBranch": "Edit Branch",
-      "manageBranches": "Manage branches and employees",
-      
 
       validation: {
-        nameRequired: "Branch name is required"
+        nameRequired: "Branch name is required",
       },
 
       fields: {
@@ -863,264 +1006,246 @@ editBonus: "Edit Bonus",
         code: "Code",
         phone: "Phone",
         manager: "Manager",
-        address: "Address"
+        address: "Address",
       },
     },
 
     settings: {
       title: "Settings",
       language: "Language",
-      systemName: "ERP System"
+      systemName: "ERP System",
     },
+
     stockEntry: {
-      addProductsToCart:
-  "Start adding products to create a purchase.",
+      title: "Stock Entry",
+      subtitle: "Add products to inventory",
+
       cart: "Purchase Cart",
-emptyCart: "Cart is empty",
-totalQuantity: "Total Quantity",
-savePurchase: "Save Purchase",
+      emptyCart: "Cart is empty",
 
-purchaseSaved: "Purchase saved successfully.",
-purchaseSaveFailed: "Failed to save purchase.",
-selectBranchFirst: "Please select a branch first.",
-  title: "Stock Entry",
-  subtitle: "Add products to inventory",
-  addButton: "Add to Inventory",
-  addItem: "Add Item",
-  searchProduct: "Search product...",
-  quantity: "Quantity",
-  items: "Items",
-  totalQty: "Total Quantity",
-  history: "History",
-  noData: "No entries yet",
-  duplicateWarning: "Duplicate products detected, continue?",
-  invalidQty: "Quantity must be greater than 0",
-  selectBranch: "Please select a branch",
-  addItemsFirst: "Add items first"
-},
-greetings: {
-  morning: "Good Morning",
-  afternoon: "Good Afternoon",
-  evening: "Good Evening",
-  welcome: "Welcome back"
-},
-dailyClosing: {
-  title: "Daily Closing",
-  subtitle: "Daily financial summary",
-  cashMatched: "Cash Matched",
-  totalSales: "Total Sales",
-  invoices: "Invoices",
-  refunds: "Refunds",
-  expenses: "Expenses",
-  expectedCash: "Expected Cash",
+      addButton: "Add to Inventory",
+      addItem: "Add Item",
 
-  reconciliation: "Cash Reconciliation",
+      addProductsToCart:
+        "Start adding products to create a purchase.",
 
-  cashSales: "Cash Sales",
+      searchProduct: "Search product...",
 
-  refundsTable: "Refunds",
+      quantity: "Quantity",
+      items: "Items",
+      totalQty: "Total Quantity",
 
-  expensesTable: "Expenses",
+      history: "History",
 
-  product: "Product",
+      noData: "No entries yet",
 
-  amount: "Amount",
+      duplicateWarning:
+        "Duplicate products detected, continue?",
 
-  time: "Time",
+      invalidQty:
+        "Quantity must be greater than 0",
 
-  note: "Note",
+      selectBranch:
+        "Please select a branch",
 
-  category: "Category",
+      selectBranchFirst:
+        "Please select a branch first.",
 
-  noData: "No data found today",
+      addItemsFirst:
+        "Add items first",
 
-  invoice: "Invoice",
+      savePurchase:
+        "Save Purchase",
 
-  qty: "Qty",
-  actualCash:
-  "Actual Cash",
+      purchaseSaved:
+        "Purchase saved successfully.",
 
-difference:
-  "Difference",
+      purchaseSaveFailed:
+        "Failed to save purchase.",
+    },
 
-matched:
-  "Cash Matched",
+    greetings: {
+      morning: "Good Morning",
+      afternoon: "Good Afternoon",
+      evening: "Good Evening",
+      welcome: "Welcome back",
+    },
 
-cashOver:
-  "Over",
+    dailyClosing: {
+      title: "Daily Closing",
+      subtitle: "Daily financial summary",
 
-cashShortage:
-  "Cash Shortage",
+      summary: "Closing Summary",
 
-saveClosing:
-  "Save Closing",
+      latest: "Latest",
 
-saving:
-  "Saving...",
+      totalSales: "Total Sales",
+      salesTotal: "Total Sales",
 
-alreadyClosed:
-  "Already Closed",
+      invoices: "Invoices",
+      invoice: "Invoice",
+      invoiceCount: "Invoices",
 
-dailyAlreadyClosed:
-  "Daily already closed",
+      refunds: "Refunds",
+      refundsTable: "Refunds",
+      refundsOnly: "Refunds",
 
-dailyClosingSaved:
-  "Daily closing saved",
+      expenses: "Expenses",
+      expensesTable: "Expenses",
+      expensesOnly: "Expenses",
 
-somethingWentWrong:
-  "Something went wrong",
+      loans: "Loans",
+      loansOnly: "Loans",
 
-notes:
-  "Notes",
+      bonuses: "Bonuses",
+      bonusesOnly: "Bonuses",
 
-writeNotes:
-  "Write notes...",
+      expectedCash: "Expected Cash",
+      actualCash: "Actual Cash",
 
-closeDailyCash:
-  "Close Daily Cash",
+      expected: "Expected",
+      actual: "Actual",
 
-enterActualCash:
-  "Enter actual cash amount",
+      difference: "Difference",
 
-loans:
-  "Loans",
+      cashMatched: "Cash Matched",
+      matched: "Cash Matched",
+      matchedCount: "Matched",
 
-bonuses:
-  "Bonuses",
+      cashOver: "Over",
+      cashShortage: "Cash Shortage",
 
-cash:
-  "Cash",
+      highestCash: "Highest Cash",
+      highestDiff: "Highest Difference",
 
-visa:
-  "Visa",
+      reconciliation:
+        "Cash Reconciliation",
 
-instapay:
-  "Instapay",
+      cashSales: "Cash Sales",
 
-branch:
-  "Branch",
+      cash: "Cash",
+      cashOnly: "Cash",
 
-createdAt:
-  "Created At",
+      visa: "Visa",
+      instapay: "Instapay",
 
-user:
-  "User",
+      amount: "Amount",
+      qty: "Qty",
 
-status:
-  "Status",
+      product: "Product",
 
-expected:
-  "Expected",
+      category: "Category",
 
-actual:
-  "Actual",
+      note: "Note",
+      notes: "Notes",
+      notesTitle: "Notes",
 
-search:
-  "Search...",
+      writeNotes:
+        "Write notes...",
 
-reviewClosings:
-  "Review all branch closings",
+      branch: "Branch",
+      user: "User",
 
-closings:
-  "Closings",
+      status: "Status",
 
-matchedCount:
-  "Matched",
+      createdAt: "Created At",
+      time: "Time",
 
-shortages:
-  "Shortages",
+      search: "Search...",
 
-historyTitle:
-  "Daily Closing History",
+      noData: "No data found today",
 
-completed:
-  "Daily closing already completed",
-latest:
-  "Latest",
+      reviewClosings:
+        "Review all branch closings",
 
-highestDiff:
-  "Highest Difference",
+      closings: "Closings",
 
-highestCash:
-  "Highest Cash",
+      shortages: "Shortages",
 
-summary:
-  "Closing Summary",
+      historyTitle:
+        "Daily Closing History",
 
-salesTotal:
-  "Total Sales",
+      saveClosing:
+        "Save Closing",
 
-cashOnly:
-  "Cash",
+      saving: "Saving...",
 
-refundsOnly:
-  "Refunds",
+      closeDailyCash:
+        "Close Daily Cash",
 
-expensesOnly:
-  "Expenses",
+      enterActualCash:
+        "Enter actual cash amount",
 
-loansOnly:
-  "Loans",
+      alreadyClosed:
+        "Already Closed",
 
-bonusesOnly:
-  "Bonuses",
+      dailyAlreadyClosed:
+        "Daily already closed",
 
-invoiceCount:
-  "Invoices",
+      dailyClosingSaved:
+        "Daily closing saved",
 
-notesTitle:
-  "Notes"
-},
+      completed:
+        "Daily closing already completed",
+
+      somethingWentWrong:
+        "Something went wrong",
+    },
     
   },
 
   ar: {
-    "purchaseHistory": {
-    "undo": "تراجع عن الشراء",
-    "undoConfirm": "هل تريد التراجع عن عملية الشراء؟",
-    "undoSuccess": "تم التراجع عن عملية الشراء بنجاح",
-    "undoFailed": "فشل التراجع عن عملية الشراء",
-    "undone": "تم التراجع",
-    "totalItems": "عدد الأصناف",
-    "totalQuantity": "إجمالي الكمية",
-    "undoneMessage": "تم التراجع عن هذه العملية"
-  },
+    purchaseHistory: {
+      undo: "تراجع عن الشراء",
+      undoConfirm: "هل تريد التراجع عن عملية الشراء؟",
+      undoSuccess: "تم التراجع عن عملية الشراء بنجاح",
+      undoFailed: "فشل التراجع عن عملية الشراء",
+      undone: "تم التراجع",
+      undoneMessage: "تم التراجع عن هذه العملية",
+      totalItems: "عدد الأصناف",
+      totalQuantity: "إجمالي الكمية",
+    },
+
     sidebar: {
       main: "الرئيسية",
       operations: "العمليات",
       management: "الإدارة",
 
-      dashboard: "الشاشة الرئيسية ",
+      dashboard: "الشاشة الرئيسية",
       sales: "المبيعات",
       expenses: "المصروفات",
       returns: "المرتجعات",
+
       inventory: "المخزون",
       purchases: "المشتريات",
       waste: "الهدر",
       pricing: "التسعير",
+
       reports: "التقارير",
+
       customers: "العملاء",
       branches: "الفروع",
       users: "المستخدمين",
+
       logs: "السجلات",
+
       operationsPage: "العمليات",
       finance: "المالية",
 
-      dailyClosing:
-        "التقفيل اليومي",
-
-      dailyClosingHistory:
-        "سجل التقفيل",
+      dailyClosing: "التقفيل اليومي",
+      dailyClosingHistory: "سجل التقفيل",
     },
+
     topbar: {
       appName: "A Perfume Story",
-      erp: "إدارة الفروع والمبيعات ",
+      erp: "إدارة الفروع والمبيعات",
       allBranches: "كل الفروع",
       english: "English",
       arabic: "العربية",
       settings: "الإعدادات",
-      logout: "تسجيل الخروج"
+      logout: "تسجيل الخروج",
     },
+
     branchNames: {
       abbasAkkad1: "عباس العقاد 1",
       abbasAkkad2: "عباس العقاد 2",
@@ -1128,686 +1253,773 @@ notesTitle:
       cityStars: "سيتي ستارز",
       cityStars2: "سيتي ستارز 2",
       elObour: "العبور",
-      elRehab: "الرحاب"
+      elRehab: "الرحاب",
     },
+
     dashboard: {
       title: "الرئيسية",
+
       alerts: "التنبيهات",
 
       noSales: "لا توجد مبيعات في الفترة المحددة",
 
-      profit: "الأرباح",
-
-      avgMargin: "متوسط الهامش",
-
-      today: "اليوم",
-
-      avgOrder: "متوسط الطلب",
-
-      growth: "النمو",
-
-
-      branchPerformance: "أداء الفروع",
-
-      profitableBranches: "أكثر الفروع ربحًا",
-
-      noBranchData: "لا توجد بيانات فروع",
       sales: "المبيعات",
-
+      orders: "مرة",
       invoices: "الفواتير",
 
+      today: "اليوم",
       todaySales: "مبيعات اليوم",
+
+      profit: "الأرباح",
+      avgMargin: "متوسط الهامش",
+      avgOrder: "متوسط الطلب",
+      growth: "النمو",
+
+      branchPerformance: "أداء الفروع",
+      profitableBranches: "أكثر الفروع ربحًا",
+      noBranchData: "لا توجد بيانات فروع",
+
       fastMoving: "الأكثر مبيعًا",
-      "orders": "مرة",
       deadStock: "الراكد",
+      neverSold: "لم يتم بيعه",
 
       recentActivity: "آخر النشاطات",
-      neverSold: "لم يتم بيعه",
+      noActivity: "لا توجد نشاطات حديثة",
+
       criticalStock: "المخزون الحرج",
       criticalOils: "الزيوت الحرجة",
-
       criticalContainers: "العبوات الحرجة",
-
       criticalOriginals: "الأوريجنال الحرجة",
-
       criticalProducts: "منتجات الجسم الحرجة",
-      noActivity:
-        "لا توجد نشاطات حديثة",
-      "bestBranch": "أفضل فرع",
-    "ofTotalSales": "من إجمالي المبيعات",
 
-    "branches": "فروع",
+      bestBranch: "أفضل فرع",
+      ofTotalSales: "من إجمالي المبيعات",
+      branches: "فروع",
 
-    "threshold": "الحد الأدنى",
-    "outOfStock": "نفذ",
-    "critical": "حرج",
-    "low": "منخفض",
+      threshold: "الحد الأدنى",
+      outOfStock: "نفد",
+      critical: "حرج",
+      low: "منخفض",
 
-    "mostProfitableProducts": "أعلى المنتجات ربحًا",
+      mostProfitableProducts: "أعلى المنتجات ربحًا",
+      mostConsumedOils: "الأكثر استهلاكًا",
+      mostProfitableOils: "أعلى الزيوت ربحًا",
 
-    "mostConsumedOils": "الأكثر استهلاكًا",
-
-    "mostProfitableOils": "أعلى الزيوت ربحًا",
-
-    "branchStock": "مخزون الفروع"
-      
+      branchStock: "مخزون الفروع",
     },
+
     activity: {
-
       sale: "بيع",
-
       return: "مرتجع",
-
       partialReturn: "مرتجع جزئي",
-      
-
     },
+
     common: {
       clearFilters: "مسح الفلاتر",
-      search: "بحث...",
-  records: "سجل",
-      exportExcel: "تصدير Excel",
-amount: "المبلغ",
-note: "الملاحظة",
-       "fromDate": "من تاريخ",
-    "toDate": "إلى تاريخ",
-      "clearAll": "مسح الكل",
-      available: "متاح",
+      clearAll: "مسح الكل",
+      clear: "مسح",
 
-  lowStock: "مخزون منخفض",
-
-  outOfStock: "نفد",
-      "date": "التاريخ",
-    "branch": "الفرع",
-    "user": "المستخدم",
-    "quantity": "الكمية",
-    "details": "التفاصيل",
-    "noData": "لا توجد بيانات",
-      "from": "من",
-  "to": "إلى",
-      all: "الكل",
-clear: "مسح",
-quantity: "الكمية",
-      records: "سجل",
-      days: "أيام",
-      save: "حفظ",
-      delete: "حذف",
-      edit: "تعديل",
-      add: "إضافة",
       search: "بحث...",
-      processing: "جاري التنفيذ...",
-      noData: "لا يوجد بيانات",
-      excel: "Excel",
-      pdf: "PDF",
-      notFound: "غير موجود",
-      qty: "الكمية",
-      unknown: "غير معروف",
-      error: "حدث خطأ",
+
+      from: "من",
+      to: "إلى",
+
+      fromDate: "من تاريخ",
+      toDate: "إلى تاريخ",
+
       date: "التاريخ",
-      back: "رجوع",
-      prev: "السابق",
-      next: "التالي",
-      page: "صفحة",
-      status: "الحالة",
-      actions: "الإجراءات",
-      confirm: "تأكيد",
+
+      all: "الكل",
+
+      add: "إضافة",
+      edit: "تعديل",
+      delete: "حذف",
+      save: "حفظ",
       cancel: "إلغاء",
-      confirmAction: "هل أنت متأكد؟",
-      price: "السعر",
-      loading: "جاري التحميل...",
       close: "إغلاق",
+
+      confirm: "تأكيد",
+      confirmAction: "هل أنت متأكد؟",
+
+      processing: "جاري التنفيذ...",
+      loading: "جاري التحميل...",
+      creating: "جاري الإنشاء...",
+
       success: "تم",
       warning: "تحذير",
-      yes: "نعم",
-      no: "لا",
+      error: "حدث خطأ",
+
       retry: "إعادة المحاولة",
       refresh: "تحديث",
       done: "تم",
-      archive: "أرشفة",
-      restore: "استعادة",
+
+      show: "إظهار",
+      hide: "إخفاء",
+
       active: "نشط",
       inactive: "غير نشط",
+      disabled: "معطل",
+      disable: "تعطيل",
+      activate: "تفعيل",
+
+      available: "متاح",
       notAvailable: "غير متوفر",
-       "show": "إظهار",
-       "hide": "إخفاء",
+
+      quantity: "الكمية",
+      qty: "الكمية",
+
+      amount: "المبلغ",
+      price: "السعر",
+
+      note: "الملاحظة",
+
       name: "الاسم",
       email: "البريد الإلكتروني",
       password: "كلمة المرور",
-      disabled: "معطل",
-      "disable": "تعطيل",
-      "activate": "تفعيل",
-      "currency": "EGP",
+
+      branch: "الفرع",
+      user: "المستخدم",
+
+      status: "الحالة",
+      actions: "الإجراءات",
+
+      records: "سجل",
+
+      noData: "لا توجد بيانات",
+      notFound: "غير موجود",
+
+      page: "صفحة",
+      prev: "السابق",
+      next: "التالي",
+
+      archive: "أرشفة",
+      restore: "استعادة",
+
+      yes: "نعم",
+      no: "لا",
+
+      excel: "Excel",
+      pdf: "PDF",
+
+      currency: "EGP",
+
       cash: "كاش",
       visa: "فيزا",
       instapay: "انستاباي",
-      available: "متاح",
+
+      lowStock: "مخزون منخفض",
+      outOfStock: "نفد",
+
       max: "الحد الأقصى",
       ml: "مل",
-      pdf:
-       "PDF",
-       "updated": "تم التعديل بنجاح",
-       "creating": "جاري الإنشاء..."
 
+      unknown: "غير معروف",
+
+      days: "أيام",
+
+      updated: "تم التعديل بنجاح",
     },
 
-
-    categories: {
-  french: "فرنسي",
-  oriental: "شرقي",
-  body: "منتجات الجسم",
-  original: "أوريجنال",
-  containers: "العبوات",
-},
+    subCategories: {
+      french: "فرنسي",
+      oriental: "شرقي",
+      body: "منتجات الجسم",
+      original: "أوريجنال",
+      containers: "العبوات",
+    },
     logs: {
-  title: "سجل المراجعة",
-  metadata: "بيانات إضافية",
-  close: "إغلاق",
-  totalLogs: "إجمالي السجلات",
-  todayLogs: "اليوم",
-  failedLogs: "فاشلة",
-  criticalLogs: "حرجة",
+      title: "سجل المراجعة",
 
-  search: "بحث بالسجلات...",
+      metadata: "بيانات إضافية",
+      close: "إغلاق",
 
-  allModules: "كل الوحدات",
-  allActions: "كل العمليات",
-  allStatus: "كل الحالات",
-  allSeverity: "كل المستويات",
+      totalLogs: "إجمالي السجلات",
+      todayLogs: "اليوم",
+      failedLogs: "فاشلة",
+      criticalLogs: "حرجة",
 
-  action: "العملية",
-  module: "القسم",
-  user: "المستخدم",
-  target: "العنصر",
-  status: "الحالة",
-  severity: "الأهمية",
-  time: "الوقت",
+      search: "بحث داخل السجل...",
 
-  success: "نجاح",
-  error: "خطأ",
-  pending: "قيد التنفيذ",
+      allModules: "كل الوحدات",
+      allActions: "كل الإجراءات",
+      allStatus: "كل الحالات",
+      allSeverity: "كل المستويات",
 
-  info: "معلومة",
-  warning: "تحذير",
-  danger: "حرج",
+      action: "العملية",
+      module: "القسم",
+      user: "المستخدم",
+      target: "العنصر",
+      status: "الحالة",
+      severity: "الأهمية",
+      time: "الوقت",
 
-  details: "التفاصيل",
-  summary: "الملخص",
+      success: "نجاح",
+      error: "خطأ",
+      pending: "قيد التنفيذ",
 
-  before: "قبل",
-  after: "بعد",
+      info: "معلومة",
+      warning: "تحذير",
+      danger: "حرج",
 
-  changes: "التغييرات",
+      details: "التفاصيل",
+      summary: "الملخص",
 
-  noLogs: "لا توجد سجلات",
+      before: "قبل",
+      after: "بعد",
 
-  auditDetails: "تفاصيل العملية",
-  auditRecords: "سجل العمليات",
-  branch: "الفرع",
-createdAt: "وقت التنفيذ",
-performedBy: "تم بواسطة",
-total: "الإجمالي",
-  cost: "التكلفة",
-  profit: "الربح",
-  invoiceNumber: "رقم الفاتورة",
-customerName: "اسم العميل",
-customerPhone: "رقم العميل",
-seller: "البائع",
-paymentMethod: "طريقة الدفع",
-paymentCategory: "فئة الدفع",
-overallMargin: "هامش الربح",
-totalItems: "عدد الأصناف",
-totalQty: "إجمالي الكمية",
-totalProfit: "إجمالي الربح",
-totalCost: "إجمالي التكلفة",
-"activity": "سجل العمليات",
-    "products": "سجل المنتجات",
-    "reversed": "تم التراجع",
-    "search": "بحث داخل السجل...",
-    "allActions": "كل الإجراءات",
-    "create": "إضافة",
-    "archive": "أرشفة",
-    "restore": "استرجاع",
-    "edit": "تعديل",
-    "productCreated": "تم إنشاء المنتج",
-    "productArchived": "تمت أرشفة المنتج",
-    "productRestored": "تم استرجاع المنتج",
-    "productEdited": "تم تعديل المنتج",
-    "transferId": "رقم التحويل",
-    "adjustmentId": "رقم التعديل",
+      changes: "التغييرات",
 
-    "fromBranch": "من فرع",
-    "fromBranchName": "من فرع",
+      noLogs: "لا توجد سجلات",
 
-    "toBranch": "الي فرع ",
-    "toBranchName": " الي فرع ",
+      auditDetails: "تفاصيل العملية",
+      auditRecords: "سجل العمليات",
 
-    "activityId": "رقم العملية",
-    "activityType": "نوع العملية",
+      branch: "الفرع",
+      createdAt: "وقت التنفيذ",
+      performedBy: "تم بواسطة",
 
-    "reason": "السبب",
-    "adjustType": "نوع التعديل",
+      total: "الإجمالي",
+      cost: "التكلفة",
+      profit: "الربح",
 
-    "transfer": "تحويل مخزون",
-    "adjust": "تعديل مخزون",
-logActions: {
-  CREATE_USER: "إنشاء مستخدم",
-  UPDATE_USER: "تعديل مستخدم",
-  DELETE_USER: "حذف مستخدم",
-  TOGGLE_USER_STATUS: "تغيير حالة المستخدم",
+      invoiceNumber: "رقم الفاتورة",
+      customerName: "اسم العميل",
+      customerPhone: "رقم العميل",
+      seller: "البائع",
 
-  CREATE_INVOICE: "إنشاء فاتورة",
-  "FULL_REFUND": "استرجاع كامل",
-  "PARTIAL_REFUND": "استرجاع جزئي",
-  "CANCEL_INVOICE": "إلغاء فاتورة",
-  RETURN_RESALE: "مرتجع وإعادة بيع",
+      paymentMethod: "طريقة الدفع",
+      paymentCategory: "فئة الدفع",
 
-  TRANSFER_STOCK: "تحويل مخزون",
-  UNDO_TRANSFER: "التراجع عن التحويل",
-  ADJUST_STOCK: "تعديل مخزون",
-  UNDO_ADJUSTMENT: "التراجع عن التعديل",
-  EDIT_ACTIVITY: "تعديل عملية",
+      overallMargin: "هامش الربح",
 
-  CREATE_PRODUCT: "إنشاء منتج",
-  UPDATE_PRODUCT: "تعديل منتج",
-  ARCHIVE_PRODUCT: "أرشفة منتج",
-  RESTORE_PRODUCT: "استعادة منتج",
+      totalItems: "عدد الأصناف",
+      totalQty: "إجمالي الكمية",
+      totalProfit: "إجمالي الربح",
+      totalCost: "إجمالي التكلفة",
 
-  CREATE_PURCHASE: "إضافة مشتريات",
-  UNDO_PURCHASE: "التراجع عن المشتريات",
+      activity: "سجل العمليات",
+      products: "سجل المنتجات",
 
-  CREATE_WASTE: "تسجيل هالك",
+      reversed: "تم التراجع",
 
-  CREATE_EXPENSE: "إضافة مصروف",
-  ADD_EXPENSE: "إضافة مصروف",
+      create: "إضافة",
+      archive: "أرشفة",
+      restore: "استرجاع",
+      edit: "تعديل",
 
-  CREATE_LOAN: "إضافة سلفة",
-  ADD_LOAN: "إضافة سلفة",
+      productCreated: "تم إنشاء المنتج",
+      productArchived: "تمت أرشفة المنتج",
+      productRestored: "تم استرجاع المنتج",
+      productEdited: "تم تعديل المنتج",
 
-  CREATE_BONUS: "إضافة حافز",
-  ADD_BONUS: "إضافة حافز",
+      transferId: "رقم التحويل",
+      adjustmentId: "رقم التعديل",
 
-  PRICE_UPDATE: "تحديث سعر",
-  UPDATE_PRICE: "تعديل سعر",
+      fromBranch: "من فرع",
+      fromBranchName: "من فرع",
 
-  CREATE_BRANCH: "إنشاء فرع",
-  UPDATE_BRANCH: "تعديل فرع",
-  ENABLE_BRANCH: "تفعيل فرع",
-  DISABLE_BRANCH: "تعطيل فرع",
+      toBranch: "إلى فرع",
+      toBranchName: "إلى فرع",
 
-  CREATE_CUSTOMER: "إضافة عميل",
-  UPDATE_CUSTOMER: "تعديل عميل",
-  ADD_CUSTOMER_NOTE: "إضافة ملاحظة عميل",
+      activityId: "رقم العملية",
+      activityType: "نوع العملية",
 
-  DAILY_CLOSING: "التقفيل اليومي",
+      reason: "السبب",
+      adjustType: "نوع التعديل",
 
-  CHANGE_PASSWORD: "تغيير كلمة المرور",
-  UPDATE_PROFILE: "تعديل الملف الشخصي",
+      transfer: "تحويل مخزون",
+      adjust: "تعديل مخزون",
 
-  RESET_SYSTEM: "إعادة ضبط النظام",
+      logActions: {
+        CREATE_USER: "إنشاء مستخدم",
+        UPDATE_USER: "تعديل مستخدم",
+        DELETE_USER: "حذف مستخدم",
+        TOGGLE_USER_STATUS: "تغيير حالة المستخدم",
 
-  LOGIN_SUCCESS: "تسجيل دخول",
-  LOGIN_FAILED: "فشل تسجيل الدخول",
-  LOGOUT: "تسجيل خروج",
-  DELETE_CUSTOMER: "حذف عميل",
+        LOGIN_SUCCESS: "تسجيل دخول",
+        LOGIN_FAILED: "فشل تسجيل الدخول",
+        LOGOUT: "تسجيل خروج",
 
-  UPDATE_INVOICE: "تعديل فاتورة",
+        CREATE_INVOICE: "إنشاء فاتورة",
+        UPDATE_INVOICE: "تعديل فاتورة",
+        CANCEL_INVOICE: "إلغاء فاتورة",
 
-  DELETE_PRODUCT: "حذف منتج",
+        FULL_REFUND: "استرجاع كامل",
+        PARTIAL_REFUND: "استرجاع جزئي",
+        RETURN_RESALE: "مرتجع وإعادة بيع",
 
-  UPDATE_PURCHASE: "تعديل مشتريات",
-  DELETE_PURCHASE: "حذف مشتريات",
+        CREATE_PRODUCT: "إنشاء منتج",
+        UPDATE_PRODUCT: "تعديل منتج",
+        DELETE_PRODUCT: "حذف منتج",
+        ARCHIVE_PRODUCT: "أرشفة منتج",
+        RESTORE_PRODUCT: "استعادة منتج",
 
-  UPDATE_WASTE: "تعديل هالك",
-  DELETE_WASTE: "حذف هالك",
+        CREATE_PURCHASE: "إضافة مشتريات",
+        UPDATE_PURCHASE: "تعديل مشتريات",
+        DELETE_PURCHASE: "حذف مشتريات",
+        UNDO_PURCHASE: "التراجع عن المشتريات",
 
-  UPDATE_EXPENSE: "تعديل مصروف",
-  DELETE_EXPENSE: "حذف مصروف",
+        TRANSFER_STOCK: "تحويل مخزون",
+        UNDO_TRANSFER: "التراجع عن التحويل",
 
-  UPDATE_LOAN: "تعديل سلفة",
-  DELETE_LOAN: "حذف سلفة",
+        ADJUST_STOCK: "تعديل مخزون",
+        UNDO_ADJUSTMENT: "التراجع عن التعديل",
 
-  UPDATE_BONUS: "تعديل حافز",
-  DELETE_BONUS: "حذف حافز",
+        EDIT_ACTIVITY: "تعديل عملية",
 
-  ARCHIVE_BRANCH: "أرشفة فرع",
-  RESTORE_BRANCH: "استعادة فرع",
+        CREATE_WASTE: "تسجيل هالك",
+        UPDATE_WASTE: "تعديل هالك",
+        DELETE_WASTE: "حذف هالك",
 
-  CREATE_DAILY_CLOSING: "إنشاء تقفيل يومي",
-  UPDATE_DAILY_CLOSING: "تعديل تقفيل يومي",
-  DELETE_DAILY_CLOSING: "حذف تقفيل يومي",
+        CREATE_EXPENSE: "إضافة مصروف",
+        ADD_EXPENSE: "إضافة مصروف",
+        UPDATE_EXPENSE: "تعديل مصروف",
+        DELETE_EXPENSE: "حذف مصروف",
 
-  EXPORT_REPORT: "تصدير تقرير",
+        CREATE_LOAN: "إضافة سلفة",
+        ADD_LOAN: "إضافة سلفة",
+        UPDATE_LOAN: "تعديل سلفة",
+        DELETE_LOAN: "حذف سلفة",
 
-  UPDATE_SETTINGS: "تعديل الإعدادات",
-  UPDATE_PRICE: "تعديل سعر"
-},
-modules: {
-    Users: "المستخدمين",
-    Sales: "المبيعات",
-    Inventory: "المخزون",
-    Customers: "العملاء",
-    Branches: "الفروع",
-    Pricing: "التسعير",
-    Expenses: "المصروفات",
-    Reports: "التقارير",
-    Waste: "الهالك",
-    Operations: "العمليات",
-    Finance: "المالية"
-  }
-},
+        CREATE_BONUS: "إضافة حافز",
+        ADD_BONUS: "إضافة حافز",
+        UPDATE_BONUS: "تعديل حافز",
+        DELETE_BONUS: "حذف حافز",
 
+        CREATE_BRANCH: "إنشاء فرع",
+        UPDATE_BRANCH: "تعديل فرع",
+        ENABLE_BRANCH: "تفعيل فرع",
+        DISABLE_BRANCH: "تعطيل فرع",
+        ARCHIVE_BRANCH: "أرشفة فرع",
+        RESTORE_BRANCH: "استعادة فرع",
 
-    
+        CREATE_CUSTOMER: "إضافة عميل",
+        UPDATE_CUSTOMER: "تعديل عميل",
+        DELETE_CUSTOMER: "حذف عميل",
+        ADD_CUSTOMER_NOTE: "إضافة ملاحظة عميل",
+
+        PRICE_UPDATE: "تحديث سعر",
+        UPDATE_PRICE: "تعديل سعر",
+
+        DAILY_CLOSING: "التقفيل اليومي",
+        CREATE_DAILY_CLOSING: "إنشاء تقفيل يومي",
+        UPDATE_DAILY_CLOSING: "تعديل تقفيل يومي",
+        DELETE_DAILY_CLOSING: "حذف تقفيل يومي",
+
+        EXPORT_REPORT: "تصدير تقرير",
+
+        CHANGE_PASSWORD: "تغيير كلمة المرور",
+        UPDATE_PROFILE: "تعديل الملف الشخصي",
+        UPDATE_SETTINGS: "تعديل الإعدادات",
+
+        RESET_SYSTEM: "إعادة ضبط النظام",
+      },
+
+      modules: {
+        Users: "المستخدمين",
+        Sales: "المبيعات",
+        Inventory: "المخزون",
+        Customers: "العملاء",
+        Branches: "الفروع",
+        Pricing: "التسعير",
+        Expenses: "المصروفات",
+        Reports: "التقارير",
+        Waste: "الهالك",
+        Operations: "العمليات",
+        Finance: "المالية",
+      },
+    },
+
     system: {
       name: "A Perfume Story",
       subtitle: "نظام الإدارة",
-      },
+    },
+
+    sales: {
+      totalSales: "إجمالي المبيعات",
+    },
 
     returns: {
       title: "المرتجعات",
-      invoice: "الفاتورة",
-      product: "المنتج",
-      type: "النوع",
-      title: "المرتجعات",
       subtitle: "متابعة جميع عمليات الاسترجاع والاستبدال",
+
+      total: "إجمالي المرتجعات",
+
+      totalRefunds: "إجمالي المرتجعات",
+      cashRefunds: "مرتجع كاش",
+      visaRefunds: "مرتجع فيزا",
+      instapayRefunds: "مرتجع انستاباي",
+
       invoice: "الفاتورة",
       product: "المنتج",
       type: "النوع",
-      total: "إجمالي المرتجعات",
+
       items: "العناصر المرتجعة",
-      sold: "تم بيعها",
+
       returned: "مرتجع",
-      search: "ابحث برقم الفاتورة أو المنتج أو الفرع...",
-      selectReturn: "اختر عملية مرتجع لعرض التفاصيل",
-      container: "العبوة",
-      noReturns: "لا توجد مرتجعات",
+      sold: "تم بيعها",
+
       refund: "استرجاع",
       exchange: "استبدال",
-      "selectReturnDescription": "اختر أي مرتجع من الجدول لعرض تفاصيله."
+
+      container: "العبوة",
+
+      search: "ابحث برقم الفاتورة أو المنتج أو الفرع...",
+
+      noReturns: "لا توجد مرتجعات",
+
+      selectReturn: "اختر عملية مرتجع لعرض التفاصيل",
+      selectReturnDescription:
+        "اختر أي مرتجع من الجدول لعرض تفاصيله.",
     },
 
-
     navigation: {
+      main: "الرئيسية",
+      management: "الإدارة",
+      operations: "العمليات",
+
       dashboard: "الرئيسية",
       sales: "المبيعات",
       expenses: "المصروفات",
-      waste: "الهدر",
+      returns: "المرتجعات",
+
       inventory: "المخزون",
       purchases: "المشتريات",
+      waste: "الهدر",
+      pricing: "الأسعار",
+
       reports: "التقارير",
+
       customers: "العملاء",
       branches: "الفروع",
       users: "المستخدمين",
-      settings: "الإعدادات",
-      main: "الرئيسية",
-      returns: "المرتجعات",
+
       logs: "السجلات",
-      operations: "العمليات",
-      management: "الإدارة",
-      pricing: "الأسعار",
+
+      settings: "الإعدادات",
     },
     operations: {
       title: "العمليات",
+
       transfer: "تحويل",
       adjust: "تعديل المخزون",
+
       fromBranch: "من فرع",
       toBranch: "إلى فرع",
+
       selectProduct: "اختار منتج",
-      available: "المتاح",
-      quantity: "الكمية",
-      reason: "السبب (اختياري)",
-      type: "النوع",
-      increase: "زيادة",
-      decrease: "نقص",
-      activityLog: "سجل العمليات",
-      noResults: "لا توجد نتائج",
-      exceedStock: "الكمية أكبر من المتاح",
-      loadingTransfer: "جارى التحويل...",
-      loadingAdjust: "جارى التعديل...",
-      transferSuccess: "تم التحويل بنجاح 🔥",
-      sameBranch: "مينفعش تحول لنفس الفرع ❌",
-      notEnoughStock: "المخزون مش كفاية ❌",
-      "product": "المنتج",
-      "undo": "تراجع",
-      "undoSuccess": "تم التراجع بنجاح",
-      "noChanges": "لا توجد أي تعديلات",
+
+      product: "المنتج",
       products: "المنتجات",
+
       addProduct: "إضافة منتج",
       productsManagement: "إدارة المنتجات",
+
+      available: "المتاح",
+      quantity: "الكمية",
+
+      reason: "السبب (اختياري)",
+      type: "النوع",
+
+      increase: "زيادة",
+      decrease: "نقص",
+
+      activityLog: "سجل العمليات",
+
+      noResults: "لا توجد نتائج",
+      noChanges: "لا توجد أي تعديلات",
+
+      exceedStock: "الكمية أكبر من المتاح",
+      notEnoughStock: "المخزون مش كفاية ❌",
+      sameBranch: "مينفعش تحول لنفس الفرع ❌",
+
+      loadingTransfer: "جارى التحويل...",
+      loadingAdjust: "جارى التعديل...",
+
+      transferSuccess: "تم التحويل بنجاح 🔥",
+
+      undo: "تراجع",
+      undoSuccess: "تم التراجع بنجاح",
     },
 
     cart: {
-      "price": "السعر",
       title: "الكارت",
+
+      price: "السعر",
+
       empty: "الكارت فاضي",
+
       subtotal: "الإجمالي قبل الخصم",
       discount: "الخصم",
       total: "الإجمالي",
+
+      add: "إضافة",
+      added: "اتضاف 🔥",
+
       checkout: "الدفع",
       clear: "مسح الكارت",
-      added: "اتضاف 🔥",
-      add: "إضافة ",
-      "seller": "بائع",
-      "selectSeller": "اختر البائع",
-      "noSellers": "لا يوجد بائعين",
+
+      seller: "بائع",
+      selectSeller: "اختر البائع",
+      noSellers: "لا يوجد بائعين",
+    },
+
+    employees: {
+      employee: "الموظف",
+      selectEmployee: "اختر الموظف",
+    },
+
+    expenses: {
+      title: "إدارة المصروفات",
+      subtitle: "إدارة المصروفات والسلف والحوافز",
+
+      tabs: {
+        expenses: "المصروفات",
+        expensesSubtitle: "إدارة مصروفات الفرع",
+
+        loans: "السلف",
+        loansSubtitle: "إدارة سلف الموظفين",
+
+        bonus: "الحوافز",
+        bonusSubtitle: "إدارة حوافز الموظفين",
       },
-      employees: {
-  employee: "الموظف",
-  selectEmployee: "اختر الموظف"
-},
-      expenses: {
-        "totalEmployees": "Employees",
-        "totalEmployees": "عدد الموظفين",
-        "averageLoan": "متوسط السلفة",
-"largestLoan": "أكبر سلفة",
-"totalTransactions": "عدد العمليات",
-"totalLoans": "إجمالي السلف",
-        totalTransactions: "عدد العمليات",
-averageExpense: "متوسط المصروف",
-        title: "إدارة المصروفات",
-subtitle: "إدارة المصروفات والسلف والحوافز",
 
-tabs: {
-  expenses: "المصروفات",
-  expensesSubtitle: "إدارة مصروفات الفرع",
-  loans: "السلف",
-  loansSubtitle: "إدارة سلف الموظفين",
-  bonus: "الحوافز",
-  bonusSubtitle: "إدارة حوافز الموظفين"
-},
+      filters: {
+        allCategories: "كل التصنيفات",
+        allEmployees: "كل الموظفين",
+      },
 
-filters: {
-  allCategories: "كل التصنيفات",
-  allEmployees: "كل الموظفين"
-},
+      add: "إضافة مصروف",
+      addExpense: "إضافة مصروف",
+      addLoan: "إضافة سلفة",
+      addBonus: "إضافة حافز",
 
-addExpense: "إضافة مصروف",
-addLoan: "إضافة سلفة",
-addBonus: "إضافة حافز",
+      editExpense: "تعديل مصروف",
+      editLoan: "تعديل سلفة",
+      editBonus: "تعديل حافز",
 
-totalExpenses: "إجمالي المصروفات",
-totalLoans: "إجمالي السلف",
-totalBonuses: "إجمالي الحوافز",
-
-topCategory: "أعلى تصنيف",
-
-category: "التصنيف",
-
-noLoans: "لا توجد سلف",
-noBonuses: "لا توجد حوافز",
-
-editExpense: "تعديل مصروف",
-editLoan: "تعديل سلفة",
-editBonus: "تعديل حافز",
       amount: "المبلغ",
       note: "ملاحظة",
-      add: "إضافة مصروف",
+
+      category: "التصنيف",
+      newCategory: "تصنيف جديد",
+
+      totalEmployees: "عدد الموظفين",
+
+      totalExpenses: "إجمالي المصروفات",
+      totalLoans: "إجمالي السلف",
+      totalBonuses: "إجمالي الحوافز",
+      totalTransactions: "عدد العمليات",
+
+      averageExpense: "متوسط المصروف",
+      averageLoan: "متوسط السلفة",
+      largestLoan: "أكبر سلفة",
+
+      topCategory: "أعلى تصنيف",
+
       noExpenses: "لا توجد مصروفات",
+      noLoans: "لا توجد سلف",
+      noBonuses: "لا توجد حوافز",
+
       enterAmount: "اكتب المبلغ",
-      
-      },
+    },
+
     waste: {
       add: "تسجيل هدر",
       addItem: "إضافة منتج",
       addItems: "ضيف منتجات الأول",
+
       success: "تم تسجيل الهدر",
+
       productNotFound: "المنتج غير موجود",
       qtyExceeded: "الكمية أكبر من المخزون",
+
       reason: "سبب الهدر (اختياري)",
-      history: "سجل الهدر"
+
+      history: "سجل الهدر",
     },
+
     customer: {
-      "customer": "العميل",
+      customer: "العميل",
+
+      title: "اسم العميل",
+
       info: "بيانات العميل",
+
       name: "اسم العميل",
       phone: "رقم التليفون",
+
       noName: "بدون اسم",
+
       type: "النوع",
+
       avgOrder: "متوسط الطلب",
+
       inactive: "عميل غير نشط",
+
       totalSpent: "إجمالي الإنفاق",
-      orders: "عدد الطلبات",
-      lastVisit: "آخر زيارة",
-      purchases: "المشتريات",
-      noPurchases: "لا توجد مشتريات",
-      title: "اسم العميل",
       grossRevenue: "إجمالي المبيعات",
       refunded: "المرتجعات",
       netSpending: "الصافي",
+
+      orders: "عدد الطلبات",
+      purchases: "المشتريات",
+
+      lastVisit: "آخر زيارة",
+      latestVisit: "أحدث زيارة",
+
+      noPurchases: "لا توجد مشتريات",
+
       whatsapp: "واتساب",
+
       notesTags: "الملاحظات والتصنيفات",
       addTag: "إضافة تصنيف",
       saveNotes: "حفظ الملاحظات",
+      addCustomerNotes: "أضف ملاحظات عن العميل...",
+
       searchCustomers: "ابحث بالاسم أو الرقم...",
+
       mostSpending: "الأعلى إنفاقًا",
       mostOrders: "الأكثر طلبًا",
-      latestVisit: "أحدث زيارة",
+
       new: "جديد",
       loyal: "عميل دائم",
       vip: "VIP",
       elite: "VIP مميز",
-      addCustomerNotes: "أضف ملاحظات عن العميل...",
     },
 
     products: {
-      container: "عبوة",
-  french: "فرنسي",
-  oriental: "شرقي",
-  original: "أوريجينال",
-  musk: "مسك",
-      noProducts: "لا توجد منتجات",
       title: "المنتجات",
+
+      categories: "الأقسام",
       categoriesLabel: "الأقسام",
+
       search: "ابحث عن منتج...",
-      outOfStock: "خلص",
-      inStock: "متوفر",
-      lowStock: "كمية قليلة",
+
+      noProducts: "لا توجد منتجات",
+
+      select: "اختار منتج",
+
       french: "فرنسي",
       oriental: "شرقي",
       body: "منتجات الجسم",
       original: "أورجينال",
-      select: "اختار منتج",
+      musk: "مسك",
+
+      container: "عبوة",
+
       oil: "كمية الزيت",
       cream: "كريم",
       makhmaria: "مخمرية",
-      musk: "مسك",
-      chooseType: "اختار النوع",
+
       ready: "جاهز",
       standard: "عادي",
+
+      chooseType: "اختار النوع",
       chooseGrade: "اختار الفئة",
       chooseContainer: "اختار العبوة",
+
       availableOptions: "الأحجام المتاحة",
+
       bottle: "زجاجة",
-      box: "بوكس",
+      box: "علبة",
       samples: "تولات",
+      sample: "عينة",
+
       pureOil: "زيت خام",
+
       available: "متوفر",
-      low: "قليل",
+
       size: "الحجم",
+
+      inStock: "متوفر",
+      lowStock: "كمية قليلة",
+      outOfStock: "خلص",
+      low: "قليل",
+
       oilQty: "كمية الزيت (ml)",
       enterOilQty: "لازم تدخل كمية الزيت",
+
       noPrice: "مفيش سعر للمنتج ده",
-      "name": "الاسم",
-      "costPrice": "سعر التكلفة",
-      "minStock": "الحد الأدنى للمخزون",
-       "editProduct": "تعديل المنتج",
-    "productName": "اسم المنتج",
-    "productType": "نوع المنتج",
-    "oilCategory": "تصنيف الزيت",
-    "pricingTier": "فئة التسعير",
-    "containerType": "نوع العبوة",
-    "costPrice": "سعر التكلفة",
-    "sellingPrice": "سعر البيع",
-    "minStock": "حد التنبيه الأدنى",
-    "category": "التصنيف",
-    "french": "فرنسي",
-    "oriental": "شرقي",
-    "musk": "مسك",
-    "bottle": "زجاجة",
-    "box": "علبة",
-    "sample": "عينة",
-    "addProduct": "إضافة منتج",
-    "productName": "اسم المنتج",
-    "selectType": "اختر النوع",
-    "selectSubCategory": "اختر التصنيف الفرعي",
-    "selectCategory": "اختر التصنيف",
-    "selectOilCategory": "اختر فئة الزيت",
-    "selectPricingTier": "اختر شريحة التسعير",
-    "costPrice": "سعر التكلفة",
-    "sellingPrice": "سعر البيع",
-    "createProduct": "إنشاء المنتج",
-    archivedProducts: "المنتجات المؤرشفة",
-    noArchivedProducts: "لا توجد منتجات مؤرشفة",
-    "types": {
-      "oil": "زيت",
-      "container": "عبوة",
-      "product": "منتج",
-      "original": "اوريجنال",
-      "packaging": "تغليف"
-    },
 
-    "subCategories": {
-      "bottle": "زجاجة",
-      "box": "علبة",
-      "sample": "عينة",
-    },
+      name: "الاسم",
 
-    "categories": {
-      "cream": "كريم",
-      "makhmaria": "مخمرية",
-      "original": "اوريجنال",
-      
-    },
+      addProduct: "إضافة منتج",
+      editProduct: "تعديل المنتج",
+      createProduct: "إنشاء المنتج",
 
-    "oilCategories": {
-      "french": "فرنسي",
-      "oriental": "شرقي",
-      "musk": "مسك",
-      
-    },
+      productName: "اسم المنتج",
+      productType: "نوع المنتج",
 
-    "pricing": {
-      "french": "فرنسي",
-      "orientalA": "شرقي A",
-      "orientalB": "شرقي B",
-      "orientalC": "شرقي C",
-      "tahara": "طهارة",
-      "rumman": "رمان",
-      "crystal": "كريستال"
-    }
-    
+      category: "التصنيف",
+
+      selectCategory: "اختر التصنيف",
+      selectSubCategory: "اختر التصنيف الفرعي",
+      selectType: "اختر النوع",
+
+      oilCategory: "تصنيف الزيت",
+      selectOilCategory: "اختر فئة الزيت",
+
+      pricingTier: "فئة التسعير",
+      selectPricingTier: "اختر شريحة التسعير",
+
+      containerType: "نوع العبوة",
+
+      costPrice: "سعر التكلفة",
+      sellingPrice: "سعر البيع",
+
+      minStock: "حد التنبيه الأدنى",
+
+      archivedProducts: "المنتجات المؤرشفة",
+      noArchivedProducts: "لا توجد منتجات مؤرشفة",
+
+      types: {
+        oil: "زيت",
+        container: "عبوة",
+        product: "منتج",
+        original: "اوريجنال",
+        packaging: "تغليف",
+      },
+
+      subCategories: {
+        bottle: "زجاجة",
+        box: "علبة",
+        sample: "عينة",
+      },
+
+      categoriesMap: {
+        cream: "كريم",
+        makhmaria: "مخمرية",
+        original: "اوريجنال",
+      },
+
+      oilCategories: {
+        french: "فرنسي",
+        oriental: "شرقي",
+        musk: "مسك",
+      },
+
+      pricing: {
+        french: "فرنسي",
+        orientalA: "شرقي A",
+        orientalB: "شرقي B",
+        orientalC: "شرقي C",
+        tahara: "طهارة",
+        rumman: "رمان",
+        crystal: "كريستال",
+      },
     },
-    
 
     payment: {
       method: "طريقة الدفع",
       cash: "كاش",
       visa: "فيزا",
-      instapay: "انستاباي"
+      instapay: "انستاباي",
     },
-    "customers": {
-    "customer": "العميل"
-  },
+
+    customers: {
+      customer: "العميل",
+    },
 
   "invoice": {
     "salesType": "نوع البيع",
@@ -1821,139 +2033,195 @@ editBonus: "تعديل حافز",
     "item": "الصنف"
   },
     invoices: {
-       "saleType": "نوع البيع",
-      "saleDate": "تاريخ البيع",
-      "createdAt": "تاريخ الإدخال",
       title: "الفواتير",
+      subtitle: "إدارة ومتابعة جميع الفواتير",
+
       view: "عرض الفواتير",
+
       number: "رقم الفاتورة",
+      invoice: "الفاتورة",
+
       total: "الإجمالي",
       date: "التاريخ",
-      subtitle: "إدارة ومتابعة جميع الفواتير",
-      search: "ابحث بالاسم أو الرقم...",
-      invoice: "الفاتورة",
+
+      saleType: "نوع البيع",
+      saleDate: "تاريخ البيع",
+      createdAt: "تاريخ الإدخال",
+
+      type: "نوع الفاتورة",
+
+      sale: "بيع جديد",
+      returnResale: "إعادة بيع مرتجع",
+      mixed: "مختلطة",
+
       refunded: "مرتجع",
       partialRefunded: "مرتجع جزئي",
       completed: "مكتملة",
-      select: "اختر فاتورة",
+      cancelled: "ملغي",
+
       refund: "استرجاع",
       exchange: "استبدال",
-      print: "طباعة الفاتورة",
+
       refundItems: "استرجاع منتجات",
+      refundInfo: "بيانات المرتجع",
+
       confirmRefund: "تأكيد الاسترجاع",
-      closed: "الفاتورة متقفلة",
-      selectQty: "اختار كمية",
-      "salesName": "اسم البائع",
-      "enteredBy": "تم بواسطة",
-      maxRefundExceeded: "الكمية أكبر من المتاح",
+
       returnedItems: "المنتجات المرتجعة",
+
       refundSuccess: "تم الاسترجاع بنجاح",
       cancelSuccess: "تم إلغاء الفاتورة بنجاح",
-      "type": "نوع الفاتورة",
-      "sale": "بيع جديد",
-      "returnResale": "إعادة بيع مرتجع",
-      "mixed": "مختلطة",
-      "filter": {
-        "sales": "فلترة بالبائع"
+
+      maxRefundExceeded: "الكمية أكبر من المتاح",
+
+      closed: "الفاتورة متقفلة",
+
+      select: "اختر فاتورة",
+      selectQty: "اختار كمية",
+
+      print: "طباعة الفاتورة",
+
+      search: "ابحث بالاسم أو الرقم...",
+
+      salesName: "اسم البائع",
+      enteredBy: "تم بواسطة",
+
+      cancelReason: "سبب الإلغاء",
+
+      activityHistory: "سجل العمليات",
+
+      filter: {
+        sales: "فلترة بالبائع",
       },
-      "cancelled": "ملغي",
-      "cancelReason": "سبب الإلغاء",
-      "refundInfo": "بيانات  المرتجع",
-      "activityHistory": "سجل العمليات"
     },
 
     inventory: {
       title: "المخزون",
+
       stock: "الكمية",
+
       addStock: "إضافة مخزون",
+
+      productsAvailable: "منتج متاح",
+
       lowStock: "كمية قليلة",
       outOfStock: "غير متوفر",
-      productsAvailable: "منتج متاح",
-      "oil": "زيت",
-      "container": "عبوة",
-      "product": "منتج",
-      "original": "أوريجنال"
+
+      oil: "زيت",
+      container: "عبوة",
+      product: "منتج",
+      original: "أوريجنال",
     },
 
     reports: {
       title: "التقارير",
+
       sales: "تقرير المبيعات",
       expenses: "تقرير المصروفات",
+
       profits: "الأرباح",
+      netRevenue: "صافي الإيراد",
+
+      invoices: "الفواتير",
+
       dateFrom: "من",
       dateTo: "إلى",
+
       exportByBranch: "تصدير حسب الفرع",
-      invoices: "الفواتير",
+
       best: "أفضل فرع",
       worst: "أضعف فرع",
+
       salesOverTime: "المبيعات مع الوقت",
+
       topCustomers: "أفضل العملاء",
-      oilUsage: "استهلاك الزيوت",
-      insights: "تحليل العميل",
       topProducts: "أكثر المنتجات",
-      spendingTrend: "اتجاه الإنفاق"
+
+      oilUsage: "استهلاك الزيوت",
+
+      insights: "تحليل العميل",
+
+      spendingTrend: "اتجاه الإنفاق",
     },
 
     users: {
-      "sales": "البائع",
+      title: "المستخدمين",
+      subtitle: "إدارة المستخدمين والصلاحيات",
+
+      addUser: "إضافة مستخدم",
+
+      search: "بحث عن مستخدم",
+
+      user: "المستخدم",
+
+      sales: "البائع",
+
+      role: "الوظيفة",
+
+      branch: "الفروع",
+
+      permissions: "الصلاحيات",
+
       admin: "مدير",
       employee: "موظف",
-      "title": "المستخدمين",
-      "subtitle": "إدارة المستخدمين والصلاحيات",
-      "addUser": "إضافة مستخدم",
-      "search": "بحث عن مستخدم",
-      "user": "المستخدم",
-      "role": "الوظيفة",
-      "branch": "الفروع",
-      permissions: "الصلاحيات",
     },
 
     roles: {
-
-      seller: "بائع",
-      "manager": "مدير فرع",
       owner: "مالك النظام",
+
+      manager: "مدير فرع",
+      branchManager: "مدير فرع",
+      assistantManager: "مساعد مدير",
 
       supervisor: "مشرف",
 
-      branchManager:
-        "مدير فرع",
-
-      assistantManager:
-        "مساعد مدير",
-
-      sales: "موظف مبيعات"
+      seller: "بائع",
+      sales: "موظف مبيعات",
     },
 
     branches: {
+      title: "الفرع",
+
+      branch: "الفرع",
+      single: "الفرع",
+      all: "كل الفروع",
+
+      subtitle: "إدارة فروع الشركة",
+
       abbasAkkad1: "عباس العقاد 1",
       abbasAkkad2: "عباس العقاد 2",
       abbasAkkad3: "عباس العقاد 3",
       cityStars: "سيتي ستارز",
       elObour: "العبور",
       elRehab: "الرحاب",
-      title: "الفرع",
-      branch: "الفرع",
-      all: "كل الفروع",
-      single: "الفرع",
-      select: "اختار فرع الأول",
-      subtitle: "إدارة فروع الشركة",
+
       activeBranches: "فرع نشط",
+
       search: "ابحث عن فرع...",
+
+      select: "اختار فرع الأول",
+
       add: "إضافة فرع",
+      addBranch: "إضافة فرع",
+
+      editBranch: "تعديل الفرع",
+
+      manageBranches: "إدارة بيانات الفروع والموظفين",
+
       empty: "لا توجد فروع",
+
       users: "المستخدمين",
-      salesToday: "مبيعات اليوم",
-      archiveConfirm: "هل تريد أرشفة {{name}} ؟",
+
       employees: "الموظفين",
       employeeName: "اسم الموظف",
       addEmployee: "إضافة موظف",
-      "addBranch": "إضافة فرع",
-      "editBranch": "تعديل الفرع",
-      "manageBranches": "إدارة بيانات الفروع والموظفين",
+
+      salesToday: "مبيعات اليوم",
+
+      archiveConfirm: "هل تريد أرشفة {{name}} ؟",
 
       validation: {
-        nameRequired: "اكتب اسم الفرع"
+        nameRequired: "اكتب اسم الفرع",
       },
 
       fields: {
@@ -1961,217 +2229,169 @@ editBonus: "تعديل حافز",
         code: "الكود",
         phone: "رقم الهاتف",
         manager: "المدير",
-        address: "العنوان"
+        address: "العنوان",
       },
     },
 
     settings: {
       title: "الإعدادات",
+
       language: "اللغة",
-      systemName: "نظام الإدارة"
+
+      systemName: "نظام الإدارة",
     },
+
     stockEntry: {
-      addProductsToCart:
-  "ابدأ بإضافة منتجات لإنشاء عملية شراء.",
+      title: "إضافة للمخزون",
+      subtitle: "إضافة منتجات إلى المخزن",
+
       cart: "سلة المشتريات",
-emptyCart: "السلة فارغة",
-totalQuantity: "إجمالي الكمية",
-savePurchase: "حفظ المشتريات",
+      emptyCart: "السلة فارغة",
 
-purchaseSaved: "تم حفظ المشتريات بنجاح",
-purchaseSaveFailed: "فشل في حفظ المشتريات",
-selectBranchFirst: "يرجى اختيار الفرع أولاً",
-  title: "إضافة للمخزون",
-  subtitle: "إضافة منتجات إلى المخزن",
-  addButton: "إضافة للمخزن",
-  addItem: "إضافة صنف",
-  searchProduct: "ابحث عن منتج...",
-  quantity: "الكمية",
-  items: "عدد الأصناف",
-  totalQty: "إجمالي الكمية",
-  history: "سجل المشتريات",
-  noData: "لا توجد عمليات",
-  duplicateWarning: "في منتجات متكررة، متأكد؟",
-  invalidQty: "الكمية لازم تكون أكبر من 0",
-  selectBranch: "اختار فرع",
-  addItemsFirst: "ضيف منتجات الأول"
-},
-greetings: {
-  morning: "صباح الخير",
-  afternoon: "مساء الخير",
-  evening: "مساء الخير",
-  welcome: "أهلاً بعودتك"
-},
-dailyClosing: {
-  title: "التقفيل اليومي",
-  subtitle: "ملخص مالي يومي",
-  cashMatched: "الكاش مطابق",
-  totalSales: "إجمالي المبيعات",
+      addButton: "إضافة للمخزن",
+      addItem: "إضافة صنف",
 
-  invoices: "الفواتير",
+      addProductsToCart:
+        "ابدأ بإضافة منتجات لإنشاء عملية شراء.",
 
-  refunds: "المرتجعات",
+      searchProduct: "ابحث عن منتج...",
 
-  expenses: "المصروفات",
+      quantity: "الكمية",
 
-  expectedCash: "النقدية المتوقعة",
+      items: "عدد الأصناف",
+      totalQty: "إجمالي الكمية",
+      totalQuantity: "إجمالي الكمية",
 
-  reconciliation: "تسوية الكاش",
+      history: "سجل المشتريات",
 
-  cashSales: "المبيعات النقدية",
+      savePurchase: "حفظ المشتريات",
 
-  refundsTable: "المرتجعات",
+      purchaseSaved: "تم حفظ المشتريات بنجاح",
+      purchaseSaveFailed: "فشل في حفظ المشتريات",
 
-  expensesTable: "المصروفات",
+      duplicateWarning:
+        "في منتجات متكررة، متأكد؟",
 
-  product: "المنتج",
+      invalidQty:
+        "الكمية لازم تكون أكبر من 0",
 
-  amount: "المبلغ",
+      selectBranch: "اختار فرع",
+      selectBranchFirst:
+        "يرجى اختيار الفرع أولاً",
 
-  time: "الوقت",
+      addItemsFirst: "ضيف منتجات الأول",
 
-  note: "ملاحظات",
+      noData: "لا توجد عمليات",
+    },
 
-  category: "التصنيف",
+    greetings: {
+      morning: "صباح الخير",
+      afternoon: "مساء الخير",
+      evening: "مساء الخير",
+      welcome: "أهلاً بعودتك",
+    },
 
-  noData: "لا توجد بيانات اليوم",
+    dailyClosing: {
+      title: "التقفيل اليومي",
+      subtitle: "ملخص مالي يومي",
 
-  invoice: "الفاتورة",
+      summary: "ملخص اليومية",
 
-  qty: "الكمية",
-  actualCash:
-  "الكاش الفعلي",
+      totalSales: "إجمالي المبيعات",
+      salesTotal: "إجمالي المبيعات",
 
-difference:
-  "الفرق",
+      invoices: "الفواتير",
 
-matched:
-  "الكاش مطابق",
+      refunds: "المرتجعات",
+      refundsTable: "المرتجعات",
+      refundsOnly: "مرتجعات",
 
-cashOver:
-  "زيادة في الكاش",
+      expenses: "المصروفات",
+      expensesTable: "المصروفات",
+      expensesOnly: "مصروفات",
 
-cashShortage:
-  "عجز في الكاش",
+      loans: "السلف",
+      loansOnly: "سلف",
 
-saveClosing:
-  "حفظ اليومية",
+      bonuses: "الحوافز",
+      bonusesOnly: "حوافز",
 
-saving:
-  "جاري الحفظ...",
+      expectedCash: "النقدية المتوقعة",
+      actualCash: "الكاش الفعلي",
 
-alreadyClosed:
-  "تم الإغلاق",
+      reconciliation: "تسوية الكاش",
 
-dailyAlreadyClosed:
-  "تم إغلاق اليومية بالفعل",
+      cashSales: "المبيعات النقدية",
 
-dailyClosingSaved:
-  "تم حفظ اليومية",
+      cashMatched: "الكاش مطابق",
+      matched: "الكاش مطابق",
+      matchedCount: "مطابق",
 
-somethingWentWrong:
-  "حدث خطأ",
+      difference: "الفرق",
 
-notes:
-  "ملاحظات",
+      cashOver: "زيادة في الكاش",
+      cashShortage: "عجز في الكاش",
 
-writeNotes:
-  "اكتب أي ملاحظات...",
+      expected: "المتوقع",
+      actual: "الفعلي",
 
-closeDailyCash:
-  "إغلاق اليومية",
+      invoice: "الفاتورة",
+      invoiceCount: "الفواتير",
 
-enterActualCash:
-  "أدخل النقدية الفعلية الموجودة",
+      product: "المنتج",
 
-loans:
-  "السلف",
+      category: "التصنيف",
 
-bonuses:
-  "الحوافز",
+      amount: "المبلغ",
+      qty: "الكمية",
 
-cash:
-  "كاش",
+      note: "ملاحظات",
+      notes: "ملاحظات",
+      notesTitle: "ملاحظات",
 
-visa:
-  "فيزا",
+      writeNotes: "اكتب أي ملاحظات...",
 
-instapay:
-  "انستاباي",
+      time: "الوقت",
 
-branch:
-  "الفرع",
+      branch: "الفرع",
+      user: "المستخدم",
 
-createdAt:
-  "وقت الحفظ",
+      status: "الحالة",
 
-user:
-  "المستخدم",
+      createdAt: "وقت الحفظ",
 
-status:
-  "الحالة",
+      latest: "الأحدث",
 
-expected:
-  "المتوقع",
+      highestCash: "أعلى كاش",
+      highestDiff: "أعلى فرق",
 
-actual:
-  "الفعلي",
+      closings: "اليوميات",
+      historyTitle: "سجل التقفيل اليومي",
 
-search:
-  "بحث...",
+      reviewClosings: "مراجعة جميع يوميات الفروع",
 
-reviewClosings:
-  "مراجعة جميع يوميات الفروع",
+      saveClosing: "حفظ اليومية",
+      saving: "جاري الحفظ...",
 
-closings:
-  "اليوميات",
+      closeDailyCash: "إغلاق اليومية",
 
-matchedCount:
-  "مطابق",
+      enterActualCash: "أدخل النقدية الفعلية الموجودة",
 
-shortages:
-  "العجز",
+      alreadyClosed: "تم الإغلاق",
+      completed: "تم إغلاق اليومية لهذا اليوم",
+      dailyAlreadyClosed: "تم إغلاق اليومية بالفعل",
 
-historyTitle:
-  "سجل التقفيل اليومي",
+      dailyClosingSaved: "تم حفظ اليومية",
 
-completed:
-  "تم إغلاق اليومية لهذا اليوم",
-latest:
-  "الأحدث",
+      somethingWentWrong: "حدث خطأ",
 
-highestDiff:
-  "أعلى فرق",
+      search: "بحث...",
 
-highestCash:
-  "أعلى كاش",
+      noData: "لا توجد بيانات اليوم",
 
-summary:
-  "ملخص اليومية",
-
-salesTotal:
-  "إجمالي المبيعات",
-
-cashOnly:
-  "كاش",
-
-refundsOnly:
-  "مرتجعات",
-
-expensesOnly:
-  "مصروفات",
-
-loansOnly:
-  "سلف",
-
-bonusesOnly:
-  "حوافز",
-
-invoiceCount:
-  "الفواتير",
-
-notesTitle:
-  "ملاحظات"
-},
+      cash: "كاش",
+      visa: "فيزا",
+      instapay: "انستاباي",
+    },
   }
 };

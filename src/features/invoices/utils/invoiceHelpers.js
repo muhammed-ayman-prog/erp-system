@@ -52,10 +52,14 @@ export const getInvoiceStatus = (
             .toLowerCase() === "oil"
       )
       .reduce(
-        (sum, i) =>
-          sum + (i.oilQty * i.qty),
-        0
-      ) || 0;
+  (sum, i) =>
+    sum +
+    (
+      i.selectedMl ??
+      ((i.oilQty || 0) * (i.qty || 0))
+    ),
+  0
+) || 0;
 
   const fullyRefunded =
     isFullyRefunded(

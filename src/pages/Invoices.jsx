@@ -949,13 +949,7 @@ const totalMl =
         sum + (i.oilQty * i.qty),
       0
     ) || 0;
-console.log({
-  refundedQty: refunded,
-  refundedMl,
-  totalProducts,
-  totalMl,
-  items: selectedInvoice.items
-});
+
 const fullyRefunded =
   isFullyRefunded(
     refunded,

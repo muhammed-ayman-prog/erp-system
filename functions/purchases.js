@@ -42,10 +42,7 @@ exports.createPurchase = onCall(
       }
 
       const { branchId, items } = request.data;
-      console.log("=== CREATE PURCHASE START ===");
-console.log("Auth UID:", auth.uid);
-console.log("Branch:", branchId);
-console.log("Items:", items);
+
 
       validateBranch(branchId);
       validateItems(items);
@@ -55,10 +52,8 @@ console.log("Items:", items);
       // ==========================
 
       
-console.log("STEP 1 - Start");
 const userData =
   await getCurrentUser(auth.uid);
-  console.log("User:", userData);
 
       const db = admin.firestore();
 
@@ -71,7 +66,6 @@ const userData =
   .collection("branches")
   .doc(branchId)
   .get();
-  console.log("STEP 3 - Branch Loaded", branchId);
 
 if (!branchSnap.exists) {
   throw new HttpsError(
@@ -82,14 +76,12 @@ if (!branchSnap.exists) {
 
 const branchName =
   branchSnap.data().name;
-  console.log("Branch Name:", branchName);
       // ==========================
       // Transaction
       // ==========================
 
       await db.runTransaction(async (transaction) => {
 
-  console.log("STEP 5 - Inside Transaction");
 
   // ==========================
   // READ ALL INVENTORY FIRST
@@ -165,14 +157,12 @@ const branchName =
   );
 
 });
-console.log("STEP 6 - Transaction Done");
 
       // ==========================
       // Stock Logs
       // ==========================
 
       for (const stock of stockResults) {
-console.log("STEP 7 - Stock Log", stock.item.productId);    
         await createStockLog({
             
 
@@ -207,7 +197,6 @@ console.log("STEP 7 - Stock Log", stock.item.productId);
   (sum, item) => sum + Number(item.quantity),
   0
 );
-console.log("Transaction Success");
 return {
   success: true,
 

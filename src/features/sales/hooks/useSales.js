@@ -122,37 +122,75 @@ const removeItem = (target) => {
 const increaseQty = (target) => {
   const product = productsWithStock.find(p => p.id === target.id);
 
-if (!product || product.quantity <= 0) return;
+  if (!product || product.quantity <= 0) return;
 
-if (target.qty >= product.quantity) {
-  showToast(setToastText, setShowToast,"وصلت لأقصى كمية ❌");
-  return;
-}
+  if (target.containerType !== "oil" && target.qty >= product.quantity) {
+    showToast(setToastText, setShowToast, "وصلت لأقصى كمية ❌");
+    return;
+  }
 
   setCart(prev =>
-    prev.map((item) =>
+    prev.map(item =>
       normalize(item.id) === normalize(target.id) &&
       normalize(item.size) === normalize(target.size) &&
       normalize(item.containerType) === normalize(target.containerType)
-        ? { ...item, qty: item.qty + 1 }
+        ? item.containerType === "oil"
+          ? (() => {
+    const newMl = (item.selectedMl ?? item.oilQty) + 1;
+
+    return {
+      ...item,
+      selectedMl: newMl,
+      price: (item.pricePerMl || 0) * newMl
+    };
+  })()
+          : {
+              ...item,
+              qty: item.qty + 1
+            }
         : item
     )
   );
 };
-  const decreaseQty = (target) => {
+const decreaseQty = (target) => {
   setCart(prev =>
     prev
-      .map((item) =>
+      .map(item =>
         normalize(item.id) === normalize(target.id) &&
         normalize(item.size) === normalize(target.size) &&
         normalize(item.containerType) === normalize(target.containerType)
-          ? { ...item, qty: item.qty - 1 }
+          ? item.containerType === "oil"
+            ? (() => {
+  const newMl = (item.selectedMl ?? item.oilQty) - 1;
+
+  return {
+    ...item,
+    selectedMl: newMl,
+    price: (item.pricePerMl || 0) * newMl
+  };
+})()
+            : {
+                ...item,
+                qty: item.qty - 1
+              }
           : item
       )
-      .filter((item) => item.qty > 0)
+      .filter(item =>
+        item.containerType === "oil"
+          ? (item.selectedMl ?? item.oilQty) > 0
+          : item.qty > 0
+      )
   );
 };
 const subtotal = cart.reduce((sum, item) => {
+  if (item.containerType === "oil") {
+    return (
+      sum +
+      (item.pricePerMl || 0) *
+      (item.selectedMl ?? item.oilQty ?? 0)
+    );
+  }
+
   return sum + (item.price || 0) * item.qty;
 }, 0);
 

@@ -68,9 +68,10 @@ export default function useInvoiceReturns(selectedInvoice) {
   }, [previousReturns]);
 
   return {
-    previousReturns,
-    groupedReturns,
-    liveReturns: previousReturns,
-  };
+  previousReturns,
+  setPreviousReturns,
+  groupedReturns,
+  liveReturns: previousReturns,
+};
 
 }

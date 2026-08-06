@@ -75,17 +75,32 @@ export default function CartItemCard({
           fontWeight: "700",
           color: theme.colors.primary
         }}>
-          {item.price * item.qty} EGP
+          {
+            item.containerType === "oil"
+              ? (
+                  (item.pricePerMl || 0) *
+                  (item.selectedMl ?? item.oilQty)
+                ).toLocaleString()
+              : (item.price * item.qty).toLocaleString()
+          } EGP
         </div>
       </div>
 
       {/* Details */}
-      <div style={{
-        fontSize: "12px",
-        color: theme.colors.textSecondary
-      }}>
-        {item.containerName || item.containerType}
-      </div>
+      <div
+  style={{
+    fontSize: "12px",
+    color: theme.colors.textSecondary
+  }}
+>
+  {item.containerName || item.containerType}
+
+  {item.containerType === "oil" && (
+    <div>
+      {item.selectedMl ?? item.oilQty} ml
+    </div>
+  )}
+</div>
 
       {/* Controls */}
       <div style={{
@@ -111,7 +126,11 @@ export default function CartItemCard({
             <Minus size={16} />
           </button>
 
-          <span>{item.qty}</span>
+          <span>
+  {item.containerType === "oil"
+    ? `${item.selectedMl ?? item.oilQty} ml`
+    : item.qty}
+</span>
 
           <button
             onClick={() => increaseQty(item)}
@@ -157,7 +176,9 @@ export default function CartItemCard({
 
                 setContainerType(item.containerType);
 
-                setOilQty(item.oilQty || 0);
+                setOilQty(
+                  item.selectedMl ?? item.oilQty ?? 0
+                );
 
                 removeItem(item);
 

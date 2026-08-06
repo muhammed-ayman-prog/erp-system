@@ -102,7 +102,8 @@ branchCode =
             }
 
             const oilStock = oilDoc.data()?.quantity || 0;
-            const neededOil = item.oilQty * item.qty;
+            const neededOil =
+              item.selectedMl ?? (item.oilQty * item.qty);
 
             if (oilStock < neededOil) {
               throw new Error(`❌ الزيت مش كفاية لـ ${item.name}`);
@@ -396,7 +397,13 @@ branchCode =
         margin: item.margin || 0,
 
         // 🟡 Backward compatibility
-        oilQty: item.oilQty || 0
+        oilQty: item.oilQty || 0,
+        
+        selectedMl:
+          item.selectedMl ?? item.oilQty,
+
+        pricePerMl:
+          item.pricePerMl || 0,
       }));
         const totalProfit = cleanedCart.reduce(
       (sum, item) => sum + (item.profit || 0),
@@ -422,7 +429,11 @@ const returnedTotal = returnedItems.reduce((sum, i) => {
     (i.containerType || "").toLowerCase() === "oil";
 
   if (isOil) {
-  return sum + ((i.price || 0) * (i.oilQty || 0));
+  return (
+    sum +
+    (i.pricePerMl || 0) *
+    (i.selectedMl ?? i.oilQty)
+  );
 }
 
   return sum + ((i.price || 0) * (i.qty || 0));
@@ -485,7 +496,7 @@ saleDate:
         (sum, i) =>
           sum +
           (i.containerType === "oil"
-            ? i.oilQty * i.qty
+            ? (i.selectedMl ?? i.oilQty)
             : i.qty),
         0
       ),
@@ -526,9 +537,9 @@ saleDate:
       : item.containerId || item.id,
             productName: item.name,
             quantity:
-      item.containerType === "oil"
-        ? item.oilQty * item.qty
-        : item.qty,
+              item.containerType === "oil"
+                ? (item.selectedMl ?? item.oilQty)
+                : item.qty,
             type: item.isReturned ? "resell" : "sale",
             movementType: item.isReturned
               ? "RETURN_RESALE"
@@ -559,12 +570,17 @@ saleDate:
                 ? item.oilCostPerML || 0
                 : item.containerCost || 0,
 
-            totalCost:
-              item.containerType === "oil"
-                ? item.oilCost || 0
-                : item.containerCost || 0,
+           totalCost:
+            item.containerType === "oil"
+              ? (item.oilCostPerML || 0) *
+                (item.selectedMl ?? item.oilQty)
+              : item.containerCost || 0,
             price: item.price || 0,
-            total: (item.price || 0) * item.qty,
+            total:
+                item.containerType === "oil"
+                ? (item.pricePerMl || 0) *
+                    (item.selectedMl ?? item.oilQty)
+                  : (item.price || 0) * item.qty,
             branchId: branchToUse,
             branchName: branchName,
             employeeId:
@@ -609,7 +625,7 @@ saleDate:
               unitCost: item.oilCostPerML || 0,
 
               totalCost: item.oilCost || 0,
-              price: item.oilQty ? item.price / item.oilQty : 0,
+              price: item.pricePerMl || 0,
               total: (item.price || 0) * item.qty,
               branchId: branchToUse,
               branchName: branchName,
@@ -725,9 +741,9 @@ saleDate:
         (sum, item) =>
           sum +
           (
-            item.containerType === "oil"
-              ? (item.oilQty || 0) * (item.qty || 0)
-              : (item.qty || 0)
+           item.containerType === "oil"
+            ? (item.selectedMl ?? item.oilQty)
+            : item.qty
           ),
         0
       ),
@@ -807,7 +823,9 @@ saleDate:
                     item.name,
 
                   qty:
-                    item.qty
+                    item.containerType === "oil"
+                      ? (item.selectedMl ?? item.oilQty)
+                      : item.qty,
 
                 })),
 

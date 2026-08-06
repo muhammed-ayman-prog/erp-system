@@ -42,17 +42,22 @@ export default function InvoiceItemsTable({
               item.containerType || ""
             ).toLowerCase() === "oil";
 
+          const oilMl =
+            item.selectedMl ??
+            ((item.oilQty || 0) * (item.qty || 0));
+
           const qty = isOil
-            ? `${
-                (item.oilQty || 0) *
-                (item.qty || 0)
-              } ${t("common.ml")}`
+            ? `${oilMl} ${t("common.ml")}`
             : item.qty;
 
           const total =
             item.total ??
-            (item.price || 0) *
-              (item.qty || 0);
+            (
+              isOil
+                ? (item.pricePerMl || 0) *
+                  (item.selectedMl ?? item.oilQty)
+                : (item.price || 0) * (item.qty || 0)
+            );
 
           return (
             <AppCard
@@ -153,11 +158,7 @@ export default function InvoiceItemsTable({
                       />
                     }
                   >
-                    {t(
-                      "products.oil"
-                    )}{" "}
-                    : {item.oilQty}{" "}
-                    {t("common.ml")}
+                    {t("products.oil")} : {item.selectedMl ?? item.oilQty} {t("common.ml")}
                   </AppBadge>
                 </div>
               )}

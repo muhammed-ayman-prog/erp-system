@@ -20,6 +20,8 @@ export default function AppButton({
 
   rightIcon,
 
+  justify = "center",
+
   style = {},
 
   type = "button",
@@ -54,7 +56,7 @@ export default function AppButton({
     ghost: {
       background: "transparent",
       color: theme.colors.text,
-      border: `1px solid transparent`,
+      border: "1px solid transparent",
     },
   };
 
@@ -84,27 +86,29 @@ export default function AppButton({
       disabled={disabled || loading}
       onClick={onClick}
       onMouseEnter={(e) => {
-        if (disabled || loading) {
-          return;
-        }
+        if (disabled || loading) return;
 
-        e.currentTarget.style.transform = "translateY(-1px)";
-        e.currentTarget.style.filter = "brightness(0.98)";
+        e.currentTarget.style.transform =
+          "translateY(-1px)";
+        e.currentTarget.style.filter =
+          "brightness(0.98)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0px)";
-        e.currentTarget.style.filter = "brightness(1)";
+        e.currentTarget.style.transform =
+          "translateY(0)";
+        e.currentTarget.style.filter =
+          "brightness(1)";
       }}
       style={{
         display: "inline-flex",
 
         alignItems: "center",
 
-        justifyContent: "center",
+        justifyContent: justify,
 
-        gap: "8px",
+        gap: 8,
 
-        fontWeight: "600",
+        fontWeight: 600,
 
         width: fullWidth ? "100%" : "auto",
 
@@ -112,11 +116,13 @@ export default function AppButton({
 
         opacity: disabled ? 0.5 : 1,
 
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: disabled
+          ? "not-allowed"
+          : "pointer",
 
         boxShadow:
           variant === "primary"
-            ? "0 4px 14px rgba(0,0,0,0.08)"
+            ? "0 4px 14px rgba(0,0,0,.08)"
             : "none",
 
         ...variants[variant],
@@ -128,7 +134,9 @@ export default function AppButton({
     >
       {!loading && leftIcon}
 
-      {loading ? t("common.loading") : children}
+      {loading
+        ? t("common.loading")
+        : children}
 
       {!loading && rightIcon}
     </button>

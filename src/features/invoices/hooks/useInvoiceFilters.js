@@ -17,6 +17,9 @@ export default function useInvoiceFilters({
 
   fromDate,
   toDate,
+
+  branchFilter,
+  showBranchFilter,
 }) {
   const sellers = useMemo(() => {
     const list = sales
@@ -61,6 +64,10 @@ const matchSearch =
         paymentFilter === "all" ||
         (s.paymentMethod || "cash")
           .toLowerCase() === paymentFilter;
+      const matchBranch =
+        !showBranchFilter ||
+        branchFilter === "all" ||
+        s.branchId === branchFilter;
 
       const refundedQty =
         s.refundedQty || 0;
@@ -141,19 +148,22 @@ const matchSearch =
         matchSearch &&
         matchSales &&
         matchPayment &&
+        matchBranch &&
         matchStatus &&
         matchDate
       );
     });
   }, [
-    sales,
-    searchKey,
-    selectedSeller,
-    paymentFilter,
-    invoiceStatusFilter,
-    fromDate,
-    toDate,
-  ]);
+      sales,
+      searchKey,
+      selectedSeller,
+      paymentFilter,
+      invoiceStatusFilter,
+      fromDate,
+      toDate,
+      branchFilter,
+      showBranchFilter,
+    ]);
 
   return {
     sellers,

@@ -191,7 +191,7 @@ const { t } = useTranslate();
 </option>
 
 <option value="Cream">
-  {t("products.categories.cream")}
+  {t("products.subCategories.cream")}
 </option>
 
 <option value="Makhmaria">

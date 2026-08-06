@@ -1,8 +1,10 @@
+
 export default async function handlePartialRefund({
   loading,
+  setLoading,
   selectedInvoice,
   refundItems,
-  setLoading,
+  refundPaymentMethod,
   setInvoices,
   setSelectedInvoice,
   setRefundItems,
@@ -32,6 +34,10 @@ export default async function handlePartialRefund({
   isFullyRefunded,
   logAction,
 }) {
+  console.trace("handlePartialRefund START", {
+  refundItems,
+  loading,
+});
     if (loading) return;
     if (!selectedInvoice || !selectedInvoice.items) return;
 
@@ -56,22 +62,15 @@ const totalProducts =
 const totalMl =
   selectedInvoice.items
     ?.filter(
-      i =>
-        (i.containerType || "")
-          .toLowerCase() === "oil"
+      i => (i.containerType || "").toLowerCase() === "oil"
     )
     .reduce(
       (sum, i) =>
-        sum + (i.oilQty * i.qty),
+        sum +
+        (i.selectedMl ?? (i.oilQty * i.qty)),
       0
     ) || 0;
-console.log({
-  refundedQty: refunded,
-  refundedMl,
-  totalProducts,
-  totalMl,
-  items: selectedInvoice.items
-});
+
 const fullyRefunded =
   isFullyRefunded(
     refunded,
@@ -137,15 +136,18 @@ const fullyRefunded =
   (sourceItem?.containerType || "").toLowerCase() === "oil";
 
 const maxAllowed =
-  (
-    isOil
-      ? (sourceItem?.oilQty || 0) * (sourceItem?.qty || 0)
-      : (sourceItem?.qty || 0)
-  ) - alreadyRefunded;
+(
+  isOil
+    ? (
+        sourceItem?.selectedMl ??
+        ((sourceItem?.oilQty || 0) * (sourceItem?.qty || 0))
+      )
+    : (sourceItem?.qty || 0)
+) - alreadyRefunded;
 
     const requestedQty = item.refundQty;
     
-
+  
   if (requestedQty > maxAllowed) {
       toast.error(t("invoices.maxRefundExceeded"));
       setLoading(false);
@@ -229,7 +231,9 @@ invoiceDocId: selectedInvoice.id,
       });
     }
   }
-
+  const returnPrice = isOil
+  ? (item.pricePerMl || 0) * item.refundQty
+  : (item.price || 0) * item.refundQty;
     // 🔥 ده لازم يكون جوه اللوب وتحت الكل
     batch.set(returnRef, {
       invoiceId: selectedInvoice.invoiceNumber,
@@ -241,7 +245,8 @@ invoiceDocId: selectedInvoice.id,
       size: item.size || "",
       unit: (item.size || "").includes("ml") ? "ml" : "",
       quantity: item.refundQty,
-      price: item.price,
+      price: returnPrice,
+      pricePerMl: item.pricePerMl || 0,
 
       type: "refund",
       status: "returned",
@@ -271,6 +276,11 @@ performedByName:
   user?.name ||
   user?.email ||
   "",
+
+refundPaymentMethod:
+  refundPaymentMethod ||
+  selectedInvoice.paymentMethod ||
+  "cash",
 
 refundDate: serverTimestamp(),
 
@@ -313,11 +323,16 @@ const refundedMlNow = validItems.reduce((s, i) => {
 
     if (isOil) {
 
-  const originalMl =
-    item.oilQty *
-    (originalItem?.qty || 1);
+const originalMl =
+
+  originalItem?.selectedMl ??
+  (
+    (item.oilQty || 0) *
+    (originalItem?.qty || 1)
+  );
 
   const pricePerMl =
+
     originalMl > 0
       ? (item.price || 0) / originalMl
       : 0;
@@ -335,7 +350,13 @@ const refundedMlNow = validItems.reduce((s, i) => {
   },
   0
 );
+const newReturnedTotal =
+  (selectedInvoice.returnedTotal || 0) + refundAmountNow;
 
+const newNetTotal = Math.max(
+  0,
+  (selectedInvoice.total || 0) - newReturnedTotal
+);
 batch.update(saleRef, {
   hasRefund: true,
 
@@ -344,6 +365,11 @@ batch.update(saleRef, {
   refundedMl: increment(refundedMlNow),
 
   refundedAmount: increment(refundAmountNow),
+
+  // 👇 جديد
+  returnedTotal: newReturnedTotal,
+
+  newTotal: newNetTotal,
 
   lastRefundDate: serverTimestamp(),
 
@@ -360,16 +386,28 @@ batch.update(saleRef, {
   prev.map(s =>
     s.id === selectedInvoice.id
       ? {
-          ...s,
+  ...s,
 
-          refundedQty:
-            (s.refundedQty || 0) + refundedQtyNow,
+  refundedQty:
+    (s.refundedQty || 0) + refundedQtyNow,
 
-          refundedMl:
-            (s.refundedMl || 0) + refundedMlNow,
+  refundedMl:
+    (s.refundedMl || 0) + refundedMlNow,
 
-          hasRefund: true
-        }
+  refundedAmount:
+    (s.refundedAmount || 0) + refundAmountNow,
+
+  returnedTotal:
+    (s.returnedTotal || 0) + refundAmountNow,
+
+  newTotal: Math.max(
+    0,
+    (s.total || 0) -
+      ((s.returnedTotal || 0) + refundAmountNow)
+  ),
+
+  hasRefund: true
+}
       : s
   )
 );
@@ -444,6 +482,9 @@ branchName: branchName || selectedBranch,
     customerPhone:
       selectedInvoice.customerPhone,
     paymentMethod: selectedInvoice.paymentMethod,
+
+    refundPaymentMethod:
+      refundPaymentMethod,
     refundAmount:
       refundAmountNow,
 
@@ -480,7 +521,14 @@ setRefundItems([]);
 
 setSelectedInvoice(prev => ({
   ...prev,
+  returnedTotal:
+  (prev?.returnedTotal || 0) + refundAmountNow,
 
+newTotal: Math.max(
+  0,
+  (prev?.total || 0) -
+    ((prev?.returnedTotal || 0) + refundAmountNow)
+),
   refundedQty:
     (prev?.refundedQty || 0) + refundedQtyNow,
 
