@@ -17,15 +17,15 @@ export default function SalesCategories({
   t,
 }) {
   const categories = [
-    {
-      key: "french",
-      label: t("products.french"),
-      icon: <FlaskConical size={20} />,
-      onClick: () => {
-        setMainTab("french");
-        setSubTab(null);
-      },
-    },
+   {
+  key: "french",
+  label: t("products.french"),
+  icon: <FlaskConical size={20} />,
+  onClick: () => {
+    setMainTab("french");
+    setSubTab(null);
+  },
+},
 
     {
       key: "oriental",

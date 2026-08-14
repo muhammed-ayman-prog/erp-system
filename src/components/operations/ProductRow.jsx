@@ -1,5 +1,10 @@
+import AppCard from "../ui/AppCard";
+import AppBadge from "../ui/AppBadge";
 import AppButton from "../ui/AppButton";
 import Flex from "../ui/layout/Flex";
+
+import { theme } from "../../theme";
+import { useTranslate } from "../../useTranslate";
 
 export default function ProductRow({
   product,
@@ -12,148 +17,149 @@ export default function ProductRow({
 
   setEditProductData,
 }) {
+  const { t } = useTranslate();
+
+  const getTypeVariant = (type) => {
+    switch (type) {
+      case "oil":
+        return "primary";
+
+      case "container":
+        return "warning";
+
+      case "original":
+        return "success";
+
+      default:
+        return "gray";
+    }
+  };
 
   return (
-
-    <div
-
+    <AppCard
+      bordered
+      padding="md"
+      radius="md"
+      shadow="sm"
       onMouseEnter={(e) => {
         e.currentTarget.style.transform =
           "translateY(-2px)";
-      }}
 
+        e.currentTarget.style.boxShadow =
+          "0 10px 24px rgba(15,23,42,.08)";
+      }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform =
-          "translateY(0px)";
-      }}
+          "translateY(0)";
 
+        e.currentTarget.style.boxShadow =
+          theme.shadow.sm;
+      }}
       style={{
         display: "flex",
-
         justifyContent: "space-between",
-
         alignItems: "center",
-
-        padding: "12px",
-
-        background: "#f9fafb",
-
-        border: "1px solid #e5e7eb",
-
-        borderRadius: "12px",
-
-        transition: "0.2s",
+        gap: "16px",
+        transition:
+          "transform .2s ease, box-shadow .2s ease",
+        flexWrap: "wrap",
       }}
     >
-
-      <div>
-
+      {/* Product Info */}
+      <div
+        style={{
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "10px",
-            marginBottom: "5px",
+            flexWrap: "wrap",
+            marginBottom: "6px",
           }}
         >
-
-          <p style={{ fontWeight: "700" }}>
-            {product.name}
-          </p>
-
-          <span
+          <div
             style={{
-              background:
-                product.type === "oil"
-                  ? "#dbeafe"
-                  : product.type === "container"
-                  ? "#fef3c7"
-                  : "#dcfce7",
-
-              color: "#111827",
-
-              padding: "3px 8px",
-
-              borderRadius: "999px",
-
-              fontSize: "11px",
-
-              fontWeight: "700",
+              fontWeight: 700,
+              fontSize: "14px",
+              color: theme.colors.text,
             }}
           >
-            {product.type}
-          </span>
+            {product.name}
+          </div>
 
+          <AppBadge
+            size="sm"
+            variant={getTypeVariant(
+              product.type
+            )}
+          >
+            {product.type}
+          </AppBadge>
         </div>
 
-        <p
+        <div
           style={{
             fontSize: "13px",
-            color: "#6b7280",
+            color: theme.colors.textSecondary,
           }}
         >
           {product.type}
           {" • "}
           {product.category ||
-            product.subCategory}
-        </p>
-
+            product.subCategory ||
+            "-"}
+        </div>
       </div>
 
-      <Flex gap="10px">
-
+      {/* Actions */}
+      <Flex
+        gap="8px"
+        style={{
+          flexShrink: 0,
+          flexWrap: "wrap",
+        }}
+      >
+        {/* Edit */}
         <AppButton
           size="sm"
-
-          style={{
-            background: "#f59e0b",
-            color: "#fff",
-          }}
-
+          variant="warning"
           onClick={() => {
-
             setEditingProduct(product);
 
             setEditProductData({
-            ...product,
-          });
-
+              ...product,
+            });
           }}
         >
-          ✏️ Edit
+          ✏️ {t("common.edit")}
         </AppButton>
 
+        {/* History */}
         <AppButton
           size="sm"
-
-          style={{
-            background: "#6366f1",
-            color: "#fff",
-          }}
-
+          variant="secondary"
           onClick={() =>
             openProductHistory(product)
           }
         >
-          🕘 History
+          🕘 {t("common.history")}
         </AppButton>
 
+        {/* Archive */}
         <AppButton
-          variant="danger"
-
           size="sm"
-
+          variant="danger"
           onClick={() =>
             handleArchiveProduct(product)
           }
         >
-          📦 Archive
+          📦 {t("common.archive")}
         </AppButton>
-
       </Flex>
-
-    </div>
-
+    </AppCard>
   );
-
 }

@@ -27,13 +27,14 @@ export default function CartItemCard({
   popupActions
 }) {
 
-  const {
-    setSelectedProduct,
-    setSelectedSize,
-    setContainerType,
-    setOilQty,
-    setShowPopup
-  } = popupActions;
+ const {
+  setSelectedProduct,
+  setSelectedSize,
+  setContainerType,
+  setOilQty,
+  setShowPopup,
+  setEditingItem
+} = popupActions;
 
   return (
     <div
@@ -167,6 +168,9 @@ export default function CartItemCard({
 
                 if (!product) return;
 
+                // ✏️ Enter Edit Mode
+                setEditingItem(item);
+
                 setSelectedProduct(product);
 
                 setSelectedSize({
@@ -177,11 +181,12 @@ export default function CartItemCard({
                 setContainerType(item.containerType);
 
                 setOilQty(
-                  item.selectedMl ?? item.oilQty ?? 0
+                  item.selectedMl ??
+                  item.oilQty ??
+                  0
                 );
 
-                removeItem(item);
-
+                // ❌ لا نحذف الـ item من الـ cart هنا
                 setShowPopup(true);
               }}
               style={btnStyle}

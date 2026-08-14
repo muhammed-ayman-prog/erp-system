@@ -41,24 +41,32 @@ export default function Grid() {
           .includes(searchQuery.toLowerCase());
 
       const matchesCategory =
-        selectedCategory === "all" ||
+  selectedCategory === "all" ||
 
-        (selectedCategory === "french" &&
-          product.category === "French") ||
+  (selectedCategory === "french" &&
+    product.category === "French") ||
 
-        (selectedCategory === "oriental" &&
-          product.category?.startsWith("Oriental")) ||
+  (selectedCategory === "oriental" &&
+    product.category?.startsWith("Oriental")) ||
 
-        (selectedCategory === "body" &&
-          ["Makhmaria", "Musk"].includes(
-            product.category
-          )) ||
+  (selectedCategory === "body" &&
+    ["Makhmaria", "Musk"].includes(
+      product.category
+    )) ||
 
-        (selectedCategory === "original" &&
-          product.category === "Original") ||
+  (selectedCategory === "original" &&
+    product.category === "Original") ||
 
-        (selectedCategory === "containers" &&
-          product.category === "container");
+  (selectedCategory === "containers" &&
+    (
+      product.category
+        ?.toLowerCase()
+        .trim() === "container" ||
+
+      product.type
+        ?.toLowerCase()
+        .trim() === "container"
+    ));
 
       return (
         matchesSearch &&

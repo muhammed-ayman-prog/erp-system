@@ -55,7 +55,7 @@ export default function PopupOptionsGrid({
 
               return (
 
-                sub === "samples" &&
+                (sub === "sample" || sub === "samples") &&
 
                 !p.name
                   ?.toLowerCase()
@@ -66,7 +66,10 @@ export default function PopupOptionsGrid({
               );
             }
 
-            return sub === "samples";
+            return (
+              sub === "sample" ||
+              sub === "samples"
+            );
           }
 
           return false;

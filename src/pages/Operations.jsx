@@ -34,6 +34,14 @@
 
   import { LOG_MODULES }
   from "../constants/logModules";
+  import {
+  getBranchesService,
+} from "../features/branches/services/branchesService";
+import AppCard from "../components/ui/AppCard";
+import AppInput from "../components/ui/AppInput";
+import AppSelect from "../components/ui/AppSelect";
+import AppButton from "../components/ui/AppButton";
+import { theme } from "../theme";
   const COLORS = {
     primary: "#3b82f6",
     success: "#10b981",
@@ -199,21 +207,23 @@
       fetchAdjustments();
     }, []);
 
-    // 📥 تحميل الفروع
     useEffect(() => {
-      const fetchBranches = async () => {
-        const snapshot = await getDocs(collection(db, "branches"));
+  const fetchBranches = async () => {
+    try {
+      const data =
+        await getBranchesService();
 
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+      setBranches(data);
+    } catch (error) {
+      console.error(
+        "Failed to fetch branches:",
+        error
+      );
+    }
+  };
 
-        setBranches(data);
-      };
-
-      fetchBranches();
-    }, []);
+  fetchBranches();
+}, []);
     useEffect(() => {
       const fetchProducts = async () => {
         const snapshot = await getDocs(collection(db, "products"));
@@ -863,17 +873,19 @@
             oilCategory:
               newOilCategory || null,
             category:
-  newProductType === "oil"
-    ? (
-        newOilCategory === "French"
-          ? "French"
-          : newOilCategory === "Oriental"
-          ? `Oriental-${newPricingTier}`
-          : "Musk"
-      )
-    : newProductType === "original"
-    ? "Original"
-    : newProductCategory || null,
+              newProductType === "oil"
+                ? (
+                    newOilCategory === "French"
+                      ? "French"
+                      : newOilCategory === "Oriental"
+                      ? `Oriental-${newPricingTier}`
+                      : "Musk"
+                  )
+                : newProductType === "original"
+                ? "Original"
+                : newProductType === "container"
+                ? "container"
+                : newProductCategory || null,
             pricingTier:
               newPricingTier || null,
             muskType:
@@ -1017,6 +1029,8 @@
                   )
                 : newProductType === "original"
                 ? "Original"
+                : newProductType === "container"
+                ? "container"
                 : newProductCategory || null,
 
             subCategory:
@@ -1225,17 +1239,13 @@
 };
 
 if (
-  updatedData.type ===
-  "container"
+  updatedData.type === "container"
 ) {
-  updatedData.oilCategory =
-    null;
+  updatedData.category = "container";
 
-  updatedData.pricingTier =
-    null;
-
-  updatedData.muskType =
-    null;
+  updatedData.oilCategory = null;
+  updatedData.pricingTier = null;
+  updatedData.muskType = null;
 }
 
 if (updatedData.type === "oil") {
@@ -2023,309 +2033,467 @@ after: changedAfter
 
             </div>
             <div
-              style={{
-                maxHeight: activeAction === "transfer" ? "1000px" : "0px",
-                opacity: activeAction === "transfer" ? 1 : 0,
-                transform: activeAction === "transfer" ? "translateY(0)" : "translateY(-10px)",
-                overflow: "hidden",
-                transition: "max-height 0.35s ease, opacity 0.25s ease, transform 0.3s ease"
-              }}
+  style={{
+    maxHeight:
+      activeAction === "transfer"
+        ? "1000px"
+        : "0px",
+
+    opacity:
+      activeAction === "transfer"
+        ? 1
+        : 0,
+
+    transform:
+      activeAction === "transfer"
+        ? "translateY(0)"
+        : "translateY(-10px)",
+
+    overflow: "hidden",
+
+    transition:
+      "max-height 0.35s ease, opacity 0.25s ease, transform 0.3s ease",
+  }}
+>
+  <AppCard
+    padding="lg"
+    radius="lg"
+    shadow="sm"
+    style={{
+      marginTop: theme.spacing.lg,
+      border: `1px solid ${theme.colors.cardBorder}`,
+    }}
+  >
+    <h3
+      style={{
+        margin: 0,
+        marginBottom: theme.spacing.md,
+        fontSize: 18,
+        fontWeight: 700,
+        color: theme.colors.text,
+      }}
+    >
+      {t("operations.transfer")} 🔄
+    </h3>
+
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
+    >
+      {/* From Branch */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("operations.fromBranch")}
+        </label>
+
+        <AppSelect
+          value={fromBranch}
+          onChange={(e) =>
+            setFromBranch(e.target.value)
+          }
+        >
+          <option value="">
+            {t("operations.fromBranch")}
+          </option>
+
+          {sortedBranches.map((b) => (
+            <option
+              key={b.id}
+              value={b.id}
             >
-              <div style={{
-                background: "#ffffff",
-                padding: "25px",
-                borderRadius: "20px",
-                marginTop: "20px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                border: "1px solid #f1f5f9" // 👈 ضيف دي
-              }}>
-                <h3 style={{ marginBottom: "10px" }}>
-                  {t("operations.transfer")} 🔄
-                </h3>
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  marginTop: "15px"
-                }}>
-                  <label style={{ fontWeight: "600", fontSize: "14px" }}>
-                    {t("operations.fromBranch")}
-                  </label>
-                  <select
-                    value={fromBranch}
-                    onChange={(e) => setFromBranch(e.target.value)}
-                    style={{
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #ddd",
-                      fontSize: "14px"
-                    }}
-                  >
-                    <option value="">{t("operations.fromBranch")}</option>
-                    {sortedBranches.map(b => {
+              {getBranchName(b.id)}
+            </option>
+          ))}
+        </AppSelect>
+      </div>
 
+      {/* To Branch */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("operations.toBranch")}
+        </label>
 
-                      return (
-                        <option key={b.id} value={b.id}>
-                          {getBranchName(b.id)}
-                        </option>
-                      );
-                    })}
-                  </select>
+        <AppSelect
+          value={toBranch}
+          onChange={(e) =>
+            setToBranch(e.target.value)
+          }
+        >
+          <option value="">
+            {t("operations.toBranch")}
+          </option>
 
-                  <label style={{ fontWeight: "600", fontSize: "14px" }}>
-                    {t("operations.toBranch")}
-                  </label>
-                  <select
-                    value={toBranch}
-                    onChange={(e) => setToBranch(e.target.value)}
-                    style={{
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #ddd",
-                      fontSize: "14px"
-                    }}
-                  >
-                    <option value="">{t("operations.toBranch")}</option>
-                    {sortedBranches.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {getBranchName(b.id)}
-                      </option>
-                    ))}
-                  </select>
-                  <label style={{ fontWeight: "600", fontSize: "14px" }}>
-                    {t("operations.selectProduct")}
-                  </label>
-                  <select
-                    value={productId}
-                    onChange={(e) => setProductId(e.target.value)}
-                    style={{
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #ddd",
-                      fontSize: "14px"
-                    }}
-                  >
+          {sortedBranches.map((b) => (
+            <option
+              key={b.id}
+              value={b.id}
+            >
+              {getBranchName(b.id)}
+            </option>
+          ))}
+        </AppSelect>
+      </div>
 
-                    <option value="">{t("operations.selectProduct")}</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p style={{
-                    background: "#eef2ff",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    fontWeight: "600"
-                  }}>
-                    {t("operations.available")}: {availableQty}
-                  </p>
+      {/* Product */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("operations.selectProduct")}
+        </label>
 
-                  <input
-                    type="number"
-                    min="1"
-                    max={availableQty}
-                    placeholder={t("operations.quantity")}
-                    value={qty}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "" || Number(val) <= availableQty) {
-                        setQty(val);
-                      }
-                    }}
-                    style={{
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #ddd",
-                      fontSize: "14px", outline: "none",
+        <AppSelect
+          value={productId}
+          onChange={(e) =>
+            setProductId(e.target.value)
+          }
+        >
+          <option value="">
+            {t("operations.selectProduct")}
+          </option>
 
-                    }}
-                    onFocus={(e) => e.target.style.boxShadow = "0 0 0 2px #3b82f6"}
-                    onBlur={(e) => e.target.style.boxShadow = "none"}
-                  />
-                  {Number(qty) > availableQty && (
-                    <p style={{ color: "red", marginTop: "5px" }}>
-                      {t("operations.exceedStock")} ❌
-                    </p>
-                  )}
+          {products.map((p) => (
+            <option
+              key={p.id}
+              value={p.id}
+            >
+              {p.name}
+            </option>
+          ))}
+        </AppSelect>
+      </div>
 
-                  <button
-                    onClick={handleTransfer}
-                    disabled={
-                      transferLoading ||
-                      !fromBranch ||
-                      !toBranch ||
-                      !productId ||
-                      Number(qty) <= 0 ||
-                      Number(qty) > availableQty}
-                    style={{
-                      width: "100%",
-                      boxShadow: "0 4px 10px rgba(59,130,246,0.3)",
-                      marginTop: "10px",
-                      padding: "14px",
-                      borderRadius: "12px",
-                      border: "none",
-                      background:
-                        (transferLoading || !fromBranch || !toBranch || !productId || Number(qty) <= 0 || Number(qty) > availableQty)
-                          ? "#9ca3af"
-                          : "#3b82f6",
-                      color: "#fff",
-                      fontWeight: "600",
-                      fontSize: "15px",
-                      transition: "0.2s",
-                      opacity: transferLoading ? 0.7 : 1,
-                      cursor: transferLoading ? "wait" : "pointer",
-                    }}
-                  >
-                    {transferLoading ? t("operations.loadingTransfer") : "🔄 " + t("operations.transfer")}
-                  </button>
-                </div>
-              </div>
+      {/* Available */}
+      <div
+        style={{
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.md,
+          background: theme.colors.infoSoft,
+          color: theme.colors.text,
+          fontSize: 14,
+          fontWeight: 600,
+        }}
+      >
+        {t("operations.available")}:{" "}
+        {availableQty}
+      </div>
 
-            </div>
+      {/* Quantity */}
+      <AppInput
+        type="number"
+        min="1"
+        max={availableQty}
+        placeholder={t("operations.quantity")}
+        value={qty}
+        onChange={(e) => {
+          const val = e.target.value;
+
+          if (
+            val === "" ||
+            Number(val) <= availableQty
+          ) {
+            setQty(val);
+          }
+        }}
+      />
+
+      {Number(qty) > availableQty && (
+        <p
+          style={{
+            margin: 0,
+            color: theme.colors.danger,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {t("operations.exceedStock")} ❌
+        </p>
+      )}
+
+      {/* Submit */}
+      <AppButton
+        type="button"
+        fullWidth
+        size="lg"
+        variant="primary"
+        loading={transferLoading}
+        disabled={
+          transferLoading ||
+          !fromBranch ||
+          !toBranch ||
+          !productId ||
+          Number(qty) <= 0 ||
+          Number(qty) > availableQty
+        }
+        onClick={handleTransfer}
+      >
+        {transferLoading
+          ? t("operations.loadingTransfer")
+          : "🔄 " + t("operations.transfer")}
+      </AppButton>
+    </div>
+  </AppCard>
+</div>
             <div
-              style={{
-                maxHeight: activeAction === "adjust" ? "1000px" : "0px",
-                opacity: activeAction === "adjust" ? 1 : 0,
-                transform: activeAction === "adjust" ? "translateY(0)" : "translateY(-10px)",
-                overflow: "hidden",
-                transition: "max-height 0.35s ease, opacity 0.25s ease, transform 0.3s ease"
-              }}
+  style={{
+    maxHeight:
+      activeAction === "adjust"
+        ? "1000px"
+        : "0px",
+
+    opacity:
+      activeAction === "adjust"
+        ? 1
+        : 0,
+
+    transform:
+      activeAction === "adjust"
+        ? "translateY(0)"
+        : "translateY(-10px)",
+
+    overflow: "hidden",
+
+    transition:
+      "max-height 0.35s ease, opacity 0.25s ease, transform 0.3s ease",
+  }}
+>
+  <AppCard
+    padding="lg"
+    radius="lg"
+    shadow="sm"
+    style={{
+      marginTop: theme.spacing.lg,
+      border: `1px solid ${theme.colors.cardBorder}`,
+    }}
+  >
+    <h3
+      style={{
+        margin: 0,
+        marginBottom: theme.spacing.md,
+        fontSize: 18,
+        fontWeight: 700,
+        color: theme.colors.text,
+      }}
+    >
+      {t("operations.adjust")} ⚖️
+    </h3>
+
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
+    >
+      {/* Branch */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("branches.select")}
+        </label>
+
+        <AppSelect
+          value={adjustBranch}
+          onChange={(e) =>
+            setAdjustBranch(e.target.value)
+          }
+        >
+          <option value="">
+            {t("branches.select")}
+          </option>
+
+          {sortedBranches.map((b) => (
+            <option
+              key={b.id}
+              value={b.id}
             >
-              <div style={{
-                background: "#ffffff",
-                padding: "25px",
-                borderRadius: "20px",
-                marginTop: "20px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                border: "1px solid #f1f5f9"
-              }}>
-                <h3>{t("operations.adjust")} ⚖️</h3>
+              {getBranchName(b.id)}
+            </option>
+          ))}
+        </AppSelect>
+      </div>
 
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  marginTop: "15px"
-                }}>
+      {/* Product */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("operations.selectProduct")}
+        </label>
 
-                  {/* Branch */}
-                  <select
-                    value={adjustBranch}
-                    onChange={(e) => setAdjustBranch(e.target.value)}
-                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-                  >
-                    <option value="">{t("branches.select")}</option>
-                    {sortedBranches.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {getBranchName(b.id)}
-                      </option>
-                    ))}
-                  </select>
+        <AppSelect
+          value={adjustProduct}
+          onChange={(e) =>
+            setAdjustProduct(e.target.value)
+          }
+        >
+          <option value="">
+            {t("operations.selectProduct")}
+          </option>
 
-                  {/* Product */}
-                  <select
-                    value={adjustProduct}
-                    onChange={(e) => setAdjustProduct(e.target.value)}
-                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-                  >
-                    <option value="">{t("operations.selectProduct")}</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                  <p style={{
-                    background: "#ecfdf5",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    fontWeight: "600"
-                  }}>
-                    {t("operations.available")}: {adjustAvailableQty}
-                  </p>
+          {products.map((p) => (
+            <option
+              key={p.id}
+              value={p.id}
+            >
+              {p.name}
+            </option>
+          ))}
+        </AppSelect>
+      </div>
 
-                  {/* Type */}
-                  <select
-                    value={adjustType}
-                    onChange={(e) => setAdjustType(e.target.value)}
-                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-                  >
-                    <option value="increase">
-                      {t("operations.increase")} ➕
-                    </option>
+      {/* Available */}
+      <div
+        style={{
+          padding: theme.spacing.sm,
+          borderRadius: theme.radius.md,
+          background: theme.colors.successSoft,
+          color: theme.colors.text,
+          fontSize: 14,
+          fontWeight: 600,
+        }}
+      >
+        {t("operations.available")}:{" "}
+        {adjustAvailableQty}
+      </div>
 
-                    <option value="decrease">
-                      {t("operations.decrease")} ➖
-                    </option>
-                  </select>
+      {/* Adjustment Type */}
+      <div>
+        <label
+          style={{
+            display: "block",
+            marginBottom: theme.spacing.xs,
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.text,
+          }}
+        >
+          {t("operations.type")}
+        </label>
 
-                  {/* Quantity */}
-                  <input
-                    type="number"
-                    value={adjustQty}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (
-                        val === "" ||
-                        adjustType === "increase" ||
-                        Number(val) <= adjustAvailableQty
-                      ) {
-                        setAdjustQty(val);
-                      }
-                    }}
-                    placeholder={t("operations.quantity")}
-                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-                  />
-                  {adjustType === "decrease" && Number(adjustQty) > adjustAvailableQty && (
-                    <p style={{ color: "red", marginTop: "5px" }}>
-                      {t("operations.exceedStock")} ❌
-                    </p>
-                  )}
+        <AppSelect
+          value={adjustType}
+          onChange={(e) =>
+            setAdjustType(e.target.value)
+          }
+        >
+          <option value="increase">
+            {t("operations.increase")} ➕
+          </option>
 
-                  {/* Reason */}
-                  <input
-                    type="text"
-                    value={adjustReason}
-                    onChange={(e) => setAdjustReason(e.target.value)}
-                    placeholder={t("operations.reason")}
-                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-                  />
+          <option value="decrease">
+            {t("operations.decrease")} ➖
+          </option>
+        </AppSelect>
+      </div>
 
-                  <button
-                    onClick={handleAdjust}
-                    disabled={
-                      adjustLoading ||
-                      !adjustBranch ||
-                      !adjustProduct ||
-                      Number(adjustQty) <= 0 ||
-                      (adjustType === "decrease" && Number(adjustQty) > adjustAvailableQty)
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "14px",
-                      borderRadius: "12px",
-                      border: "none",
-                      background:
-                        (adjustLoading || !adjustBranch || !adjustProduct || Number(adjustQty) <= 0 ||
-                          (adjustType === "decrease" && Number(adjustQty) > adjustAvailableQty))
-                          ? "#9ca3af"
-                          : COLORS.success,
-                      color: "#fff",
-                      fontWeight: "600",
-                      transition: "0.2s",
-                      opacity: adjustLoading ? 0.7 : 1,
-                      cursor: adjustLoading ? "wait" : "pointer",
-                    }}
-                  >
-                    {adjustLoading
-                      ? t("operations.loadingAdjust")
-                      : "⚖️ " + t("operations.adjust")}
-                  </button>
+      {/* Quantity */}
+      <AppInput
+        type="number"
+        min="1"
+        value={adjustQty}
+        placeholder={t("operations.quantity")}
+        onChange={(e) => {
+          const val = e.target.value;
 
-                </div>
-              </div>
-            </div>
+          if (
+            val === "" ||
+            adjustType === "increase" ||
+            Number(val) <= adjustAvailableQty
+          ) {
+            setAdjustQty(val);
+          }
+        }}
+      />
+
+      {adjustType === "decrease" &&
+        Number(adjustQty) >
+          adjustAvailableQty && (
+          <p
+            style={{
+              margin: 0,
+              color: theme.colors.danger,
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            {t("operations.exceedStock")} ❌
+          </p>
+        )}
+
+      {/* Reason */}
+      <AppInput
+        type="text"
+        value={adjustReason}
+        placeholder={t("operations.reason")}
+        onChange={(e) =>
+          setAdjustReason(e.target.value)
+        }
+      />
+
+      {/* Submit */}
+      <AppButton
+        type="button"
+        fullWidth
+        size="lg"
+        variant="success"
+        loading={adjustLoading}
+        disabled={
+          adjustLoading ||
+          !adjustBranch ||
+          !adjustProduct ||
+          Number(adjustQty) <= 0 ||
+          (adjustType === "decrease" &&
+            Number(adjustQty) >
+              adjustAvailableQty)
+        }
+        onClick={handleAdjust}
+      >
+        {adjustLoading
+          ? t("operations.loadingAdjust")
+          : "⚖️ " + t("operations.adjust")}
+      </AppButton>
+    </div>
+  </AppCard>
+</div>
             {activeAction === "addProduct" && (
 
   <AddProductSection

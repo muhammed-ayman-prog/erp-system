@@ -35,6 +35,7 @@ export default function ProductPopup({
 
   getPrice,
   addToCart,
+  updateCartItem,
 
   setToastText,
   setShowToast
@@ -52,7 +53,10 @@ export default function ProductPopup({
   setSelectedSize,
 
   oilQty,
-  setOilQty
+  setOilQty,
+
+  editingItem,
+  setEditingItem
 } = popupState;
 
 const isFrenchBox =
@@ -126,7 +130,6 @@ const getContainerButtonStyle = (
 
 
 const resetPopup = () => {
-
   setShowPopup(false);
 
   setSelectedSize(null);
@@ -134,6 +137,8 @@ const resetPopup = () => {
   setPopupStep(null);
 
   setOilQty(0);
+
+  setEditingItem(null);
 };
 const formatContainerName =
   useMemo(() => {
@@ -391,7 +396,11 @@ if (!popupState.showPopup) return null;
             selectedProduct?.cost || 0
           }
 
-          addToCart={addToCart}
+          addToCart={addToCart}addToCart={addToCart}
+
+          updateCartItem={updateCartItem}
+
+          editingItem={editingItem}
 
           setToastText={
             setToastText

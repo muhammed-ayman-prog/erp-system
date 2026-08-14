@@ -205,32 +205,30 @@ branchCode =
               continue;
             }
 
-            // 🔁 Returned Item
-            if (r.item.isReturned) {
-              const returnedRef = doc(db, "returned_items", r.item.returnedItemId);
-              const returnedSnap = await transaction.get(returnedRef);
-                if (!returnedSnap.exists()) {
-                  throw new Error("❌ المنتج المرتجع غير موجود");
-                }
-                if (returnedSnap.data()?.status === "sold") {
-                  throw new Error("❌ المنتج المرتجع تم بيعه بالفعل");
-                }
-              transaction.update(returnedRef, {
-                status: "sold",
-                soldAt: serverTimestamp()
-              });
+           // 🔁 Returned Item
+if (r.item.isReturned) {
+  const returnedRef = doc(
+    db,
+    "returned_items",
+    r.item.returnedItemId
+  );
 
-              // 🔥 تحديث returns
-              if (r.item.returnId) {
-              const returnRef = doc(db, "returns", r.item.returnId);
+  const returnedSnap = await transaction.get(returnedRef);
 
-              transaction.update(returnRef, {
-                status: "sold"
-              });
-            }
+  if (!returnedSnap.exists()) {
+    throw new Error("❌ المنتج المرتجع غير موجود");
+  }
 
-              continue;
-            }
+  if (returnedSnap.data()?.status === "sold") {
+    throw new Error("❌ المنتج المرتجع تم بيعه بالفعل");
+  }
+
+  // ⚠️ مهم:
+  // لا نغير status هنا.
+  // هنغيره فقط بعد نجاح إنشاء الفاتورة.
+
+  continue;
+}
 
             // 🟢 Normal Flow
             if (r.type === "ready") {
@@ -336,75 +334,106 @@ branchCode =
   }
   
         // 🟢 3) SAVE INVOICE
-          const cleanedCart = cart.map(item => ({
-        employeeId:
-          employeeId || null,
+const cleanedCart = cart.map(item => ({
+  employeeId:
+    employeeId || null,
 
-        employeeName:
-          employeeName ||
-          user?.displayName ||
-          user?.name ||
-          user?.email ||
-          "Unknown Employee",
-        // 🧾 Basic
-        id: item.id,
-        name: item.name,
+  employeeName:
+    employeeName ||
+    user?.displayName ||
+    user?.name ||
+    user?.email ||
+    "Unknown Employee",
 
-        itemType: item.itemType || "UNKNOWN",
+  // 🧾 Basic
+  id: item.id || "",
+  name: item.name || "",
 
-        saleMode: item.saleMode || "UNKNOWN",
+  itemType:
+    item.itemType || "UNKNOWN",
 
-        isReturned: item.isReturned || false,
+  saleMode:
+    item.saleMode || "UNKNOWN",
 
-        saleType: item.isReturned
-          ? "RETURN_RESALE"
-          : "SALE",
+  isReturned:
+    item.isReturned || false,
 
-        // 🛢 Oil
-        oilId: item.oilId || item.id,
-        oilName: item.oilName || item.name,
-        oilCategory: item.oilCategory || "",
+  saleType:
+    item.isReturned
+      ? "RETURN_RESALE"
+      : "SALE",
 
-        oilQtyML: item.oilQtyML || 0,
+  // 🛢 Oil
+  oilId:
+    item.oilId || item.id || null,
 
-        // 🧴 Container
-        size: item.size || "",
+  oilName:
+    item.oilName || item.name || "",
 
-        containerName: item.containerName || "",
-        containerType: item.containerType ?? "unknown",
-        containerId: item.containerId ?? null,
+  oilCategory:
+    item.oilCategory || "",
 
-        // 📦 Qty
-        qty: item.qty || 1,
+  oilQtyML:
+    item.oilQtyML || 0,
 
-        // 💰 Pricing
-        unitPrice: item.unitPrice || item.price || 0,
-        price: item.price || 0,
+  // 🧴 Container
+  size:
+    item.size || "",
 
-        // 💸 Costing
-        oilCostPerML: item.oilCostPerML || 0,
+  containerName:
+    item.containerName || "",
 
-        oilCost: item.oilCost || 0,
+  containerType:
+    item.containerType ?? "unknown",
 
-        containerCost: item.containerCost || 0,
+  containerId:
+    item.containerId ?? null,
 
-        overheadCost: item.overheadCost || 0,
+  // 📦 Qty
+  qty:
+    item.qty || 1,
 
-        unitCost: item.unitCost || 0,
+  // 💰 Pricing
+  unitPrice:
+    item.unitPrice || item.price || 0,
 
-        profit: item.profit || 0,
+  price:
+    item.price || 0,
 
-        margin: item.margin || 0,
+  // 💸 Costing
+  oilCostPerML:
+    item.oilCostPerML || 0,
 
-        // 🟡 Backward compatibility
-        oilQty: item.oilQty || 0,
-        
-        selectedMl:
-          item.selectedMl ?? item.oilQty,
+  oilCost:
+    item.oilCost || 0,
 
-        pricePerMl:
-          item.pricePerMl || 0,
-      }));
+  containerCost:
+    item.containerCost || 0,
+
+  overheadCost:
+    item.overheadCost || 0,
+
+  unitCost:
+    item.unitCost || 0,
+
+  profit:
+    item.profit || 0,
+
+  margin:
+    item.margin || 0,
+
+  // 🟡 Backward compatibility
+  oilQty:
+    item.oilQty || 0,
+
+  selectedMl:
+    item.selectedMl ??
+    item.oilQty ??
+    0,
+
+  pricePerMl:
+    item.pricePerMl || 0,
+}));
         const totalProfit = cleanedCart.reduce(
       (sum, item) => sum + (item.profit || 0),
       0
@@ -523,6 +552,40 @@ saleDate:
         user?.id ||
         null
     });
+    // 🔁 Mark returned items as sold ONLY after invoice is created successfully
+for (const item of cart) {
+  if (!item.isReturned) continue;
+
+  const returnedRef = doc(
+    db,
+    "returned_items",
+    item.returnedItemId
+  );
+
+  const returnedSnap = await getDoc(returnedRef);
+
+  if (!returnedSnap.exists()) {
+    throw new Error("❌ المنتج المرتجع غير موجود");
+  }
+
+  if (returnedSnap.data()?.status === "sold") {
+    throw new Error("❌ المنتج المرتجع تم بيعه بالفعل");
+  }
+
+  await updateDoc(returnedRef, {
+    status: "sold",
+    soldAt: serverTimestamp()
+  });
+
+  if (item.returnId) {
+    await updateDoc(
+      doc(db, "returns", item.returnId),
+      {
+        status: "sold"
+      }
+    );
+  }
+}
     // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
     try {
 

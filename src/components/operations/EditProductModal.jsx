@@ -1,133 +1,88 @@
-export default function EditProductModal({
+import AppModal from "../ui/AppModal";
+import AppInput from "../ui/AppInput";
+import AppSelect from "../ui/AppSelect";
+import AppButton from "../ui/AppButton";
 
+export default function EditProductModal({
   editingProduct,
+
   editProductData,
   setEditProductData,
+
   setEditingProduct,
+
   handleSaveProductEdit,
-  t
 
+  t,
 }) {
+  if (!editingProduct || !editProductData) {
+    return null;
+  }
 
-  if (!editingProduct || !editProductData) return null;
+  const closeModal = () => {
+    setEditingProduct(null);
+  };
 
   return (
-
-    <div
-      onClick={() => setEditingProduct(null)}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-        padding: "15px"
-      }}
+    <AppModal
+      open={!!editingProduct}
+      onClose={closeModal}
+      width="550px"
     >
-
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#fff",
-          borderRadius: "20px",
-          width: "100%",
-          maxWidth: "550px",
-          maxHeight: "90vh",
+          maxHeight: "80vh",
           overflowY: "auto",
-          padding: "20px"
+          padding: "4px",
         }}
       >
-
+        {/* Header */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "20px"
+            marginBottom: "20px",
           }}
         >
-
-          <h3 style={{ margin: 0 }}>
-            ✏️ {t("products.editProduct")}
-          </h3>
-
-          <button
-            onClick={() => setEditingProduct(null)}
+          <h3
             style={{
-              border: "none",
-              background: "transparent",
-              fontSize: "22px",
-              cursor: "pointer"
+              margin: 0,
+              fontSize: "18px",
+              fontWeight: 700,
             }}
           >
-            ✕
-          </button>
-
+            ✏️ {t("products.editProduct")}
+          </h3>
         </div>
 
         {/* NAME */}
-
-        <label
-          style={{
-            fontWeight: "600",
-            display: "block",
-            marginBottom: "6px"
-          }}
-        >
-          {t("products.productName")}
-        </label>
-
-        <input
+        <AppInput
           type="text"
+          placeholder={t("products.productName")}
           value={editProductData.name || ""}
           onChange={(e) =>
-            setEditProductData(prev => ({
+            setEditProductData((prev) => ({
               ...prev,
-              name: e.target.value
+              name: e.target.value,
             }))
           }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            marginBottom: "12px"
-          }}
         />
 
         {/* TYPE */}
-
-        <label
-          style={{
-            fontWeight: "600",
-            display: "block",
-            marginBottom: "6px"
-          }}
-        >
-          {t("products.productType")}
-        </label>
-
-        <select
+        <AppSelect
           value={editProductData.type || ""}
           onChange={(e) => {
-  const type = e.target.value;
+            const type = e.target.value;
 
-  setEditProductData(prev => ({
-    ...prev,
-    type,
-    category: type === "original"
-      ? "Original"
-      : prev.category
-  }));
-}}
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            marginBottom: "12px"
+            setEditProductData((prev) => ({
+              ...prev,
+              type,
+              category:
+                type === "original"
+                  ? "Original"
+                  : prev.category,
+            }));
           }}
         >
           <option value="product">
@@ -145,290 +100,208 @@ export default function EditProductModal({
           <option value="container">
             {t("products.types.container")}
           </option>
-        </select>
+        </AppSelect>
 
         {/* OIL */}
-
         {editProductData.type === "oil" && (
-
           <>
-
-            <label
-              style={{
-                fontWeight: "600",
-                display: "block",
-                marginBottom: "6px"
-              }}
-            >
-              {t("products.oilCategory")}
-            </label>
-
-            <select
-              value={editProductData.oilCategory || ""}
+            <AppSelect
+              value={
+                editProductData.oilCategory || ""
+              }
               onChange={(e) =>
-                setEditProductData(prev => ({
+                setEditProductData((prev) => ({
                   ...prev,
-                  oilCategory: e.target.value
+                  oilCategory: e.target.value,
                 }))
               }
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "10px",
-                border: "1px solid #ddd",
-                marginBottom: "12px"
-              }}
             >
+              <option value="">
+                {t("products.oilCategory")}
+              </option>
+
               <option value="French">
-  {t("products.oilCategories.french")}
-</option>
+                {t(
+                  "products.oilCategories.french"
+                )}
+              </option>
 
-<option value="Oriental">
-  {t("products.oilCategories.oriental")}
-</option>
+              <option value="Oriental">
+                {t(
+                  "products.oilCategories.oriental"
+                )}
+              </option>
 
-<option value="Musk">
-  {t("products.oilCategories.musk")}
-</option>
+              <option value="Musk">
+                {t(
+                  "products.oilCategories.musk"
+                )}
+              </option>
+            </AppSelect>
 
-            </select>
+            {(editProductData.oilCategory ===
+              "Oriental" ||
+              editProductData.oilCategory ===
+                "Musk") && (
+              <AppSelect
+                value={
+                  editProductData.pricingTier ||
+                  ""
+                }
+                onChange={(e) =>
+                  setEditProductData((prev) => ({
+                    ...prev,
+                    pricingTier:
+                      e.target.value,
+                  }))
+                }
+              >
+                <option value="">
+                  {t(
+                    "products.pricingTier"
+                  )}
+                </option>
 
-            {(editProductData.oilCategory === "Oriental" ||
-              editProductData.oilCategory === "Musk") && (
-
-              <>
-                <label
-                  style={{
-                    fontWeight: "600",
-                    display: "block",
-                    marginBottom: "6px"
-                  }}
-                >
-                  {t("products.pricingTier")}
-                </label>
-
-                <select
-                  value={editProductData.pricingTier || ""}
-                  onChange={(e) =>
-                    setEditProductData(prev => ({
-                      ...prev,
-                      pricingTier: e.target.value
-                    }))
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "1px solid #ddd",
-                    marginBottom: "12px"
-                  }}
-                >
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                </select>
-              </>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </AppSelect>
             )}
-
           </>
         )}
 
         {/* CONTAINER */}
-
         {editProductData.type === "container" && (
+          <AppSelect
+            value={
+              editProductData.subCategory || ""
+            }
+            onChange={(e) =>
+              setEditProductData((prev) => ({
+                ...prev,
+                subCategory: e.target.value,
+              }))
+            }
+          >
+            <option value="">
+              {t(
+                "products.containerType"
+              )}
+            </option>
 
-          <>
-            <label
-              style={{
-                fontWeight: "600",
-                display: "block",
-                marginBottom: "6px"
-              }}
-            >
-              {t("products.containerType")}
-            </label>
+            <option value="bottle">
+              {t(
+                "products.subCategories.bottle"
+              )}
+            </option>
 
-            <select
-              value={editProductData.subCategory || ""}
-              onChange={(e) =>
-                setEditProductData(prev => ({
-                  ...prev,
-                  subCategory: e.target.value
-                }))
-              }
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "10px",
-                border: "1px solid #ddd",
-                marginBottom: "12px"
-              }}
-            >
-              <option value="bottle">
-                {t("products.subCategories.bottle")}
-              </option>
+            <option value="box">
+              {t(
+                "products.subCategories.box"
+              )}
+            </option>
 
-              <option value="box">
-                {t("products.subCategories.box")}
-              </option>
-
-              <option value="sample">
-                {t("products.subCategories.sample")}
-              </option>
-            </select>
-          </>
+            <option value="sample">
+              {t(
+                "products.subCategories.sample"
+              )}
+            </option>
+          </AppSelect>
         )}
 
-        {/* PRODUCT + ORIGINAL */}
-
+        {/* PRODUCT */}
         {editProductData.type === "product" && (
-  <>
-    <label
-      style={{
-        fontWeight: "600",
-        display: "block",
-        marginBottom: "6px"
-      }}
-    >
-      {t("products.category")}
-    </label>
+          <AppSelect
+            value={
+              editProductData.category || ""
+            }
+            onChange={(e) =>
+              setEditProductData((prev) => ({
+                ...prev,
+                category: e.target.value,
+              }))
+            }
+          >
+            <option value="">
+              {t("products.category")}
+            </option>
 
-    <select
-      value={editProductData.category || ""}
-      onChange={(e) =>
-        setEditProductData(prev => ({
-          ...prev,
-          category: e.target.value
-        }))
-      }
-      style={{
-        width: "100%",
-        padding: "12px",
-        borderRadius: "10px",
-        border: "1px solid #ddd",
-        marginBottom: "12px"
-      }}
-    >
-      <option value="Cream">
-        {t("products.subCategories.cream")}
-      </option>
+            <option value="Cream">
+              {t(
+                "products.subCategories.cream"
+              )}
+            </option>
 
-      <option value="Makhmaria">
-        {t("products.categories.makhmaria")}
-      </option>
-    </select>
-  </>
-)}
+            <option value="Makhmaria">
+              {t(
+                "products.categories.makhmaria"
+              )}
+            </option>
+          </AppSelect>
+        )}
 
         {/* COST */}
-
-        <label
-          style={{
-            fontWeight: "600",
-            display: "block",
-            marginBottom: "6px"
-          }}
-        >
-          {t("products.costPrice")}
-        </label>
-
-        <input
+        <AppInput
           type="number"
-          value={editProductData.costPrice || ""}
+          placeholder={t("products.costPrice")}
+          value={editProductData.costPrice ?? ""}
           onChange={(e) =>
-            setEditProductData(prev => ({
+            setEditProductData((prev) => ({
               ...prev,
-              costPrice: Number(e.target.value)
+              costPrice:
+                Number(e.target.value),
             }))
           }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            marginBottom: "12px"
-          }}
         />
 
-        {/* SELLING */}
-
-        <label
-          style={{
-            fontWeight: "600",
-            display: "block",
-            marginBottom: "6px"
-          }}
-        >
-          {t("products.sellingPrice")}
-        </label>
-
-        <input
+        {/* SELLING PRICE */}
+        <AppInput
           type="number"
-          value={editProductData.sellingPrice || ""}
+          placeholder={t(
+            "products.sellingPrice"
+          )}
+          value={
+            editProductData.sellingPrice ?? ""
+          }
           onChange={(e) =>
-            setEditProductData(prev => ({
+            setEditProductData((prev) => ({
               ...prev,
-              sellingPrice: Number(e.target.value)
+              sellingPrice:
+                Number(e.target.value),
             }))
           }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            marginBottom: "12px"
-          }}
         />
 
         {/* MIN STOCK */}
-
-        <label
-          style={{
-            fontWeight: "600",
-            display: "block",
-            marginBottom: "6px"
-          }}
-        >
-          {t("products.minStock")}
-        </label>
-
-        <input
+        <AppInput
           type="number"
-          value={editProductData.minStock || ""}
+          placeholder={t("products.minStock")}
+          value={
+            editProductData.minStock ?? ""
+          }
           onChange={(e) =>
-            setEditProductData(prev => ({
+            setEditProductData((prev) => ({
               ...prev,
-              minStock: Number(e.target.value)
+              minStock:
+                Number(e.target.value),
             }))
           }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            marginBottom: "20px"
-          }}
         />
 
-        <button
+        {/* SAVE */}
+        <AppButton
+          type="button"
+          fullWidth
+          size="lg"
+          variant="primary"
           onClick={handleSaveProductEdit}
           style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "12px",
-            border: "none",
-            background: "#2563eb",
-            color: "#fff",
-            fontWeight: "700",
-            cursor: "pointer"
+            marginTop: "8px",
           }}
         >
           💾 {t("common.save")}
-        </button>
-
+        </AppButton>
       </div>
-
-    </div>
-
+    </AppModal>
   );
 }

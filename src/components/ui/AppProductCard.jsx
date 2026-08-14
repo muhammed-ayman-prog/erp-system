@@ -9,12 +9,73 @@ import {
 
 import { theme } from "../../theme";
 import { useTranslate } from "../../useTranslate";
+const getContainerKind = (product) => {
+  const category =
+    product?.category
+      ?.toLowerCase()
+      ?.trim() || "";
 
-const getIcon = (category) => {
-  const value = (category || "").toLowerCase();
+  if (!category.includes("container")) {
+    return null;
+  }
+
+  const values = [
+    product?.subCategory,
+    product?.type,
+    product?.containerType,
+    product?.name,
+  ]
+    .filter(Boolean)
+    .map((value) =>
+      value.toString().toLowerCase().trim()
+    );
+
+  const combined = values.join(" ");
+
+  // Samples
+  if (
+    combined.includes("sample") ||
+    combined.includes("samples")
+  ) {
+    return "sample";
+  }
+
+  // Boxes
+  if (
+    combined.includes("box") ||
+    combined.includes("علبة")
+  ) {
+    return "box";
+  }
+
+  // Bottles
+  if (
+    combined.includes("bottle") ||
+    combined.includes("bottles") ||
+    combined.includes("زجاجة")
+  ) {
+    return "bottle";
+  }
+
+  return "container";
+};
+const getIcon = (category, product) => {
+  const value =
+    (category || "").toLowerCase();
 
   if (value.includes("container")) {
-    return <Box size={18} />;
+    const kind =
+      getContainerKind(product);
+
+    if (kind === "sample") {
+      return <Droplets size={20} strokeWidth={2} />;
+    }
+
+    if (kind === "box") {
+      return <Box size={20} strokeWidth={2} />;
+    }
+
+    return <Package size={20} strokeWidth={2} />;
   }
 
   if (
@@ -22,17 +83,26 @@ const getIcon = (category) => {
     value.includes("oriental") ||
     value.includes("oil")
   ) {
-    return <Droplets size={18} />;
+    return <Droplets size={20} strokeWidth={2} />;
   }
 
-  return <Package size={18} />;
+  return <Package size={20} strokeWidth={2} />;
 };
 
-const getCategoryVariant = (category) => {
-  const value = (category || "").toLowerCase();
+const getCategoryVariant = (category, product) => {
+  const value =
+    (category || "").toLowerCase();
 
-  if (value.includes("container"))
+  if (value.includes("container")) {
+    const kind =
+      getContainerKind(product);
+
+    if (kind === "sample") {
+      return "primary";
+    }
+
     return "gray";
+  }
 
   if (value.includes("french"))
     return "primary";
@@ -46,11 +116,32 @@ const getCategoryVariant = (category) => {
   return "warning";
 };
 
-const getCategoryLabel = (category, t) => {
-  const value = (category || "").toLowerCase();
+const getCategoryLabel = (
+  category,
+  product,
+  t
+) => {
+  const value =
+    (category || "").toLowerCase();
 
-  if (value.includes("container"))
+  if (value.includes("container")) {
+    const kind =
+      getContainerKind(product);
+
+    if (kind === "sample") {
+      return t("products.sample");
+    }
+
+    if (kind === "box") {
+      return t("products.box");
+    }
+
+    if (kind === "bottle") {
+      return t("products.bottle");
+    }
+
     return t("products.container");
+  }
 
   if (value.includes("french"))
     return t("products.french");
@@ -67,11 +158,23 @@ const getCategoryLabel = (category, t) => {
   return category;
 };
 
-const getIconBackground = (category) => {
-  const value = (category || "").toLowerCase();
+const getIconBackground = (
+  category,
+  product
+) => {
+  const value =
+    (category || "").toLowerCase();
 
-  if (value.includes("container"))
+  if (value.includes("container")) {
+    const kind =
+      getContainerKind(product);
+
+    if (kind === "sample") {
+      return theme.colors.infoSoft;
+    }
+
     return theme.colors.graySoft;
+  }
 
   if (value.includes("french"))
     return theme.colors.infoSoft;
@@ -85,11 +188,23 @@ const getIconBackground = (category) => {
   return theme.colors.cardSoft;
 };
 
-const getIconColor = (category) => {
-  const value = (category || "").toLowerCase();
+const getIconColor = (
+  category,
+  product
+) => {
+  const value =
+    (category || "").toLowerCase();
 
-  if (value.includes("container"))
+  if (value.includes("container")) {
+    const kind =
+      getContainerKind(product);
+
+    if (kind === "sample") {
+      return theme.colors.primary;
+    }
+
     return theme.colors.gray;
+  }
 
   if (value.includes("french"))
     return theme.colors.primary;
@@ -210,12 +325,14 @@ export default function AppProductCard({
 
             background:
               getIconBackground(
-                product.category
+                product.category,
+                product
               ),
 
             color:
               getIconColor(
-                product.category
+                product.category,
+                product
               ),
 
             display: "flex",
@@ -233,7 +350,10 @@ export default function AppProductCard({
                 "transform .25s ease",
             }}
           >
-            {getIcon(product.category)}
+            {getIcon(
+              product.category,
+              product
+            )}
           </div>
         </div>
 
@@ -286,12 +406,14 @@ export default function AppProductCard({
               size="sm"
               variant={
                 getCategoryVariant(
-                  product.category
+                  product.category,
+                  product
                 )
               }
             >
               {getCategoryLabel(
                 product.category,
+                product,
                 t
               )}
             </AppBadge>

@@ -107,6 +107,22 @@ useEffect(() => {
 
   return product.name;
 };
+const updateCartItem = (originalItem, updatedItem) => {
+  setCart(prev =>
+    prev.map(item =>
+      normalize(item.id) === normalize(originalItem.id) &&
+      normalize(item.size) === normalize(originalItem.size) &&
+      normalize(item.containerType) === normalize(originalItem.containerType)
+        ? {
+            ...updatedItem,
+            qty: originalItem.qty ?? 1,
+          }
+        : item
+    )
+  );
+
+  return updatedItem.name;
+};
 const removeItem = (target) => {
   setCart(prev =>
     prev.filter(
@@ -463,6 +479,7 @@ return {
   cart,
   setCart,
   addToCart,
+  updateCartItem,
   removeItem,
   increaseQty,
   decreaseQty,

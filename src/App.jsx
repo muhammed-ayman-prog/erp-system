@@ -13,7 +13,7 @@ import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import Operations from "./pages/Operations";
 import Expenses from "./features/expenses";
-import Waste from "./pages/Waste";
+import Waste from "./features/waste/Waste";
 import Returns from "./pages/Returns";
 import Layout from "./components/Layout";
 import DailyClosingHistory

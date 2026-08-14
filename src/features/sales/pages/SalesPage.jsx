@@ -162,6 +162,7 @@ const {
   cart,
   setCart,
   addToCart,
+  updateCartItem,
   removeItem,
   increaseQty,
   decreaseQty,
@@ -169,7 +170,7 @@ const {
   total,
   getPrice,
   handleCheckout,
- } = useSales(
+} = useSales(
   productsWithStock,
   discount,
   pricing,
@@ -258,7 +259,10 @@ const {
   setSelectedSize,
 
   oilQty,
-  setOilQty
+  setOilQty,
+
+  editingItem,
+  setEditingItem
 } = popupState;
 const customerState = useMemo(() => ({
   customerName,
@@ -300,8 +304,13 @@ const popupActions = useMemo(() => ({
   setSelectedSize,
   setContainerType,
   setOilQty,
-  setShowPopup
-}), []);
+  setShowPopup,
+
+  // ✏️ Edit mode
+  setEditingItem
+}), [
+  setEditingItem
+]);
 const {
   handleSelectProduct
 } = useSelectProduct({
@@ -369,7 +378,10 @@ const salesContextValue = useMemo(() => ({
   setSaleDate,
   loading,
   inventoryMap,
+
   addToCart,
+  updateCartItem,
+
   getPrice,
   setToastText,
   setShowToast
@@ -388,6 +400,7 @@ const salesContextValue = useMemo(() => ({
  loading,
  inventoryMap,
  addToCart,
+ updateCartItem,
  getPrice,
  saleDate
 ]);
@@ -476,7 +489,7 @@ return (
   {/* نخفي العنوان في الموبايل */}
   {!isMobile && (
     <div className="cat-title">
-      📦 {t("products.categories")}
+      📦 {t("products.categoriesLabel")}
     </div>
   )}
 

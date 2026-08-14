@@ -233,6 +233,9 @@ const isMobile =
     useState([]);
   const [actualCash, setActualCash] =
   useState("");
+  const [actualVisa, setActualVisa] = useState("");
+
+const [actualInstapay, setActualInstapay] = useState("");
 
 const [closingNotes, setClosingNotes] =
 useState("");
@@ -837,11 +840,21 @@ useEffect(() => {
     todayLoans,
     todayBonuses
   ]);
-  const cashDifference =
+const cashDifference =
 
   Number(actualCash || 0)
 
   - analytics.expectedCash;
+
+const visaDifference =
+  Number(actualVisa || 0) -
+  analytics.visaSales;
+
+const instapayDifference =
+  Number(actualInstapay || 0) -
+  analytics.instapaySales;
+
+
 
 const differenceStatus =
 
@@ -925,6 +938,13 @@ const handleSaveClosing = async () => {
             Number(
               actualCash || 0
             ),
+          expectedVisa: analytics.visaSales,
+            actualVisa: Number(actualVisa || 0),
+            visaDifference,
+
+            expectedInstapay: analytics.instapaySales,
+            actualInstapay: Number(actualInstapay || 0),
+            instapayDifference,
 
           difference:
             cashDifference,
@@ -982,6 +1002,8 @@ const handleSaveClosing = async () => {
 );
 
       setActualCash("");
+      setActualVisa("");
+      setActualInstapay("");
 
       setClosingNotes("");
 
@@ -1554,6 +1576,19 @@ const handleSaveClosing = async () => {
               theme.colors.white
           }}
         />
+        <label>الفيزا الفعلية</label>
+<input
+  type="number"
+  value={actualVisa}
+  onChange={(e) => setActualVisa(e.target.value)}
+/>
+
+<label>الإنستاباي الفعلي</label>
+<input
+  type="number"
+  value={actualInstapay}
+  onChange={(e) => setActualInstapay(e.target.value)}
+/>
 
       </div>
 

@@ -17,330 +17,202 @@ import CartSummary from "./cart/CartSummary";
 import CartFooter from "./cart/CartFooter";
 import EmptyCart from "./cart/EmptyCart";
 
-
 export default function PurchaseCartDrawer() {
-
   const { t } = useTranslate();
 
   const { selectedBranch } = useApp();
-
 
   const {
     showCart,
     setShowCart,
 
     cartItems,
-
     totalItems,
     totalQuantity,
 
     clearCart,
-
     removeFromCart,
-
     updateCartQuantity,
-
   } = usePurchaseContext();
 
-
-
-  const [loading, setLoading] =
-    useState(false);
-
-
+  const [loading, setLoading] = useState(false);
 
   const closeDrawer = () => {
-
     if (!loading) {
       setShowCart(false);
     }
-
   };
 
-
-
-
   const handleSavePurchase = async () => {
-
     if (loading) return;
-
-
 
     if (
       !selectedBranch ||
       selectedBranch === "all"
     ) {
-
       toast.error(
         t("stockEntry.selectBranchFirst")
       );
 
       return;
-
     }
 
-
-
-
     if (!cartItems.length) {
-
       toast.error(
         t("stockEntry.emptyCart")
       );
 
       return;
-
     }
 
-
-
-
     try {
-
       setLoading(true);
 
-
-
       await createPurchaseService({
+        branchId: selectedBranch,
 
-        branchId:selectedBranch,
-
-
-        items: cartItems.map((item)=>({
-
-          productId:
-            item.productId,
-
-
-          quantity:
-            item.purchaseQuantity,
-
+        items: cartItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.purchaseQuantity,
         })),
-
       });
-
-
 
       toast.success(
         t("stockEntry.purchaseSaved")
       );
 
-
-
       clearCart();
-
       closeDrawer();
 
-
-
-    } catch(error) {
-
+    } catch (error) {
       console.error(error);
-
 
       toast.error(
         t("stockEntry.purchaseSaveFailed")
       );
 
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
-
-
-
   return (
-
     <AppDrawer
-
       side="left"
-
       open={showCart}
-
       onClose={closeDrawer}
-
       width={410}
-
+      scrollable={false}
     >
-
-
       <div
-
         style={{
+          display: "flex",
+          flexDirection: "column",
 
-          display:"flex",
+          height: "100%",
+          minHeight: 0,
 
-          flexDirection:"column",
-
-          height:"100%",
+          overflow: "hidden",
 
           background:
             theme.colors.card,
-
         }}
-
       >
 
-
-
+        {/* Header */}
         <CartHeader
-
           totalItems={totalItems}
-
-          hasItems={
-            cartItems.length > 0
-          }
-
+          hasItems={cartItems.length > 0}
           disabled={loading}
-
           onClear={clearCart}
-
           onClose={closeDrawer}
-
         />
 
-
-
-
-
+        {/* Products - ONLY SCROLL AREA */}
         <div
-
           style={{
+            flex: "1 1 0",
+            minHeight: 0,
 
-            flex:1,
-
-            overflowY:"auto",
+            overflowY: "auto",
+            overflowX: "hidden",
 
             padding:
               `${theme.spacing.md}px ${theme.spacing.lg}px`,
 
-            display:"flex",
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
 
-            flexDirection:"column",
-
-            gap:
-              theme.spacing.sm,
-
+            boxSizing: "border-box",
           }}
-
         >
-
-
-
           {cartItems.length === 0 ? (
-
             <EmptyCart />
-
           ) : (
-
-            <>
-
-
-              {cartItems.map((item)=>(
-
-                <CartItem
-
-                  key={item.productId}
-
-                  item={item}
-
-                  disabled={loading}
-
-
-                  onUpdateQuantity={
-                    updateCartQuantity
-                  }
-
-
-                  onRemove={() =>
-                    removeFromCart(
-                      item.productId
-                    )
-                  }
-
-                />
-
-              ))}
-
-
-
-
-
-              <CartSummary
-
-                totalItems={totalItems}
-
-                totalQuantity={
-                  totalQuantity
+            cartItems.map((item) => (
+              <CartItem
+                key={item.productId}
+                item={item}
+                disabled={loading}
+                onUpdateQuantity={
+                  updateCartQuantity
                 }
-
+                onRemove={() =>
+                  removeFromCart(
+                    item.productId
+                  )
+                }
               />
-
-
-
-            </>
-
+            ))
           )}
-
-
         </div>
 
-
-
-
-
+        {/* Summary - FIXED */}
         {cartItems.length > 0 && (
-
-
           <div
-
             style={{
-
-
-              padding:
-                `12px ${theme.spacing.lg}px ${theme.spacing.lg}px`,
-
+              flexShrink: 0,
 
               background:
                 theme.colors.card,
 
+              borderTop:
+                `1px solid ${theme.colors.border}`,
+            }}
+          >
+            <CartSummary
+              totalItems={totalItems}
+              totalQuantity={totalQuantity}
+            />
+          </div>
+        )}
+
+        {/* Footer - FIXED */}
+        {cartItems.length > 0 && (
+          <div
+            style={{
+              flexShrink: 0,
+
+              padding:
+                `12px ${theme.spacing.lg}px ${theme.spacing.lg}px`,
+
+              background:
+                theme.colors.card,
 
               borderTop:
                 `1px solid ${theme.colors.border}`,
-
-
             }}
-
           >
-
-
             <CartFooter
-
               loading={loading}
-
               onCancel={closeDrawer}
-
               onSave={handleSavePurchase}
-
             />
-
-
           </div>
-
-
         )}
 
-
       </div>
-
-
     </AppDrawer>
-
   );
-
 }

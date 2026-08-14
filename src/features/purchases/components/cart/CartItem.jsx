@@ -21,20 +21,19 @@ export default function CartItem({
   return (
 
     <AppCard
+  style={{
+    padding: 12,
 
-      style={{
-        padding:12,
+    borderRadius: 16,
 
-        borderRadius:16,
+    background: theme.colors.card,
 
-        background:
-          theme.colors.card,
+    boxShadow:
+      "0 4px 16px rgba(15,23,42,.06)",
 
-        boxShadow:
-          "0 4px 16px rgba(15,23,42,.06)",
-      }}
-
-    >
+    flexShrink: 0,
+  }}
+>
 
       <div
 

@@ -6,6 +6,7 @@ export default function AppDrawer({
   children,
   side = "right",
   width = "360px",
+  scrollable = true,
 }) {
   if (!open) {
     return null;
@@ -41,7 +42,6 @@ export default function AppDrawer({
           position: "absolute",
 
           top: isMobile ? 0 : 12,
-
           bottom: isMobile ? 0 : 12,
 
           [side]: isMobile ? 0 : 12,
@@ -54,8 +54,12 @@ export default function AppDrawer({
           background:
             theme.colors.card,
 
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+
           overflowY:
-            "auto",
+            scrollable ? "auto" : "hidden",
 
           boxSizing:
             "border-box",
@@ -70,10 +74,8 @@ export default function AppDrawer({
               ? "0 24px 24px 0"
               : "24px 0 0 24px",
 
-
           boxShadow:
             "0 30px 70px rgba(15,23,42,.25)",
-
 
           animation:
             side === "left"

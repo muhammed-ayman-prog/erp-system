@@ -1,4 +1,9 @@
 import { useTranslate } from "../../useTranslate";
+
+import AppCard from "../ui/AppCard";
+import AppInput from "../ui/AppInput";
+import AppSelect from "../ui/AppSelect";
+import AppButton from "../ui/AppButton";
 export default function AddProductSection({
 
   activeAction,
@@ -61,344 +66,265 @@ const { t } = useTranslate();
                   }}
                 >
       
-                  <div style={{
-                    background: "#ffffff",
-                    padding: "25px",
-                    borderRadius: "20px",
-                    marginTop: "20px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                    border: "1px solid #f1f5f9"
-                  }}>
-      
-                    <h3>
-  ➕ {t("products.addProduct")}
-</h3>
-      
-                    <div style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                      marginTop: "15px"
-                    }}>
-      
-                      <input
-                        type="text"
-                        placeholder={t("products.productName")}
-                        value={newProductName}
-                        onChange={(e) =>
-                          setNewProductName(e.target.value)
-                        }
-      
-                        style={{
-                          padding: "12px",
-                          borderRadius: "10px",
-                          border: "1px solid #ddd"
-                        }}
-                      />
-      
-                      <select
-                        value={newProductType}
-                        onChange={(e) =>
-                          setNewProductType(e.target.value)
-                        }
-      
-                        style={{
-                          padding: "12px",
-                          borderRadius: "10px",
-                          border: "1px solid #ddd"
-                        }}
-                      >
-                        <option value="">
-  {t("products.selectType")}
-</option>
+                  <AppCard
+  padding="lg"
+  radius="lg"
+  shadow="sm"
+  style={{
+    marginTop: "20px",
+  }}
+>
+  <h3
+    style={{
+      margin: 0,
+      marginBottom: "15px",
+    }}
+  >
+    ➕ {t("products.addProduct")}
+  </h3>
 
-<option value="oil">
-  {t("products.types.oil")}
-</option>
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: "12px",
+    }}
+  >
 
-<option value="container">
-  {t("products.types.container")}
-</option>
+    {/* Product Name */}
+    <AppInput
+      type="text"
+      placeholder={t("products.productName")}
+      value={newProductName}
+      onChange={(e) =>
+        setNewProductName(e.target.value)
+      }
+    />
 
-<option value="product">
-  {t("products.types.product")}
-</option>
+    {/* Product Type */}
+    <AppSelect
+      value={newProductType}
+      onChange={(e) =>
+        setNewProductType(e.target.value)
+      }
+    >
+      <option value="">
+        {t("products.selectType")}
+      </option>
 
-<option value="original">
-  {t("products.types.original")}
-</option>
+      <option value="oil">
+        {t("products.types.oil")}
+      </option>
 
-<option value="packaging">
-  {t("products.types.packaging")}
-</option>
-                      </select>
-      
-                      {newProductType === "container" && (
-      
-                        <select
-                          value={newProductSubCategory}
-                          onChange={(e) =>
-                            setNewProductSubCategory(
-                              e.target.value
-                            )
-                          }
-      
-                          style={{
-                            padding: "12px",
-                            borderRadius: "10px",
-                            border: "1px solid #ddd"
-                          }}
-                        >
-                          <option value="">
-  {t("products.selectSubCategory")}
-</option>
+      <option value="container">
+        {t("products.types.container")}
+      </option>
 
-<option value="bottle">
-  {t("products.subCategories.bottle")}
-</option>
+      <option value="product">
+        {t("products.types.product")}
+      </option>
 
-<option value="box">
-  {t("products.subCategories.box")}
-</option>
+      <option value="original">
+        {t("products.types.original")}
+      </option>
 
-<option value="sample">
-  {t("products.subCategories.sample")}
-</option>
-      
-                        </select>
-                      )}
-      
-                      {newProductType === "product" && (
-      
-        <select
-          value={newProductCategory}
-      
+      <option value="packaging">
+        {t("products.types.packaging")}
+      </option>
+    </AppSelect>
+
+    {/* Container Sub Category */}
+    {newProductType === "container" && (
+      <AppSelect
+        value={newProductSubCategory}
+        onChange={(e) =>
+          setNewProductSubCategory(
+            e.target.value
+          )
+        }
+      >
+        <option value="">
+          {t("products.selectSubCategory")}
+        </option>
+
+        <option value="bottle">
+          {t("products.subCategories.bottle")}
+        </option>
+
+        <option value="box">
+          {t("products.subCategories.box")}
+        </option>
+
+        <option value="sample">
+          {t("products.subCategories.sample")}
+        </option>
+      </AppSelect>
+    )}
+
+    {/* Body Product Category */}
+    {newProductType === "product" && (
+      <AppSelect
+        value={newProductCategory}
+        onChange={(e) =>
+          setNewProductCategory(
+            e.target.value
+          )
+        }
+      >
+        <option value="">
+          {t("products.selectCategory")}
+        </option>
+
+        <option value="Cream">
+          {t("products.subCategories.cream")}
+        </option>
+
+        <option value="Makhmaria">
+          {t("products.categories.makhmaria")}
+        </option>
+      </AppSelect>
+    )}
+
+    {/* Original Category */}
+    {newProductType === "original" && (
+      <AppSelect
+        value={newProductCategory}
+        onChange={(e) =>
+          setNewProductCategory(
+            e.target.value
+          )
+        }
+      >
+        <option value="">
+          {t("products.selectCategory")}
+        </option>
+
+        <option value="Original">
+          {t("products.categories.original")}
+        </option>
+      </AppSelect>
+    )}
+
+    {/* Oil Category */}
+    {newProductType === "oil" && (
+      <>
+        <AppSelect
+          value={newOilCategory}
           onChange={(e) =>
-            setNewProductCategory(
+            setNewOilCategory(
               e.target.value
             )
           }
-      
-          style={{
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd"
-          }}
         >
-      
           <option value="">
-  {t("products.selectCategory")}
-</option>
+            {t("products.selectOilCategory")}
+          </option>
 
-<option value="Cream">
-  {t("products.subCategories.cream")}
-</option>
+          <option value="French">
+            {t("products.oilCategories.french")}
+          </option>
 
-<option value="Makhmaria">
-  {t("products.categories.makhmaria")}
-</option>
-      
-        </select>
-      )}
-      
-      {newProductType === "original" && (
-      
-        <select
-          value={newProductCategory}
-      
+          <option value="Oriental">
+            {t("products.oilCategories.oriental")}
+          </option>
+
+          <option value="Musk">
+            {t("products.oilCategories.musk")}
+          </option>
+        </AppSelect>
+
+        <AppSelect
+          value={newPricingTier}
           onChange={(e) =>
-            setNewProductCategory(
+            setNewPricingTier(
               e.target.value
             )
           }
-      
-          style={{
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd"
-          }}
         >
-      
           <option value="">
-  {t("products.selectCategory")}
-</option>
+            {t("products.selectPricingTier")}
+          </option>
 
-<option value="Original">
-  {t("products.categories.original")}
-</option>
-      
-        </select>
-      )}
-                      {newProductType === "oil" && (
-                        <>
-      
-                          <select
-                            value={newOilCategory}
-      
-                            onChange={(e) =>
-                              setNewOilCategory(
-                                e.target.value
-                              )
-                            }
-      
-                            style={{
-                              padding: "12px",
-                              borderRadius: "10px",
-                              border: "1px solid #ddd"
-                            }}
-                          >
-                            <option value="">
-  {t("products.selectOilCategory")}
-</option>
+          {newOilCategory === "French" && (
+            <option value="French">
+              {t("products.pricing.french")}
+            </option>
+          )}
 
-<option value="French">
-  {t("products.oilCategories.french")}
-</option>
+          {newOilCategory === "Oriental" && (
+            <>
+              <option value="A">
+                {t("products.pricing.orientalA")}
+              </option>
 
-<option value="Oriental">
-  {t("products.oilCategories.oriental")}
-</option>
+              <option value="B">
+                {t("products.pricing.orientalB")}
+              </option>
 
-<option value="Musk">
-  {t("products.oilCategories.musk")}
-</option>
-      
-                          </select>
-      
-                          <select
-                            value={newPricingTier}
-      
-                            onChange={(e) =>
-                              setNewPricingTier(e.target.value)
-                            }
-      
-                            style={{
-                              padding: "12px",
-                              borderRadius: "10px",
-                              border: "1px solid #ddd"
-                            }}
-                          >
-      
-                            <option value="">
-  {t("products.selectPricingTier")}
-</option>
-      
-                            {newOilCategory === "French" && (
-                             <option value="French">
-  {t("products.pricing.french")}
-</option>
-                            )}
-      
-                            {newOilCategory === "Oriental" && (
-                              <>
-                                <option value="A">
-  {t("products.pricing.orientalA")}
-</option>
+              <option value="C">
+                {t("products.pricing.orientalC")}
+              </option>
+            </>
+          )}
 
-<option value="B">
-  {t("products.pricing.orientalB")}
-</option>
+          {newOilCategory === "Musk" && (
+            <>
+              <option value="tahara">
+                {t("products.pricing.tahara")}
+              </option>
 
-<option value="C">
-  {t("products.pricing.orientalC")}
-</option>
-                              </>
-                            )}
-      
-                            {newOilCategory === "Musk" && (
-                              <>
-        <option value="tahara">
-  {t("products.pricing.tahara")}
-</option>
+              <option value="rumman">
+                {t("products.pricing.rumman")}
+              </option>
 
-<option value="rumman">
-  {t("products.pricing.rumman")}
-</option>
-
-<option value="crystal">
-  {t("products.pricing.crystal")}
-</option>
+              <option value="crystal">
+                {t("products.pricing.crystal")}
+              </option>
+            </>
+          )}
+        </AppSelect>
       </>
-                            )}
-      
-                          </select>
-      
-                        </>
-                      )}
-      
-                      <input
-                        type="number"
-                        placeholder={t("products.costPrice")}
-                        value={newProductCost}
-                        onChange={(e) =>
-                          setNewProductCost(e.target.value)
-                        }
-      
-                        style={{
-                          padding: "12px",
-                          borderRadius: "10px",
-                          border: "1px solid #ddd"
-                        }}
-                      />
-      
-                      {(
-                        newProductType === "product" ||
-                        newProductType === "original"
-                      ) && (
-      
-                        <input
-                          type="number"
-                          placeholder={t("products.sellingPrice")}
-                          value={newProductPrice}
-                          onChange={(e) =>
-                            setNewProductPrice(e.target.value)
-                          }
-      
-                          style={{
-                            padding: "12px",
-                            borderRadius: "10px",
-                            border: "1px solid #ddd"
-                          }}
-                        />
-      
-                      )}
-      
-                      <button
-                        onClick={handleCreateProduct}
-                        disabled={createLoading}
-      
-                        style={{
-                          width: "100%",
-                          padding: "14px",
-                          borderRadius: "12px",
-                          border: "none",
-      
-                          background:
-                            createLoading
-                              ? "#9ca3af"
-                              : "#8b5cf6",
-      
-                          color: "#fff",
-                          fontWeight: "600",
-      
-                          cursor:
-                            createLoading
-                              ? "wait"
-                              : "pointer",
-      
-                          opacity:
-                            createLoading
-                              ? 0.7
-                              : 1
-                        }}
-                      >
-                        {createLoading
-  ? t("common.creating")
-  : `➕ ${t("products.createProduct")}`}
-                      </button>
-      
-                    </div>
-                  </div>
+    )}
+
+    {/* Cost */}
+    <AppInput
+      type="number"
+      placeholder={t("products.costPrice")}
+      value={newProductCost}
+      onChange={(e) =>
+        setNewProductCost(e.target.value)
+      }
+    />
+
+    {/* Selling Price */}
+    {(
+      newProductType === "product" ||
+      newProductType === "original"
+    ) && (
+      <AppInput
+        type="number"
+        placeholder={t("products.sellingPrice")}
+        value={newProductPrice}
+        onChange={(e) =>
+          setNewProductPrice(e.target.value)
+        }
+      />
+    )}
+
+    {/* Create */}
+    <AppButton
+      type="button"
+      fullWidth
+      size="lg"
+      loading={createLoading}
+      onClick={handleCreateProduct}
+      variant="primary"
+    >
+      {t("products.createProduct")}
+    </AppButton>
+
+  </div>
+</AppCard>
                 </div>
 
     </>

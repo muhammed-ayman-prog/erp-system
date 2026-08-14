@@ -14,6 +14,9 @@ export default function PopupFooter({
   oilCostPerML,
 
   addToCart,
+  updateCartItem,
+
+  editingItem,
 
   setToastText,
   setShowToast,
@@ -191,7 +194,7 @@ export default function PopupFooter({
 
   margin,
 
-  qty: 1,
+  qty: editingItem?.qty ?? 1,
 
   oilQty:
     oilQty || 0,
@@ -204,19 +207,21 @@ export default function PopupFooter({
   pricePerMl
 };
 
-          const name =
-            addToCart(item);
+          const name = editingItem
+  ? updateCartItem(editingItem, item)
+  : addToCart(item);
 
-          if (name) {
+if (name) {
+  setToastText(
+    editingItem
+      ? `${name} updated 🔥`
+      : `${name} added 🔥`
+  );
 
-            setToastText(
-              `${name} added 🔥`
-            );
+  setShowToast(true);
 
-            setShowToast(true);
-
-            resetPopup();
-          }
+  resetPopup();
+}
         }}
 
         style={{

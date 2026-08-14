@@ -40,6 +40,11 @@ export default function AppButton({
       color: theme.colors.text,
       border: `1px solid ${theme.colors.border}`,
     },
+    outlinePrimary: {
+      background: "transparent",
+      color: theme.colors.primary,
+      border: `1px solid ${theme.colors.primary}`,
+    },
 
     danger: {
       background: theme.colors.danger,

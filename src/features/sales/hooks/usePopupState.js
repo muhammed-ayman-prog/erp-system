@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 export function usePopupState() {
-
   const [
     showPopup,
     setShowPopup
@@ -27,8 +26,13 @@ export function usePopupState() {
     setPopupStep
   ] = useState(null);
 
-  return {
+  // ✏️ Edit mode
+  const [
+    editingItem,
+    setEditingItem
+  ] = useState(null);
 
+  return {
     popupStep,
     setPopupStep,
 
@@ -42,6 +46,10 @@ export function usePopupState() {
     setSelectedSize,
 
     oilQty,
-    setOilQty
+    setOilQty,
+
+    // ✏️ Edit
+    editingItem,
+    setEditingItem
   };
 }

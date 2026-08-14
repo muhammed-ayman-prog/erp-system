@@ -326,7 +326,7 @@ export const translations = {
       clearFilters: "Clear Filters",
       clearAll: "Clear All",
       clear: "Clear",
-
+      history:"History",
       search: "Search...",
 
       from: "From",
@@ -407,6 +407,7 @@ export const translations = {
       no: "No",
 
       excel: "Excel",
+      exportExcel: "Export Excel", 
       pdf: "PDF",
 
       currency: "EGP",
@@ -463,7 +464,9 @@ export const translations = {
 
     operations: {
       title: "Operations",
-
+      productCreated:"Product Created",
+      productArchived:"Product Archived",
+      productRestored:"Product Restored",
       transfer: "Transfer",
       adjust: "Adjust Inventory",
 
@@ -589,19 +592,48 @@ export const translations = {
     },
 
     waste: {
-      add: "Add Waste",
-      addItem: "Add Item",
-      addItems: "Add items first",
+  title: "Waste",
+  subtitle: "Record and monitor wasted stock",
 
-      success: "Waste recorded successfully",
+  add: "Add Waste",
+  addItem: "Add Item",
+  addItems: "Add items first",
 
-      productNotFound: "Product not found",
-      qtyExceeded: "Quantity exceeds stock",
+  success: "Waste recorded successfully",
+  product: "Product",
+  productNotFound: "Product not found",
+  qtyExceeded: "Quantity exceeds stock",
 
-      reason: "Waste reason (optional)",
+  selectBranch: "Please select a branch first",
 
-      history: "Waste History",
-    },
+  type: "Waste Type",
+  selectType: "Select waste type",
+
+  types: {
+    tester: "Tester",
+    atasheh: "Atasheh",
+    damage: "Waste / Damage",
+    other: "Other",
+  },
+
+  notes: "Notes",
+  otherNotesPlaceholder: "Enter the reason or notes",
+  otherNotesRequired: "Please enter the reason or notes",
+  availableStock:"Available Stock",
+  totalWastedQuantity: "Total wasted quantity",
+
+  totalOperations: "Total Operations",
+  totalQuantity: "Total Quantity",
+  todayWaste: "Today's Waste",
+
+  history: "Waste History",
+
+  noWaste: "No waste records yet",
+  noWasteDescription:
+    "Waste transactions will appear here once recorded",
+
+  removeItem: "Remove Item",
+},
 
     customer: {
       customer: "Customer",
@@ -744,6 +776,7 @@ export const translations = {
         cream: "Cream",
         makhmaria: "Makhmaria",
         original: "Original",
+        
       },
 
       oilCategories: {
@@ -761,6 +794,13 @@ export const translations = {
         rumman: "Rumman",
         crystal: "Crystal",
       },
+      categories:{
+        makhmaria:"Makhmaria"
+      },
+      subCategories: {
+        cream:"Cream",
+        
+      }
     },
 
         payment: {
@@ -1318,7 +1358,7 @@ export const translations = {
       clearFilters: "مسح الفلاتر",
       clearAll: "مسح الكل",
       clear: "مسح",
-
+      history:"تاريخ المنتج",
       search: "بحث...",
 
       from: "من",
@@ -1700,7 +1740,9 @@ export const translations = {
     },
     operations: {
       title: "العمليات",
-
+      productCreated:"تم انشاء المنتج",
+      productArchived:"تم ارشفة المنتج",
+      productRestored:"تم استعادة المنتج",
       transfer: "تحويل",
       adjust: "تعديل المخزون",
 
@@ -1824,20 +1866,53 @@ export const translations = {
       enterAmount: "اكتب المبلغ",
     },
 
-    waste: {
-      add: "تسجيل هدر",
-      addItem: "إضافة منتج",
-      addItems: "ضيف منتجات الأول",
+   waste: {
+  title: "الهدر",
+  subtitle: "تسجيل ومتابعة المخزون المهدر",
 
-      success: "تم تسجيل الهدر",
+  add: "تسجيل هدر",
+  addItem: "إضافة منتج",
+  addItems: "ضيف منتجات الأول",
 
-      productNotFound: "المنتج غير موجود",
-      qtyExceeded: "الكمية أكبر من المخزون",
+  success: "تم تسجيل الهدر",
 
-      reason: "سبب الهدر (اختياري)",
+  productNotFound: "المنتج غير موجود",
+  qtyExceeded: "الكمية أكبر من المخزون",
 
-      history: "سجل الهدر",
-    },
+  selectBranch: "اختار فرع الأول",
+  product: "منتج",
+  type: "نوع الهدر",
+  selectType: "اختر نوع الهدر",
+  topWasteType: "أكثر نوع هدر",
+  operations: "عملية",
+  topWasteType: "أكثر نوع هدر",
+  operations: "عملية",
+
+  types: {
+    tester: "تستر",
+    atasheh: "اتاشة",
+    damage: "هدر / كسر",
+    other: "أخرى",
+  },
+
+  notes: "ملاحظات",
+  otherNotesPlaceholder: "اكتب سبب الهدر أو الملاحظات",
+  otherNotesRequired: "اكتب سبب الهدر أو الملاحظات",
+  availableStock:"الكمية المتاحة",
+  totalWastedQuantity: "إجمالي الكمية المهدرة",
+
+  totalOperations: "إجمالي العمليات",
+  totalQuantity: "إجمالي الكمية",
+  todayWaste: "هدر اليوم",
+
+  history: "سجل الهدر",
+
+  noWaste: "لا توجد عمليات هدر",
+  noWasteDescription:
+    "ستظهر عمليات الهدر هنا بعد تسجيلها",
+
+  removeItem: "حذف المنتج",
+},
 
     customer: {
       customer: "العميل",
@@ -1882,15 +1957,22 @@ export const translations = {
       mostSpending: "الأعلى إنفاقًا",
       mostOrders: "الأكثر طلبًا",
 
-      new: "جديد",
-      loyal: "عميل دائم",
+      new: "NEW",
+      loyal: "LOYAL",
       vip: "VIP",
-      elite: "VIP مميز",
+      elite: "ELITE",
     },
-
+    categories: {
+      containers:"عبوات",
+      original:"اوريجنال",
+      body: "منتجات الجسم",
+      oriental:"شرقي",
+      french:"فرنسي"
+    },
+    
     products: {
       title: "المنتجات",
-
+      
       categories: "الأقسام",
       categoriesLabel: "الأقسام",
 
@@ -1934,13 +2016,13 @@ export const translations = {
 
       inStock: "متوفر",
       lowStock: "كمية قليلة",
-      outOfStock: "خلص",
+      outOfStock: "إنتهى",
       low: "قليل",
 
       oilQty: "كمية الزيت (ml)",
-      enterOilQty: "لازم تدخل كمية الزيت",
+      enterOilQty: "ادخل  كمية الزيت",
 
-      noPrice: "مفيش سعر للمنتج ده",
+      noPrice: "لايوجد سعر لهذا المنتج",
 
       name: "الاسم",
 
@@ -1952,7 +2034,6 @@ export const translations = {
       productType: "نوع المنتج",
 
       category: "التصنيف",
-
       selectCategory: "اختر التصنيف",
       selectSubCategory: "اختر التصنيف الفرعي",
       selectType: "اختر النوع",
@@ -1976,15 +2057,21 @@ export const translations = {
       types: {
         oil: "زيت",
         container: "عبوة",
-        product: "منتج",
+        product: "منتجات الجسم",
         original: "اوريجنال",
         packaging: "تغليف",
       },
 
       subCategories: {
         bottle: "زجاجة",
-        box: "علبة",
+        box: "بوكس",
         sample: "عينة",
+        cream:"كريم",
+        makhmaria:"مخمرية",
+      },
+      categories:{
+        makhmaria:"مخمرية",
+
       },
 
       categoriesMap: {
@@ -2054,7 +2141,7 @@ export const translations = {
       returnResale: "إعادة بيع مرتجع",
       mixed: "مختلطة",
 
-      refunded: "مرتجع",
+      refunded: "مرتجع بالكامل",
       partialRefunded: "مرتجع جزئي",
       completed: "مكتملة",
       cancelled: "ملغي",
@@ -2077,7 +2164,7 @@ export const translations = {
       closed: "الفاتورة متقفلة",
 
       select: "اختر فاتورة",
-      selectQty: "اختار كمية",
+      selectQty: "اختر كمية",
 
       print: "طباعة الفاتورة",
 

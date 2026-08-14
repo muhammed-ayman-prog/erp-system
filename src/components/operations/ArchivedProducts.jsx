@@ -1,86 +1,99 @@
+import AppCard from "../ui/AppCard";
+import AppButton from "../ui/AppButton";
+import AppEmptyState from "../ui/AppEmptyState";
+
 export default function ArchivedProducts({
-
   archivedProducts,
-
-  handleRestoreProduct
-
+  handleRestoreProduct,
 }) {
-
   return (
-
-    <div
+    <AppCard
+      padding="lg"
+      radius="lg"
+      shadow="sm"
       style={{
-        marginTop: "25px"
+        marginTop: "25px",
       }}
     >
-
       <h3
         style={{
+          margin: 0,
+          marginBottom: "20px",
           fontSize: "18px",
-          fontWeight: "700",
-          marginBottom: "20px"
+          fontWeight: 700,
         }}
       >
         ♻️ Archived Products
       </h3>
 
-      {archivedProducts.length === 0 && (
-        <p>No archived products</p>
-      )}
-
-      {archivedProducts.map(product => (
-
+      {archivedProducts.length === 0 ? (
+        <AppEmptyState title="No archived products" />
+      ) : (
         <div
-          key={product.id}
-
           style={{
-            background: "#fff",
-            padding: "15px",
-            borderRadius: "12px",
-            border: "1px solid #f1f5f9",
-            marginBottom: "10px",
-            boxShadow:
-              "0 5px 15px rgba(0,0,0,0.05)"
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
           }}
         >
+          {archivedProducts.map((product) => (
+            <AppCard
+              key={product.id}
+              padding="md"
+              radius="md"
+              shadow="sm"
+              bordered
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "15px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: 0,
+                    flex: 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "14px",
+                    }}
+                  >
+                    {product.name}
+                  </div>
 
-          <p
-            style={{
-              fontWeight: "700"
-            }}
-          >
-            {product.name}
-          </p>
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    {product.type}
+                  </div>
+                </div>
 
-          <p>
-            {product.type}
-          </p>
-
-          <button
-            onClick={() =>
-              handleRestoreProduct(product)
-            }
-
-            style={{
-              marginTop: "10px",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              border: "none",
-              background: "#10b981",
-              color: "#fff",
-              cursor: "pointer",
-              fontWeight: "600"
-            }}
-          >
-            ♻️ Restore
-          </button>
-
+                <AppButton
+                  type="button"
+                  variant="success"
+                  size="sm"
+                  onClick={() =>
+                    handleRestoreProduct(product)
+                  }
+                >
+                  ♻️ Restore
+                </AppButton>
+              </div>
+            </AppCard>
+          ))}
         </div>
-
-      ))}
-
-    </div>
-
+      )}
+    </AppCard>
   );
-
 }

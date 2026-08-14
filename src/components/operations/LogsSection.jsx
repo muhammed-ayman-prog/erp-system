@@ -1,8 +1,14 @@
-export default function LogsSection({
+import AppCard from "../ui/AppCard";
+import AppInput from "../ui/AppInput";
+import AppSelect from "../ui/AppSelect";
+import AppButton from "../ui/AppButton";
 
+export default function LogsSection({
   t,
   COLORS,
+
   productsAccordionOpen,
+
   search,
   setSearch,
 
@@ -20,393 +26,535 @@ export default function LogsSection({
   setSelectedActivity,
 
   productMap,
-
   productLogs,
 
   logSearch,
   setLogSearch,
 
   logFilter,
-  setLogFilter
-
+  setLogFilter,
 }) {
-
   return (
-
     <>
-
       {!productsAccordionOpen && (
-  <>
-          <div style={{
-            background: "#fff",
-            padding: "20px",
-            borderRadius: "15px",
-            marginTop: "25px",
-            boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
-            border: "1px solid #f1f5f9" // 👈 ضيف دي
-          }}>
-            <input
+        <>
+          {/* Filters */}
+          <AppCard
+            padding="lg"
+            radius="lg"
+            shadow="sm"
+            bordered
+            style={{
+              marginTop: "25px",
+            }}
+          >
+            <AppInput
               type="text"
               placeholder={t("common.search")}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginBottom: "15px",
-                borderRadius: "10px",
-                border: "1px solid #ddd",
-                fontSize: "14px",
-                outline: "none",
-
-              }}
-              onFocus={(e) => e.target.style.boxShadow = "0 0 0 2px #3b82f6"}
-              onBlur={(e) => e.target.style.boxShadow = "none"}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
             />
-            <select
+
+            <AppSelect
               value={filterBranch}
-              onChange={(e) => setFilterBranch(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginBottom: "20px",
-                borderRadius: "10px",
-                border: "1px solid #ddd",
-                fontSize: "14px",
-              }}
+              onChange={(e) =>
+                setFilterBranch(e.target.value)
+              }
             >
-              <option value="">{t("branches.all")}</option>
-              {sortedBranches.map(b => (
-                <option key={b.id} value={b.id}>
+              <option value="">
+                {t("branches.all")}
+              </option>
+
+              {sortedBranches.map((b) => (
+                <option
+                  key={b.id}
+                  value={b.id}
+                >
                   {getBranchName(b.id)}
                 </option>
               ))}
-            </select>
-          </div>
-          <div style={{ marginTop: "30px" }}>
-            <h3 style={{
+            </AppSelect>
+          </AppCard>
+
+          {/* Activity Logs */}
+          <div
+            style={{
               marginTop: "30px",
-              fontSize: "18px",
-              fontWeight: "700",
-            }}>
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                marginBottom: "20px",
+                fontSize: "18px",
+                fontWeight: 700,
+              }}
+            >
               {t("operations.activityLog")} 📊
             </h3>
+
+            {/* Tabs */}
             <div
               style={{
                 display: "flex",
                 gap: "10px",
-                marginTop: "25px",
                 marginBottom: "20px",
-                flexWrap: "wrap"
+                flexWrap: "wrap",
               }}
             >
-
-  <button
-    onClick={() =>
-      setActiveLogTab("activity")
-    }
-
-    style={{
-      flex: 1,
-  minWidth: "140px",
-      padding: "12px 18px",
-      borderRadius: "12px",
-      border: "none",
-
-      background:
-        activeLogTab === "activity"
-          ? "#3b82f6"
-          : "#f3f4f6",
-
-      color:
-        activeLogTab === "activity"
-          ? "#fff"
-          : "#111827",
-
-      fontWeight: "700",
-
-      cursor: "pointer"
-    }}
-  >
-    📊 {t("logs.activity")}
-  </button>
-
-  <button
-    onClick={() =>
-      setActiveLogTab("products")
-    }
-
-    style={{
-      flex: 1,
-  minWidth: "140px",
-  padding: "12px 18px",
-      borderRadius: "12px",
-      border: "none",
-
-      background:
-        activeLogTab === "products"
-          ? "#8b5cf6"
-          : "#f3f4f6",
-
-      color:
-        activeLogTab === "products"
-          ? "#fff"
-          : "#111827",
-
-      fontWeight: "700",
-
-      cursor: "pointer"
-    }}
-  >
-    📦 {t("logs.products")}
-  </button>
-
-</div>
-
-            {activeLogTab === "activity" && (
-            <>
-
-            {filteredActivities.map(item => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedActivity(item)}
+              <AppButton
+                size="lg"
+                variant={
+                  activeLogTab === "activity"
+                    ? "primary"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setActiveLogTab("activity")
+                }
                 style={{
-                  background: "#fff",
-                  padding: "15px",
-                  border: "1px solid #f1f5f9",
-                  marginBottom: "10px",
-                  borderRadius: "12px",
-                  boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
-                  transition: "0.2s",
-                  cursor: "pointer",
+                  flex: 1,
+                  minWidth: "140px",
                 }}
               >
-                <p style={{ marginBottom: "5px", fontWeight: "600" }}>
-                  {item.actionType === "transfer"
-                    ? "🔄 " + t("operations.transfer")
-                    : "⚖️ " + t("operations.adjust")}
-                </p>
+                📊 {t("logs.activity")}
+              </AppButton>
 
-                {/* 🔥 ADD HERE */}
-                {item.reversed && (
-                  <span style={{
-                    color: COLORS.danger,
-                    fontWeight: "700",
-                    fontSize: "12px",
-                    background: "#fee2e2",
-                    padding: "3px 8px",
-                    borderRadius: "8px",
-                    marginLeft: "8px"
-                  }}>
-                    {t("logs.reversed")}
-                  </span>
+              <AppButton
+                size="lg"
+                variant={
+                  activeLogTab === "products"
+                    ? "primary"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setActiveLogTab("products")
+                }
+                style={{
+                  flex: 1,
+                  minWidth: "140px",
+                }}
+              >
+                📦 {t("logs.products")}
+              </AppButton>
+            </div>
+
+            {/* =========================
+                ACTIVITY TAB
+            ========================= */}
+            {activeLogTab === "activity" && (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  {filteredActivities.map(
+                    (item) => (
+                      <AppCard
+                        key={item.id}
+                        bordered
+                        padding="md"
+                        radius="md"
+                        shadow="sm"
+                        onClick={() =>
+                          setSelectedActivity(
+                            item
+                          )
+                        }
+                        style={{
+                          cursor: "pointer",
+                          transition:
+                            "transform .2s ease, box-shadow .2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform =
+                            "translateY(-2px)";
+
+                          e.currentTarget.style.boxShadow =
+                            "0 10px 24px rgba(15,23,42,.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform =
+                            "translateY(0)";
+
+                          e.currentTarget.style.boxShadow =
+                            undefined;
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: 0,
+                            marginBottom: "8px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.actionType ===
+                          "transfer"
+                            ? "🔄 " +
+                              t(
+                                "operations.transfer"
+                              )
+                            : "⚖️ " +
+                              t(
+                                "operations.adjust"
+                              )}
+
+                          {/* Reversed */}
+                          {item.reversed && (
+                            <span
+                              style={{
+                                color:
+                                  COLORS.danger,
+                                fontWeight: 700,
+                                fontSize: "12px",
+                                background:
+                                  "#fee2e2",
+                                padding:
+                                  "3px 8px",
+                                borderRadius:
+                                  "8px",
+                                marginLeft:
+                                  "8px",
+                              }}
+                            >
+                              {t(
+                                "logs.reversed"
+                              )}
+                            </span>
+                          )}
+                        </p>
+
+                        <p>
+                          <strong>
+                            {t(
+                              "operations.product"
+                            )}
+                            :
+                          </strong>{" "}
+                          {productMap[
+                            item.productId
+                          ] ||
+                            item.productId}
+                        </p>
+
+                        {item.actionType ===
+                          "transfer" && (
+                          <>
+                            <p>
+                              {
+                                t(
+                                  "operations.fromBranch"
+                                )
+                              }
+                              :{" "}
+                              {getBranchName(
+                                item.fromBranch
+                              )}
+                            </p>
+
+                            <p>
+                              {
+                                t(
+                                  "operations.toBranch"
+                                )
+                              }
+                              :{" "}
+                              {getBranchName(
+                                item.toBranch
+                              )}
+                            </p>
+                          </>
+                        )}
+
+                        {item.actionType ===
+                          "adjust" && (
+                          <>
+                            <p>
+                              {
+                                t(
+                                  "branches.single"
+                                )
+                              }
+                              :{" "}
+                              {getBranchName(
+                                item.branchId
+                              )}
+                            </p>
+
+                            <p>
+                              <strong>
+                                {t(
+                                  "operations.type"
+                                )}
+                                :
+                              </strong>{" "}
+                              {(
+                                item.adjustType ||
+                                item.type
+                              ) ===
+                              "increase"
+                                ? `${t(
+                                    "operations.increase"
+                                  )} ➕`
+                                : `${t(
+                                    "operations.decrease"
+                                  )} ➖`}
+                            </p>
+
+                            {item.reason && (
+                              <p>
+                                <strong>
+                                  {t(
+                                    "operations.reason"
+                                  )}
+                                  :
+                                </strong>{" "}
+                                {item.reason}
+                              </p>
+                            )}
+                          </>
+                        )}
+
+                        <p
+                          style={{
+                            fontWeight: 700,
+                          }}
+                        >
+                          {t("common.qty")}:{" "}
+                          {item.qty}
+                        </p>
+
+                        <p>
+                          <strong>
+                            {t("users.title")}:
+                          </strong>{" "}
+                          {item.user}
+                        </p>
+
+                        <p
+                          style={{
+                            marginBottom: 0,
+                            fontSize: "13px",
+                            color:
+                              "#6b7280",
+                          }}
+                        >
+                          {item.createdAt
+                            ?.toDate
+                            ? new Date(
+                                item.createdAt.toDate()
+                              ).toLocaleString()
+                            : new Date(
+                                item.createdAt
+                              ).toLocaleString()}
+                        </p>
+                      </AppCard>
+                    )
+                  )}
+                </div>
+
+                {filteredActivities.length ===
+                  0 && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      marginTop: "20px",
+                    }}
+                  >
+                    {t(
+                      "operations.noResults"
+                    )}{" "}
+                    ❌
+                  </div>
                 )}
-
-                <p>
-                  <strong>{t("operations.product")}:</strong> {productMap[item.productId] || item.productId}
-                </p>
-
-                {item.actionType === "transfer" && (
-                  <>
-                    <p>
-                      {t("operations.fromBranch")}: {getBranchName(item.fromBranch)}
-                    </p>
-
-                    <p>
-                      {t("operations.toBranch")}: {getBranchName(item.toBranch)}
-                    </p>
-                  </>
-                )}
-
-                {item.actionType === "adjust" && (
-                  <>
-                    <p>
-                      {t("branches.single")}: {getBranchName(item.branchId)}
-                    </p>
-                    <p>
-                      <strong>{t("operations.type")}:</strong>{" "}
-                      {(item.adjustType || item.type) === "increase"
-                        ? `${t("operations.increase")} ➕`
-                        : `${t("operations.decrease")} ➖`}
-                    </p>
-                    {item.reason && <p><strong>{t("operations.reason")}:</strong> {item.reason}</p>}
-                  </>
-                )}
-
-                <p style={{ fontWeight: "700", color: "#3b82f6" }}>
-                  {t("common.qty")}: {item.qty}
-                </p>
-
-                <p><strong>{t("users.title")}:</strong> {item.user}</p>
-
-                <p style={{ fontSize: "13px", color: "#6b7280" }}>
-                  {item.createdAt?.toDate
-                    ? new Date(item.createdAt.toDate()).toLocaleString()
-                    : new Date(item.createdAt).toLocaleString()}
-                </p>
-              </div>
-            ))}
-            {filteredActivities.length === 0 && (
-              <p style={{ textAlign: "center", marginTop: "20px" }}>
-                {t("operations.noResults")} ❌
-              </p>
+              </>
             )}
-            </>
-)}
-{activeLogTab === "products" && (
-<>
 
-<input
-  type="text"
-  placeholder={t("logs.search")}
+            {/* =========================
+                PRODUCT LOGS TAB
+            ========================= */}
+            {activeLogTab === "products" && (
+              <>
+                <AppInput
+                  type="text"
+                  placeholder={t(
+                    "logs.search"
+                  )}
+                  value={logSearch}
+                  onChange={(e) =>
+                    setLogSearch(
+                      e.target.value
+                    )
+                  }
+                />
 
-  value={logSearch}
+                <AppSelect
+                  value={logFilter}
+                  onChange={(e) =>
+                    setLogFilter(
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    {t("common.all")}
+                  </option>
 
-  onChange={(e) =>
-    setLogSearch(e.target.value)
-  }
+                  <option value="create">
+                    ➕{" "}
+                    {t(
+                      "logs.productCreated"
+                    )}
+                  </option>
 
-  style={{
-    width: "100%",
-    padding: "10px",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    marginBottom: "10px"
-  }}
-/>
+                  <option value="edit">
+                    ✏️{" "}
+                    {t(
+                      "logs.productEdited"
+                    )}
+                  </option>
 
-<select
-  value={logFilter}
+                  <option value="archive">
+                    📦{" "}
+                    {t(
+                      "logs.productArchived"
+                    )}
+                  </option>
 
-  onChange={(e) =>
-    setLogFilter(e.target.value)
-  }
+                  <option value="restore">
+                    ♻️{" "}
+                    {t(
+                      "logs.productRestored"
+                    )}
+                  </option>
+                </AppSelect>
 
-  style={{
-    width: "100%",
-    padding: "10px",
-    borderRadius: "10px",
-    border: "1px solid #ddd",
-    marginBottom: "20px"
-  }}
->
-  <option value="">
-    {t("logs.allActions")}
-  </option>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection:
+                      "column",
+                    gap: "10px",
+                  }}
+                >
+                  {productLogs
+                    .filter((log) => {
+                      const matchesSearch =
+                        (
+                          log.productName ||
+                          ""
+                        )
+                          .toLowerCase()
+                          .includes(
+                            logSearch.toLowerCase()
+                          );
 
-  <option value="create">
-    {t("logs.create")}
-  </option>
+                      const matchesFilter =
+                        !logFilter ||
+                        log.action ===
+                          logFilter;
 
-  <option value="archive">
-    {t("logs.archive")}
-  </option>
-  <option value="restore">
-  {t("logs.restore")}
-</option>
-<option value="edit">
-  {t("logs.edit")}
-</option>
+                      return (
+                        matchesSearch &&
+                        matchesFilter
+                      );
+                    })
+                    .map((log, index) => (
+                      <AppCard
+                        key={
+                          log.id ||
+                          `${log.action}-${log.productName}-${index}`
+                        }
+                        bordered
+                        padding="md"
+                        radius="md"
+                        shadow="sm"
+                      >
+                        <p
+                          style={{
+                            margin: 0,
+                            marginBottom:
+                              "8px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {log.action ===
+                          "create"
+                            ? `➕ ${t(
+                                "logs.productCreated"
+                              )}`
+                            : log.action ===
+                              "archive"
+                            ? `📦 ${t(
+                                "logs.productArchived"
+                              )}`
+                            : log.action ===
+                              "restore"
+                            ? `♻️ ${t(
+                                "logs.productRestored"
+                              )}`
+                            : `✏️ ${t(
+                                "logs.productEdited"
+                              )}`}
+                        </p>
 
-</select>
+                        <p>
+                          <strong>
+                            {t(
+                              "operations.product"
+                            )}
+                            :
+                          </strong>{" "}
+                          {log.productName}
+                        </p>
 
-{productLogs
-  .filter(log => {
+                        <p>
+                          <strong>
+                            {t(
+                              "operations.type"
+                            )}
+                            :
+                          </strong>{" "}
+                          {log.type}
+                        </p>
 
-    const matchesSearch =
-      (
-        log.productName || ""
-      )
-        .toLowerCase()
-        .includes(
-          logSearch.toLowerCase()
-        );
+                        <p>
+                          <strong>
+                            {t("users.single")}:
+                          </strong>{" "}
+                          {log.user}
+                        </p>
 
-    const matchesFilter =
-      !logFilter ||
-      log.action === logFilter;
-
-    return (
-      matchesSearch &&
-      matchesFilter
-    );
-
-  })
-
-  .map((log, index) => (
-
-    <div
-      key={log.id || `${log.action}-${log.productName}-${index}`}
-
-      style={{
-        background: "#fff",
-        padding: "15px",
-        borderRadius: "12px",
-        border: "1px solid #f1f5f9",
-        marginBottom: "10px",
-        boxShadow:
-          "0 5px 15px rgba(0,0,0,0.05)"
-      }}
-    >
-
-      <p
-        style={{
-          fontWeight: "700",
-          marginBottom: "5px"
-        }}
-      >
-        {log.action === "create"
-          ? `➕ ${t("logs.productCreated")}`
-: log.action === "archive"
-? `📦 ${t("logs.productArchived")}`
-: log.action === "restore"
-? `♻️ ${t("logs.productRestored")}`
-: `✏️ ${t("logs.productEdited")}`}
-      </p>
-
-      <p>
-        <strong>{t("operations.product")}:</strong>
-        {" "}
-        {log.productName}
-      </p>
-
-      <p>
-        <strong>{t("operations.type")}:</strong>
-        {" "}
-        {log.type}
-      </p>
-
-      <p>
-        <strong>{t("users.single")}:</strong>
-        {" "}
-        {log.user}
-      </p>
-
-      <p
-        style={{
-          fontSize: "13px",
-          color: "#6b7280"
-        }}
-      >
-        {log.createdAt?.toDate
-          ? new Date(
-              log.createdAt.toDate()
-            ).toLocaleString()
-          : t("common.noData")}
-      </p>
-
-    </div>
-
-))}
-
-</>
-)}
+                        <p
+                          style={{
+                            marginBottom: 0,
+                            fontSize: "13px",
+                            color:
+                              "#6b7280",
+                          }}
+                        >
+                          {log.createdAt
+                            ?.toDate
+                            ? new Date(
+                                log.createdAt.toDate()
+                              ).toLocaleString()
+                            : t(
+                                "common.noData"
+                              )}
+                        </p>
+                      </AppCard>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
-          </>
-)}
-
+        </>
+      )}
     </>
-
   );
-
 }
