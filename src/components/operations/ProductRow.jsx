@@ -82,14 +82,15 @@ export default function ProductRow({
           }}
         >
           <div
-            style={{
-              fontWeight: 700,
-              fontSize: "14px",
-              color: theme.colors.text,
-            }}
-          >
-            {product.name}
-          </div>
+  style={{
+    fontWeight: 700,
+    fontSize: "14px",
+    lineHeight: "1.4",
+    color: theme.colors.text,
+  }}
+>
+  {product.name}
+</div>
 
           <AppBadge
             size="sm"
@@ -102,27 +103,29 @@ export default function ProductRow({
         </div>
 
         <div
-          style={{
-            fontSize: "13px",
-            color: theme.colors.textSecondary,
-          }}
-        >
-          {product.type}
-          {" • "}
-          {product.category ||
-            product.subCategory ||
-            "-"}
-        </div>
+  style={{
+    fontSize: "13px",
+    lineHeight: "1.4",
+    color: theme.colors.textSecondary,
+  }}
+>
+  {product.type}
+  {" • "}
+  {product.category ||
+    product.subCategory ||
+    "-"}
+</div>
       </div>
 
       {/* Actions */}
       <Flex
-        gap="8px"
-        style={{
-          flexShrink: 0,
-          flexWrap: "wrap",
-        }}
-      >
+  gap="8px"
+  style={{
+    flexShrink: 0,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  }}
+>
         {/* Edit */}
         <AppButton
           size="sm"

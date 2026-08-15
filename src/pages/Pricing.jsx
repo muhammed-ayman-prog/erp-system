@@ -42,49 +42,89 @@ const [openSections, setOpenSections] =
     creams: false,
     makhmaria: false,
     packaging: false
-  });   
+  });  
+  const [productsMap, setProductsMap] = useState(new Map());
+ 
   // 🔥 fetch pricing
   useEffect(() => {
+const fetchPricing = async () => {
+  const [snapshot, readySnapshot] = await Promise.all([
+    getDocs(collection(db, "pricing")),
+    getDocs(collection(db, "products"))
+  ]);
 
-    const fetchPricing = async () => {
+  // 🔥 All Products
+  const allProducts = readySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 
-      const snapshot = await getDocs(
-        collection(db, "pricing")
-      );
-
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setPricing(
-  data.sort((a, b) => {
-
-    const aName =
-      `${a.category}_${a.grade || ""}_${a.container || ""}_${a.size || ""}`;
-
-    const bName =
-      `${b.category}_${b.grade || ""}_${b.container || ""}_${b.size || ""}`;
-
-    return aName.localeCompare(bName);
-  })
-);
-// 🔥 Ready Products
-const readySnapshot = await getDocs(
-  collection(db, "products")
+  // 🔥 Products Map
+  const productsMapData = new Map(
+  allProducts.map(product => [
+    product.id,
+    product
+  ])
 );
 
-const readyData = readySnapshot.docs.map(doc => ({
-  id: doc.id,
-  ...doc.data()
-}));
+setProductsMap(productsMapData);
 
-setReadyProducts(
-  readyData.sort((a, b) =>
-    a.name.localeCompare(b.name)
-  )
-);
-    };
+
+  // 🔥 Pricing
+  const data = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  // 🔥 Hide pricing linked to archived products
+ const filteredPricing = data.filter(item => {
+  const isContainerPricing =
+    (item.category === "french" || item.category === "oriental") &&
+    (item.container === "bottle" || item.container === "sample");
+
+  // 🔥 Pricing الخاصة بالـ Bottles / Samples
+  if (isContainerPricing) {
+    const product = item.productId
+  ? productsMapData.get(item.productId)
+  : null;
+
+    // لازم يكون لها Product موجود فعلًا و Active
+    return (
+      !!product &&
+      product.isArchived !== true &&
+      product.archived !== true
+    );
+  }
+
+  // باقي أنواع الـ Pricing تفضل كما هي
+  return true;
+});
+
+  setPricing(
+    filteredPricing.sort((a, b) => {
+      const aName =
+        `${a.category}_${a.grade || ""}_${a.container || ""}_${a.size || ""}`;
+
+      const bName =
+        `${b.category}_${b.grade || ""}_${b.container || ""}_${b.size || ""}`;
+
+      return aName.localeCompare(bName);
+    })
+  );
+
+  // 🔥 Ready Products
+  const readyData = allProducts.filter(
+    product =>
+      product.isArchived !== true &&
+      product.archived !== true
+  );
+
+  setReadyProducts(
+    readyData.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
+  );
+};
 
     fetchPricing();
 
@@ -517,7 +557,7 @@ toast.success("Price Updated Successfully");
   }}
 >
 
-  <div>Size</div>
+<div>Product / Size</div>
 <div>Container</div>
 <div>Category</div>
 <div>Price</div>
@@ -547,8 +587,28 @@ toast.success("Price Updated Successfully");
           >
 
             <div>
+  {item.productId
+    ? (
+        <>
+          <div style={{ fontWeight: "600" }}>
+            {productsMap.get(item.productId)?.name || "-"}
+          </div>
+
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              marginTop: "3px"
+            }}
+          >
             {item.size || "-"}
-            </div>
+          </div>
+        </>
+      )
+    : (
+        item.size || "-"
+      )}
+</div>
 
             <div>
             {item.container || "-"}

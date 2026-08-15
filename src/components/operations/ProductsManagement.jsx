@@ -9,6 +9,8 @@ import {
   groupOils,
 } from "../../utils/productGroups";
 
+import { theme } from "../../theme";
+
 export default function ProductsManagement({
   openProductHistory,
 
@@ -81,6 +83,8 @@ export default function ProductsManagement({
       title="📦 Products Management"
       style={{
         marginTop: "25px",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {/* Search */}
@@ -95,8 +99,8 @@ export default function ProductsManagement({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
-          marginTop: "20px",
+          gap: "14px",
+          marginTop: theme.spacing.xl,
         }}
       >
         {Object.entries(groupedProducts).map(
@@ -151,7 +155,9 @@ export default function ProductsManagement({
                                 })
                               )
                             }
-                            background="#e5e7eb"
+                            background={
+                              theme.colors.borderLight
+                            }
                             buttonStyle={{
                               padding:
                                 "10px 14px",
@@ -165,7 +171,7 @@ export default function ProductsManagement({
                                   display: "flex",
                                   flexDirection:
                                     "column",
-                                  gap: "10px",
+                                  gap: theme.spacing.md,
                                   paddingTop:
                                     "10px",
                                 }}
@@ -213,7 +219,9 @@ export default function ProductsManagement({
                                 })
                               )
                             }
-                            background="#e0f2fe"
+                            background={
+                              theme.colors.infoSoft
+                            }
                             buttonStyle={{
                               padding:
                                 "10px 14px",
@@ -227,7 +235,7 @@ export default function ProductsManagement({
                                   display: "flex",
                                   flexDirection:
                                     "column",
-                                  gap: "10px",
+                                  gap: theme.spacing.md,
                                   paddingTop:
                                     "10px",
                                 }}
@@ -250,7 +258,7 @@ export default function ProductsManagement({
                           display: "flex",
                           flexDirection:
                             "column",
-                          gap: "10px",
+                          gap: theme.spacing.md,
                           paddingTop: "10px",
                         }}
                       >

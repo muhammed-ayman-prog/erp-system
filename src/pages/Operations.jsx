@@ -9,6 +9,7 @@
     doc,
     runTransaction,
     query,
+    where,
     serverTimestamp,
     updateDoc,
   } from "firebase/firestore";
@@ -28,7 +29,7 @@
   "../components/operations/ProductHistoryModal";
   import { useAuth } from "../store/useAuth";
   import logAction from "../utils/logAction";
-
+  import normalizeLog from "../utils/logs/normalizeLog";
   import { LOG_ACTIONS }
   from "../constants/logActions";
 
@@ -952,47 +953,51 @@ import { theme } from "../theme";
                 id: `french_${newProductSubCategory}_${normalizedName}`,
 
                 data: {
-                  category: "french",
-                  container: newProductSubCategory,
-                  size: newProductName,
-                  price: 0
-                }
+  category: "french",
+  container: newProductSubCategory,
+  size: newProductName,
+  price: 0,
+  productId
+}
               },
 
               {
                 id: `oriental_A_${newProductSubCategory}_${normalizedName}`,
 
                 data: {
-                  category: "oriental",
-                  grade: "A",
-                  container: newProductSubCategory,
-                  size: newProductName,
-                  price: 0
-                }
+  category: "oriental",
+  grade: "A",
+  container: newProductSubCategory,
+  size: newProductName,
+  price: 0,
+  productId
+}
               },
 
               {
                 id: `oriental_B_${newProductSubCategory}_${normalizedName}`,
 
                 data: {
-                  category: "oriental",
-                  grade: "B",
-                  container: newProductSubCategory,
-                  size: newProductName,
-                  price: 0
-                }
+  category: "oriental",
+  grade: "B",
+  container: newProductSubCategory,
+  size: newProductName,
+  price: 0,
+  productId
+}
               },
 
               {
                 id: `oriental_C_${newProductSubCategory}_${normalizedName}`,
 
                 data: {
-                  category: "oriental",
-                  grade: "C",
-                  container: newProductSubCategory,
-                  size: newProductName,
-                  price: 0
-                }
+  category: "oriental",
+  grade: "C",
+  container: newProductSubCategory,
+  size: newProductName,
+  price: 0,
+  productId
+}
               }
 
             ];
@@ -1278,48 +1283,25 @@ if (updatedData.type === "oil") {
 }
 const beforeData = {
   name: editingProduct.name,
-
   type: editingProduct.type,
-
   category: editingProduct.category,
-
   subCategory: editingProduct.subCategory,
-
   oilCategory: editingProduct.oilCategory,
-
   pricingTier: editingProduct.pricingTier,
-
   muskType: editingProduct.muskType,
-
   costPrice: editingProduct.costPrice,
-
-  sellingPrice: editingProduct.sellingPrice,
-
   minStock: editingProduct.minStock
 };
 
 const afterData = {
   name: updatedData.name || null,
-
   type: updatedData.type || null,
-
   category: updatedData.category || null,
-
   subCategory: updatedData.subCategory || null,
-
   oilCategory: updatedData.oilCategory || null,
-
   pricingTier: updatedData.pricingTier || null,
-
   muskType: updatedData.muskType || null,
-
   costPrice: Number(updatedData.costPrice) || 0,
-
-  sellingPrice:
-    updatedData.sellingPrice == null
-      ? null
-      : Number(updatedData.sellingPrice),
-
   minStock: Number(updatedData.minStock) || 0
 };
 const changedBefore = {};
@@ -1342,7 +1324,7 @@ if (Object.keys(changedAfter).length === 0) {
   toast.error(t("operations.noChanges"));
   return;
 }
-      const updateData = {
+const updateData = {
   name: updatedData.name,
   type: updatedData.type,
   category: updatedData.category,
@@ -1351,10 +1333,6 @@ if (Object.keys(changedAfter).length === 0) {
   pricingTier: updatedData.pricingTier,
   muskType: updatedData.muskType,
   costPrice: Number(updatedData.costPrice) || 0,
-  sellingPrice:
-    updatedData.sellingPrice == null
-      ? null
-      : Number(updatedData.sellingPrice),
   minStock: Number(updatedData.minStock) || 0,
 };
 
@@ -1432,61 +1410,49 @@ after: changedAfter
     }
 
   };
-  const openProductHistory = (
-    product
-  ) => {
+  const openProductHistory = async (product) => {
+  try {
+    const q = query(
+      collection(db, "logs"),
+      where("targetId", "==", product.id)
+    );
 
-    const productActivityLogs =
-      allActivities.filter(
-        item =>
-          item.productId === product.id
-      );
+    const snapshot = await getDocs(q);
 
-    const productActionLogs =
-      productLogs.filter(
-        log =>
-          log.productName === product.name
-      );
-
-    const merged = [
-
-      ...productActivityLogs.map(
-        item => ({
-          ...item,
-          logType: "activity"
-        })
-      ),
-
-      ...productActionLogs.map(
-        item => ({
-          ...item,
-          logType: "product"
+    const productLogs = snapshot.docs
+      .map((doc) =>
+        normalizeLog({
+          id: doc.id,
+          ...doc.data(),
         })
       )
-
-    ];
-
-    merged.sort((a, b) => {
-
-      const aTime =
-        a.createdAt?.seconds
+      .sort((a, b) => {
+        const aTime = a.createdAt?.seconds
           ? a.createdAt.seconds
           : new Date(a.createdAt).getTime();
 
-      const bTime =
-        b.createdAt?.seconds
+        const bTime = b.createdAt?.seconds
           ? b.createdAt.seconds
           : new Date(b.createdAt).getTime();
 
-      return bTime - aTime;
+        return bTime - aTime;
+      });
 
-    });
-
-    setProductHistory(merged);
-
+    setProductHistory(productLogs);
     setSelectedProductHistory(product);
+  } catch (error) {
+    console.error(
+      "Failed to load product history:",
+      error
+    );
 
-  };
+    toast.error(
+      t("common.error")
+    );
+  }
+};
+
+  
     const branchOrder = [
       "abbasAkkad1",
       "abbasAkkad2",
@@ -1830,105 +1796,88 @@ after: changedAfter
               gap: "20px",
               marginTop: "20px"
             }}>
-              <button
-                onClick={() =>
-                  setActiveAction(
-                    activeAction === "transfer"
-                      ? null
-                      : "transfer"
-                  )
-                }
-                style={{
-                  padding: "15px",
-                  borderRadius: "15px",
-                  border: "none",
-                  background: activeAction === "transfer" ? "#3b82f6" : "#f3f4f6",
-                  color: activeAction === "transfer" ? "#fff" : "#000",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  width: "100%",
-                  transition: "0.2s",
-                  transform: activeAction === "transfer" ? "scale(1.02)" : "scale(1)",
-                }}
-              >
-                🔄 {t("operations.transfer")}
-              </button>
+              <AppButton
+  type="button"
+  fullWidth
+  size="lg"
+  onClick={() =>
+    setActiveAction(
+      activeAction === "transfer"
+        ? null
+        : "transfer"
+    )
+  }
+  style={{
+    background:
+      activeAction === "transfer"
+        ? theme.colors.primary
+        : "#f3f4f6",
+    color:
+      activeAction === "transfer"
+        ? "#fff"
+        : "#000",
+    fontWeight: "600",
+  }}
+>
+  🔄 {t("operations.transfer")}
+</AppButton>
 
-              <button
-                onClick={() =>
-                  setActiveAction(
-                    activeAction === "adjust"
-                      ? null
-                      : "adjust"
-                  )
-                }
-                style={{
-                  padding: "15px",
-                  borderRadius: "15px",
-                  border: "none",
-                  background: activeAction === "adjust" ? COLORS.success : "#f3f4f6",
-                  color: activeAction === "adjust" ? "#fff" : "#000",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  width: "100%",
-                  transition: "0.2s",
-                  transform: activeAction === "adjust" ? "scale(1.02)" : "scale(1)",
-                }}
-              >
-                ⚖️ {t("operations.adjust")}
-              </button>
+              <AppButton
+  type="button"
+  fullWidth
+  size="lg"
+  onClick={() =>
+    setActiveAction(
+      activeAction === "adjust"
+        ? null
+        : "adjust"
+    )
+  }
+  style={{
+    background:
+      activeAction === "adjust"
+        ? theme.colors.success
+        : "#f3f4f6",
+    color:
+      activeAction === "adjust"
+        ? "#fff"
+        : "#000",
+    fontWeight: "600",
+  }}
+>
+  ⚖️ {t("operations.adjust")}
+</AppButton>
               <div
     style={{
       alignSelf: "stretch"
     }}
   >
 
-    <button
-      onClick={() => {
-
-    const nextState =
-      !productsAccordionOpen;
-
-    setProductsAccordionOpen(
-      nextState
-    );
+    <AppButton
+  type="button"
+  fullWidth
+  size="lg"
+  onClick={() => {
+    const nextState = !productsAccordionOpen;
+    setProductsAccordionOpen(nextState);
 
     if (!nextState) {
-
       setActiveAction(null);
-
     }
-
   }}
-
-      style={{
-        padding: "15px",
-        borderRadius: "15px",
-        border: "none",
-
-        background:
-          productsAccordionOpen
-            ? "#111827"
-            : "#f3f4f6",
-
-        color:
-          productsAccordionOpen
-            ? "#fff"
-            : "#000",
-
-        cursor: "pointer",
-
-        fontWeight: "700",
-
-        width: "100%",
-
-        fontSize: "16px",
-
-        transition: "0.2s"
-      }}
-    >
-      📦 {t("operations.products")}
-    </button>
+  style={{
+    background: productsAccordionOpen
+      ? "#111827"
+      : "#f3f4f6",
+    color: productsAccordionOpen
+      ? "#fff"
+      : "#000",
+    fontWeight: "700",
+    fontSize: "16px",
+  }}
+>
+  📦 {t("operations.products")}
+</AppButton>
 
     <div
       style={{
@@ -1951,79 +1900,60 @@ after: changedAfter
 
         {/* ADD PRODUCT BUTTON */}
 
-        <button
-          onClick={() =>
-            setActiveAction(
-              activeAction === "addProduct"
-                ? null
-                : "addProduct"
-            )
-          }
-
-          style={{
-            padding: "15px",
-            borderRadius: "15px",
-            border: "none",
-
-            background:
-              activeAction === "addProduct"
-                ? "#2563eb"
-                : "#f3f4f6",
-
-            color:
-              activeAction === "addProduct"
-                ? "#fff"
-                : "#000",
-
-            cursor: "pointer",
-
-            fontWeight: "600",
-
-            width: "100%",
-
-            marginBottom: "10px"
-          }}
-        >
-          ➕ {t("operations.addProduct")}
-        </button>
+        <AppButton
+  type="button"
+  fullWidth
+  size="lg"
+  onClick={() =>
+    setActiveAction(
+      activeAction === "addProduct"
+        ? null
+        : "addProduct"
+    )
+  }
+  style={{
+    background:
+      activeAction === "addProduct"
+        ? "#2563eb"
+        : "#f3f4f6",
+    color:
+      activeAction === "addProduct"
+        ? "#fff"
+        : "#000",
+    fontWeight: "600",
+    marginBottom: "10px",
+  }}
+>
+  ➕ {t("operations.addProduct")}
+</AppButton>
 
         {/* PRODUCTS MANAGEMENT BUTTON */}
 
-        <button
-          onClick={() =>
-            setActiveAction(
-              activeAction === "productsManagement"
-                ? null
-                : "productsManagement"
-            )
-          }
-
-          style={{
-            padding: "15px",
-            borderRadius: "15px",
-            border: "none",
-
-            background:
-              activeAction ===
-              "productsManagement"
-                ? "#dc2626"
-                : "#f3f4f6",
-
-            color:
-              activeAction ===
-              "productsManagement"
-                ? "#fff"
-                : "#000",
-
-            cursor: "pointer",
-
-            fontWeight: "600",
-
-            width: "100%"
-          }}
-        >
-          📦 {t("operations.productsManagement")}
-        </button>
+        <AppButton
+  type="button"
+  fullWidth
+  size="lg"
+  onClick={() =>
+    setActiveAction(
+      activeAction === "productsManagement"
+        ? null
+        : "productsManagement"
+    )
+  }
+  style={{
+    background:
+      activeAction === "productsManagement"
+        ? "#dc2626"
+        : "#f3f4f6",
+    color:
+      activeAction === "productsManagement"
+        ? "#fff"
+        : "#000",
+    fontWeight: "600",
+  }}
+>
+  📦 {t("operations.productsManagement")}
+</AppButton>
 
     </div>
 

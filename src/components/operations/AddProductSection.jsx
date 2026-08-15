@@ -72,24 +72,32 @@ const { t } = useTranslate();
   shadow="sm"
   style={{
     marginTop: "20px",
+    width: "100%",
+    boxSizing: "border-box",
   }}
 >
   <h3
-    style={{
-      margin: 0,
-      marginBottom: "15px",
-    }}
-  >
-    ➕ {t("products.addProduct")}
-  </h3>
+  style={{
+    margin: 0,
+    marginBottom: "15px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "18px",
+    fontWeight: "700",
+  }}
+>
+  <span>➕</span>
+  <span>{t("products.addProduct")}</span>
+</h3>
 
   <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-    }}
-  >
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+  }}
+>
 
     {/* Product Name */}
     <AppInput
@@ -313,15 +321,18 @@ const { t } = useTranslate();
 
     {/* Create */}
     <AppButton
-      type="button"
-      fullWidth
-      size="lg"
-      loading={createLoading}
-      onClick={handleCreateProduct}
-      variant="primary"
-    >
-      {t("products.createProduct")}
-    </AppButton>
+  type="button"
+  fullWidth
+  size="lg"
+  loading={createLoading}
+  onClick={handleCreateProduct}
+  variant="primary"
+  style={{
+    marginTop: "4px",
+  }}
+>
+  {t("products.createProduct")}
+</AppButton>
 
   </div>
 </AppCard>
