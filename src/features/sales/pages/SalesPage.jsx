@@ -121,6 +121,7 @@ const selectedBranchData =
   loading
 } = useAuth();
 const [selectedProduct, setSelectedProduct] = useState(null);
+const [isSelectingSecondOil, setIsSelectingSecondOil] = useState(false);
   // ✅ ده متغير عادي
 const isMusk = useMemo(() => {
 
@@ -183,14 +184,49 @@ const {
   
   const [mainTab, setMainTab] = useState("french");
   const [subTab, setSubTab] = useState(null);
-  const visibleProducts =
-  useVisibleProducts({
-    productsWithStock,
-    mainTab,
-    subTab,
-    search
-  });
+ const normalVisibleProducts = useVisibleProducts({
+  productsWithStock,
+  mainTab,
+  subTab,
+  search
+});
+
+// أثناء اختيار الزيت الثاني نعرض الزيوت فقط
+const visibleProducts = isSelectingSecondOil
+  ? productsWithStock.filter((product) => {
+      const category = (product.category || "").toLowerCase();
+      const subCategory = (product.subCategory || "").toLowerCase();
+
+      const isOil =
+        category.includes("french") ||
+        category.includes("oriental") ||
+        category.includes("musk") ||
+        subCategory === "musk";
+
+      const isDifferentOil =
+        String(product.id) !== String(selectedProduct?.id);
+
+      const hasStock = Number(product.quantity || 0) > 0;
+
+      const searchText = search.trim().toLowerCase();
+
+      const matchesSearch =
+        !searchText ||
+        (product.name || "").toLowerCase().includes(searchText) ||
+        category.includes(searchText);
+
+      return isOil && isDifferentOil && hasStock && matchesSearch;
+    })
+  : normalVisibleProducts;
   const [paymentMethod, setPaymentMethod] = useState("");
+  // Split Payment
+const [isSplitPayment, setIsSplitPayment] = useState(false);
+
+const [splitPayments, setSplitPayments] = useState({
+  cash: "",
+  visa: "",
+  instapay: "",
+});
   const [
   selectedSeller,
   setSelectedSeller
@@ -260,6 +296,10 @@ const {
 
   oilQty,
   setOilQty,
+  secondOil,
+setSecondOil,
+secondOilQty,
+setSecondOilQty,
 
   editingItem,
   setEditingItem
@@ -282,14 +322,19 @@ const customerState = useMemo(() => ({
 ]);
 const checkoutState = useMemo(() => ({
   subtotal,
-
   discount,
   setDiscount,
-
   total,
 
+  // Payment
   paymentMethod,
   setPaymentMethod,
+
+  // Split Payment
+  isSplitPayment,
+  setIsSplitPayment,
+  splitPayments,
+  setSplitPayments,
 
   loadingCheckout
 }), [
@@ -297,19 +342,39 @@ const checkoutState = useMemo(() => ({
   discount,
   total,
   paymentMethod,
+  isSplitPayment,
+  splitPayments,
   loadingCheckout
 ]);
+const handleStartSecondOilSelection = () => {
+  if (!selectedProduct) return;
+
+  setSearch("");
+  // نقفل النافذة دون تصفير اختيارات المنتج الأول
+  setIsSelectingSecondOil(true);
+  setShowPopup(false);
+};
+
+const handleCancelSecondOilSelection = () => {
+  setIsSelectingSecondOil(false);
+  setSearch("");
+
+  // نرجع لنافذة المنتج الأول
+  setShowPopup(true);
+};
 const popupActions = useMemo(() => ({
   setSelectedProduct,
   setSelectedSize,
   setContainerType,
   setOilQty,
+  setSecondOil,
+  setSecondOilQty,
   setShowPopup,
-
-  // ✏️ Edit mode
   setEditingItem
 }), [
-  setEditingItem
+  setEditingItem,
+  setSecondOil,
+  setSecondOilQty
 ]);
 const {
   handleSelectProduct
@@ -323,7 +388,13 @@ const {
 
   setSelectedProduct,
   setPopupStep,
-  setShowPopup
+  setShowPopup,
+
+  // Second Oil Selection
+  isSelectingSecondOil,
+  setIsSelectingSecondOil,
+  setSecondOil,
+  setSecondOilQty
 });
 const {
   handleCheckoutAction
@@ -336,10 +407,15 @@ const {
   customerPhone,
 
   paymentMethod,
+  isSplitPayment,
+  splitPayments,
+  setIsSplitPayment,
+  setSplitPayments,
   selectedSeller,
 
   selectedBranch,
   saleDate,
+  setSaleDate,
   user,
 
   setToastText,
@@ -462,16 +538,19 @@ return (
   <Cart />
 
 </CartDrawer>
-    <div className="sales-layout" style={{
+  <div className="sales-layout" style={{
   direction:
-  lang === "ar"
-    ? "rtl"
-    : "ltr",
+    lang === "ar"
+      ? "rtl"
+      : "ltr",
+
   display: isMobile ? "block" : "grid",
+
   gridTemplateColumns:
-  isMobile
-    ? "1fr"
-    : "220px 1fr",
+    isMobile || isSelectingSecondOil
+      ? "1fr"
+      : "220px 1fr",
+
   width: "100%",
   alignItems: "start"
 }}>
@@ -479,30 +558,31 @@ return (
     
       
       {/* المنتجات */}
-      <div className="left-side" 
-      style=
-      {{order:
-        lang === "ar" ? 1 : 1,
-        marginBottom: isMobile ? "10px" : "0"
-      }}>
+      {!isSelectingSecondOil && (
+  <div
+    className="left-side"
+    style={{
+      order: lang === "ar" ? 1 : 1,
+      marginBottom: isMobile ? "10px" : "0"
+    }}
+  >
+    {!isMobile && (
+      <div className="cat-title">
+        📦 {t("products.categoriesLabel")}
+      </div>
+    )}
 
-  {/* نخفي العنوان في الموبايل */}
-  {!isMobile && (
-    <div className="cat-title">
-      📦 {t("products.categoriesLabel")}
-    </div>
-  )}
-
-  <SalesCategories
-  isMobile={isMobile}
-  mainTab={mainTab}
-  setMainTab={setMainTab}
-  setSubTab={setSubTab}
-  setPopupStep={setPopupStep}
-  setShowPopup={setShowPopup}
-  t={t}
-/>
-</div>
+    <SalesCategories
+      isMobile={isMobile}
+      mainTab={mainTab}
+      setMainTab={setMainTab}
+      setSubTab={setSubTab}
+      setPopupStep={setPopupStep}
+      setShowPopup={setShowPopup}
+      t={t}
+    />
+  </div>
+)}
         <div style={{
           order:
             lang === "ar" ? 2 : 2,
@@ -533,13 +613,65 @@ return (
   t={t}
 />
 
-<ProductsHeader
-  mainTab={mainTab}
-  subTab={subTab}
-  visibleProducts={visibleProducts}
-  theme={theme}
-  t={t}
-/>
+{isSelectingSecondOil ? (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: "12px",
+      padding: "14px",
+      marginBottom: "12px",
+      borderRadius: "12px",
+      background: theme.colors.secondary,
+      border: `1px solid ${theme.colors.border}`
+    }}
+  >
+    <div>
+      <div style={{ fontWeight: 700 }}>
+        {lang === "ar"
+          ? "اختار الزيت الثاني"
+          : "Choose the second oil"}
+      </div>
+
+      <div
+        style={{
+          fontSize: "12px",
+          color: theme.colors.textSecondary,
+          marginTop: "4px"
+        }}
+      >
+        {lang === "ar"
+          ? "اختار زيت مختلف من الزيوت المتاحة في المخزون"
+          : "Choose another available oil"}
+      </div>
+    </div>
+
+    <button
+      type="button"
+      onClick={handleCancelSecondOilSelection}
+      style={{
+        padding: "9px 14px",
+        borderRadius: "9px",
+        border: `1px solid ${theme.colors.border}`,
+        background: theme.colors.background,
+        color: theme.colors.text,
+        cursor: "pointer",
+        fontWeight: 600
+      }}
+    >
+      {lang === "ar" ? "رجوع" : "Back"}
+    </button>
+  </div>
+) : (
+  <ProductsHeader
+    mainTab={mainTab}
+    subTab={subTab}
+    visibleProducts={visibleProducts}
+    theme={theme}
+    t={t}
+  />
+)}
   
 
 
@@ -560,13 +692,14 @@ return (
     />
 
     <Suspense fallback={null}>
-  <ProductPopup
-    selectedProduct={selectedProduct}
-    setSubTab={setSubTab}
-    setMainTab={setMainTab}
-    isMusk={isMusk}
-    popupState={popupState}
-  />
+ <ProductPopup
+  selectedProduct={selectedProduct}
+  setSubTab={setSubTab}
+  setMainTab={setMainTab}
+  isMusk={isMusk}
+  popupState={popupState}
+  onAddSecondOil={handleStartSecondOilSelection}
+/>
 </Suspense>
 
   </>

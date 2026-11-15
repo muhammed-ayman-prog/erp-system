@@ -1,3 +1,4 @@
+
 export function useCheckoutAction({
   handleCheckout,
 
@@ -6,8 +7,15 @@ export function useCheckoutAction({
   customerName,
   customerPhone,
   saleDate,
+  setSaleDate,
 
   paymentMethod,
+
+  // Split Payment
+  isSplitPayment,
+  splitPayments,
+  setIsSplitPayment,
+  setSplitPayments,
 
   selectedSeller,
 
@@ -31,21 +39,29 @@ export function useCheckoutAction({
   setCustomerPhone
 }) {
 
-  function handleCheckoutAction(
-    params
-  ) {
-
+  function handleCheckoutAction(params) {
     return handleCheckout({
       ...params,
-      
+
       playCheckoutSound,
 
       customerName,
       customerPhone,
       saleDate,
+      setSaleDate,
+
       paymentMethod,
+
+      // Split Payment
+      isSplitPayment,
+      splitPayments,
+
+      setIsSplitPayment,
+      setSplitPayments,
+
       employeeId: selectedSeller?.id,
       employeeName: selectedSeller?.name,
+
       selectedBranch,
       user,
 

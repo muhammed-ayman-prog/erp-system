@@ -1,3 +1,4 @@
+
 import AppFormDialog from "../../../components/ui/AppFormDialog";
 import AppInput from "../../../components/ui/AppInput";
 import AppSelect from "../../../components/ui/AppSelect";
@@ -6,26 +7,26 @@ import { useTranslate } from "../../../useTranslate";
 export default function EditExpenseDialog({
   open,
   onClose,
-
   amount,
   setAmount,
-
   note,
   setNote,
-
   category,
   setCategory,
-
   customCategory,
   setCustomCategory,
-
   categories,
-
+  businessDate,
+  setBusinessDate,
   loading,
-
   onSubmit,
 }) {
   const { t } = useTranslate();
+
+  const today = new Date();
+  const todayDate = `${today.getFullYear()}-${String(
+    today.getMonth() + 1
+  ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
     <AppFormDialog
@@ -49,10 +50,7 @@ export default function EditExpenseDialog({
         onChange={(e) => setCategory(e.target.value)}
       >
         {categories.map((item) => (
-          <option
-            key={item}
-            value={item}
-          >
+          <option key={item} value={item}>
             {item}
           </option>
         ))}
@@ -61,16 +59,30 @@ export default function EditExpenseDialog({
       {category === "➕ تصنيف جديد" && (
         <>
           <div style={{ height: 12 }} />
-
           <AppInput
             value={customCategory}
             placeholder={t("expenses.newCategory")}
-            onChange={(e) =>
-              setCustomCategory(e.target.value)
-            }
+            onChange={(e) => setCustomCategory(e.target.value)}
           />
         </>
       )}
+
+      <div style={{ height: 12 }} />
+
+      <div>
+        <label style={dateLabelStyle}>تاريخ العملية</label>
+        <AppInput
+          type="date"
+          value={businessDate || ""}
+          max={todayDate}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value && value <= todayDate) {
+              setBusinessDate(value);
+            }
+          }}
+        />
+      </div>
 
       <div style={{ height: 12 }} />
 
@@ -82,3 +94,11 @@ export default function EditExpenseDialog({
     </AppFormDialog>
   );
 }
+
+const dateLabelStyle = {
+  display: "block",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#64748b",
+  marginBottom: 7,
+};

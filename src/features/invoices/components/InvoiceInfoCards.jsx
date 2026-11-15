@@ -1,13 +1,11 @@
+
 import {
   UserRound,
   Store,
   CreditCard,
-  BadgeCheck,
-  ShoppingBag,
   UserCog,
 } from "lucide-react";
 
-import AppCard from "../../../components/ui/AppCard";
 import { theme } from "../../../theme";
 
 export default function InvoiceInfoCards({
@@ -17,87 +15,80 @@ export default function InvoiceInfoCards({
   branchName,
   branchNameMap,
 }) {
+  const paymentMethod = (
+    selectedInvoice.paymentMethod || "cash"
+  ).toLowerCase();
+
+  const paymentRows = Array.isArray(selectedInvoice.payments)
+    ? selectedInvoice.payments.filter(
+        (payment) =>
+          payment?.method &&
+          Number(payment.amount) > 0
+      )
+    : [];
+
+  const isSplitPayment =
+    paymentMethod === "mixed" || paymentRows.length > 1;
+
+  const paymentLabel = (method) => {
+    const labels = {
+      cash: lang === "ar" ? "كاش" : "Cash",
+      visa: lang === "ar" ? "فيزا" : "Visa",
+      instapay: lang === "ar" ? "إنستاباي" : "InstaPay",
+    };
+
+    return (
+      labels[method?.toLowerCase()] || method
+    );
+  };
+
+  const formatPaymentAmount = (amount) =>
+    `${Number(amount || 0).toLocaleString(
+      lang === "ar" ? "ar-EG" : "en-US"
+    )} ${lang === "ar" ? "ج.م" : "EGP"}`;
+
   const cards = [
     {
-      icon: <UserRound size={20} />,
+      icon: <UserRound size={17} />,
       title: t("customers.customer"),
       value:
         selectedInvoice.customerName ||
-        (lang === "ar"
-          ? "عميل نقدي"
-          : "Walk In"),
+        (lang === "ar" ? "عميل نقدي" : "Walk In"),
       sub:
         selectedInvoice.customerPhone ||
-        (lang === "ar"
-          ? "بدون رقم"
-          : "No Phone"),
-      color: "primary",
+        (lang === "ar" ? "بدون رقم" : "No Phone"),
+      color: theme.colors.primary,
     },
-
     {
-      icon: <UserCog size={20} />,
+      icon: <UserCog size={17} />,
       title: t("invoices.salesName"),
       value:
         selectedInvoice.items?.find(
-          (i) => i.employeeName
+          (item) => item.employeeName
         )?.employeeName ||
         selectedInvoice.employeeName ||
         "-",
-      sub:
-        selectedInvoice.enteredBy || "-",
-      color: "info",
+      sub: selectedInvoice.enteredBy || "-",
+      color: theme.colors.info || theme.colors.primary,
     },
-
     {
-      icon: <Store size={20} />,
+      icon: <Store size={17} />,
       title: t("branches.title"),
       value: branchNameMap?.[branchName]
-        ? t(
-            `branchNames.${branchNameMap[branchName]}`
-          )
-        : branchName,
-      color: "warning",
+        ? t(`branchNames.${branchNameMap[branchName]}`)
+        : branchName || "-",
+      color: theme.colors.warning || theme.colors.primary,
     },
-
     {
-      icon: <CreditCard size={20} />,
+      icon: <CreditCard size={17} />,
       title: t("payment.method"),
-      value: t(
-        `common.${(
-          selectedInvoice.paymentMethod ||
-          "cash"
-        ).toLowerCase()}`
-      ),
-      color: "purple",
-    },
-
-    {
-      icon: <ShoppingBag size={20} />,
-      title: t("invoices.saleType"),
-      value:
-        selectedInvoice.saleType ===
-        "RETURN_RESALE"
-          ? t("invoices.returnResale")
-          : selectedInvoice.saleType ===
-            "MIXED"
-          ? t("invoices.mixed")
-          : t("invoices.sale"),
-      color: "primary",
-    },
-
-    {
-      icon: <BadgeCheck size={20} />,
-      title: t("common.status"),
-      value:
-        selectedInvoice.status ===
-        "cancelled"
-          ? t("invoices.cancelled")
-          : t("invoices.completed"),
-      color:
-        selectedInvoice.status ===
-        "cancelled"
-          ? "danger"
-          : "success",
+      value: isSplitPayment
+        ? lang === "ar"
+          ? "دفع مقسّم"
+          : "Split Payment"
+        : t(`common.${paymentMethod}`),
+      color: theme.colors.primary,
+      isPayment: true,
     },
   ];
 
@@ -106,106 +97,131 @@ export default function InvoiceInfoCards({
       style={{
         display: "grid",
         gridTemplateColumns:
-          "repeat(auto-fit,minmax(240px,1fr))",
-        gap: theme.spacing.md,
-        marginTop: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
+          "repeat(auto-fit, minmax(min(100%, 145px), 1fr))",
+        gap: 8,
+        marginBottom: theme.spacing.md,
       }}
     >
-      {cards.map((card, index) => {
-        const color =
-          theme.colors[card.color] ||
-          theme.colors.primary;
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            minWidth: 0,
+            padding: "10px 11px",
+            borderRadius: theme.radius.lg,
+            background: theme.colors.cardSoft,
+            border: `1px solid ${theme.colors.border}`,
+            gridColumn:
+              card.isPayment && isSplitPayment
+                ? "1 / -1"
+                : undefined,
+          }}
+        >
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              minWidth: 32,
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: theme.colors.background,
+              color: card.color,
+            }}
+          >
+            {card.icon}
+          </div>
 
-        const soft =
-          theme.colors[
-            `${card.color}Soft`
-          ] || theme.colors.primarySoft;
-
-        return (
-          <AppCard
-            key={index}
-            hover
-            padding="lg"
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+            }}
           >
             <div
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: theme.spacing.md,
+                fontSize: 11,
+                fontWeight: 500,
+                color: theme.colors.textSecondary,
+                marginBottom: 3,
               }}
             >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-
-                  borderRadius:
-                    theme.radius.full,
-
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent:
-                    "center",
-
-                  background: soft,
-
-                  color,
-                  flexShrink: 0,
-                }}
-              >
-                {card.icon}
-              </div>
-
-              <div
-                style={{
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color:
-                      theme.colors
-                        .textSecondary,
-                    marginBottom: 6,
-                  }}
-                >
-                  {card.title}
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color:
-                      theme.colors.text,
-                    wordBreak:
-                      "break-word",
-                  }}
-                >
-                  {card.value}
-                </div>
-
-                {card.sub && (
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 12,
-                      color:
-                        theme.colors
-                          .textSecondary,
-                    }}
-                  >
-                    {card.sub}
-                  </div>
-                )}
-              </div>
+              {card.title}
             </div>
-          </AppCard>
-        );
-      })}
+
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: theme.colors.text,
+                overflowWrap: "anywhere",
+                lineHeight: 1.5,
+              }}
+            >
+              {card.value}
+            </div>
+
+            {card.sub && (
+              <div
+                style={{
+                  fontSize: 10,
+                  color: theme.colors.textSecondary,
+                  marginTop: 2,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {card.sub}
+              </div>
+            )}
+
+            {card.isPayment &&
+              isSplitPayment && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 6,
+                    marginTop: 7,
+                  }}
+                >
+                  {paymentRows.length > 0 ? (
+                    paymentRows.map((payment, i) => (
+                      <span
+                        key={`${payment.method}-${i}`}
+                        style={{
+                          fontSize: 11,
+                          padding: "4px 7px",
+                          borderRadius: 6,
+                          background: theme.colors.background,
+                          color: theme.colors.text,
+                        }}
+                      >
+                        {paymentLabel(payment.method)}
+                        {" · "}
+                        {formatPaymentAmount(payment.amount)}
+                      </span>
+                    ))
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: theme.colors.textSecondary,
+                      }}
+                    >
+                      {lang === "ar"
+                        ? "تفاصيل الدفع غير متاحة"
+                        : "Payment details unavailable"}
+                    </span>
+                  )}
+                </div>
+              )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

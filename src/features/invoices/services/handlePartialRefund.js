@@ -160,6 +160,29 @@ const maxAllowed =
     const originalItem = selectedInvoice.items.find(
       i => getKey(i) === getKey(item)
     );
+    const originalOilComponents =
+  Array.isArray(originalItem?.oilComponents) &&
+  originalItem.oilComponents.length > 0
+    ? originalItem.oilComponents.map(component => ({
+        oilId: component.oilId || component.id || null,
+        oilName: component.oilName || "",
+        oilCategory: component.oilCategory || "",
+        quantityML: Number(
+          component.quantityML ?? component.oilQty ?? 0
+        ),
+        costPerML: Number(component.costPerML) || 0,
+        cost: Number(component.cost) || 0
+      }))
+    : Number(originalItem?.oilQty) > 0
+    ? [{
+        oilId: originalItem.oilId || originalItem.id || null,
+        oilName: originalItem.oilName || originalItem.name || "",
+        oilCategory: originalItem.oilCategory || "",
+        quantityML: Number(originalItem.oilQty),
+        costPerML: Number(originalItem.oilCostPerML) || 0,
+        cost: Number(originalItem.oilCost) || 0
+      }]
+    : [];
     // 🔥 لازم يتعرفوا هنا فوق
     const returnRef = doc(collection(db, "returns"));
     let returnedRefs = [];
@@ -204,7 +227,7 @@ const isReadyProduct =
 
         productId: item.productId || item.id,
         name: item.name,
-
+        oilComponents: originalOilComponents,
         quantity: 1,
 
         branchId: selectedInvoice.branchId,
@@ -253,6 +276,7 @@ invoiceDocId: selectedInvoice.id,
 
       branchId: selectedInvoice.branchId,
       originalOilQty: item.oilQty || 0,
+      oilComponents: originalOilComponents,
       originalQty: originalItem?.qty || 1, 
       container: item.containerType?.toUpperCase() || "",
       containerName:
@@ -382,6 +406,9 @@ batch.update(saleRef, {
     ""
 });
 
+  
+  // 🔥 مرة واحدة بس
+  await batch.commit();
   setInvoices(prev =>
   prev.map(s =>
     s.id === selectedInvoice.id
@@ -411,8 +438,6 @@ batch.update(saleRef, {
       : s
   )
 );
-  // 🔥 مرة واحدة بس
-  await batch.commit();
   // 👤 Update customer stats
 if (
   selectedInvoice.customerId &&

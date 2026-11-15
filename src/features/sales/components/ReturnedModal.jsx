@@ -1,4 +1,5 @@
 import AppModal from "../../../components/ui/AppModal";
+
 export default function ReturnedModal({
   showReturned,
   setShowReturned,
@@ -14,231 +15,311 @@ export default function ReturnedModal({
   theme,
   t
 }) {
-
   if (!showReturned) {
     return null;
   }
 
+  const searchTerm = (
+    normalizedReturnedSearch ||
+    returnedSearch ||
+    ""
+  )
+    .toLowerCase()
+    .trim();
+
+  // البحث باسم المنتج أو بأي زيت من مكونات العبوة
+  const filteredReturnedItems = (
+    Array.isArray(returnedItems)
+      ? returnedItems
+      : []
+  ).filter(item => {
+    const productName = (
+      item.name || ""
+    ).toLowerCase();
+
+    const oilNames = (
+      Array.isArray(item.oilComponents)
+        ? item.oilComponents
+        : []
+    )
+      .map(component =>
+        `${component.oilName || ""} ${component.oilCategory || ""}`
+      )
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      productName.includes(searchTerm) ||
+      oilNames.includes(searchTerm)
+    );
+  });
+
   return (
     <AppModal
-  open={showReturned}
-  onClose={() =>
-    setShowReturned(false)
-  }
-  width="900px"
->
-
-  <div style={{
-    background:
-      theme.colors.background
-  }}>
-
+      open={showReturned}
+      onClose={() => setShowReturned(false)}
+      width="900px"
+    >
+      <div
+        style={{
+          background: theme.colors.background
+        }}
+      >
         {/* Header */}
-        <div style={{
-          display: "flex",
-
-          justifyContent:
-            "space-between",
-
-          alignItems: "center",
-
-          marginBottom: "15px"
-        }}>
-
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "15px"
+          }}
+        >
           <h2>
             📦 {t("returns.title")}
           </h2>
 
           <button
             type="button"
-
-            onClick={() =>
-              setShowReturned(false)
-            }
+            onClick={() => setShowReturned(false)}
           >
             ✖
           </button>
-
         </div>
 
         {/* Search */}
         <input
           autoComplete="off"
-
-          dir={
-            lang === "ar"
-              ? "rtl"
-              : "ltr"
-          }
-
-          placeholder={
-            t("common.search")
-          }
-
+          dir={lang === "ar" ? "rtl" : "ltr"}
+          placeholder={t("common.search")}
           value={returnedSearch}
-
-          onChange={(e) =>
-            setReturnedSearch(
-              e.target.value
-            )
+          onChange={e =>
+            setReturnedSearch(e.target.value)
           }
-
           style={{
             width: "100%",
-
             padding: "12px",
-
             borderRadius: "12px",
-
             marginBottom: "15px",
-
-            border:
-              `1px solid ${theme.colors.border}`
+            border: `1px solid ${theme.colors.border}`
           }}
         />
 
         {/* Items */}
-        <div style={{
-          display: "grid",
-
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
-
-          gap: "12px"
-        }}>
-
-          {returnedItems
-            .filter(i =>
-              (i.name || "")
-                .toLowerCase()
-                .includes(
-                  normalizedReturnedSearch
-                )
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(220px,1fr))",
+            gap: "12px"
+          }}
+        >
+          {filteredReturnedItems.map(item => {
+            const oilComponents = Array.isArray(
+              item.oilComponents
             )
-            .map(item => (
+              ? item.oilComponents
+              : [];
 
-            <div
-              key={item.id}
+            return (
+              <div
+                key={item.id}
+                style={{
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: "16px",
+                  padding: "14px",
+                  background: theme.colors.card
+                }}
+              >
+                {/* Product Name */}
+                <div
+                  style={{
+                    fontWeight: "700",
+                    marginBottom: "6px"
+                  }}
+                >
+                  {item.name}
+                </div>
 
-              style={{
-                border:
-                  `1px solid ${theme.colors.border}`,
+                {/* Container Name */}
+                <div
+                  style={{
+                    fontSize: "13px",
+                    opacity: 0.7,
+                    marginBottom: "10px"
+                  }}
+                >
+                  {item.containerName}
+                </div>
 
-                borderRadius: "16px",
+                {/* Oil Composition */}
+                {oilComponents.length > 0 && (
+                  <div
+                    style={{
+                      background: theme.colors.background,
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: "10px",
+                      padding: "10px",
+                      marginBottom: "12px"
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: "700",
+                        fontSize: "13px",
+                        marginBottom: "8px"
+                      }}
+                    >
+                      {lang === "ar"
+                        ? "🧪 محتويات العبوة"
+                        : "🧪 Bottle Contents"}
+                    </div>
 
-                padding: "14px",
+                    {oilComponents.map(
+                      (component, index) => {
+                        const quantity = Number(
+                          component.quantityML ??
+                          component.oilQty ??
+                          0
+                        );
 
-                background:
-                  theme.colors.card
-              }}
-            >
+                        const oilName =
+                          component.oilName ||
+                          component.oilCategory ||
+                          (lang === "ar"
+                            ? "زيت"
+                            : "Oil");
 
-              <div style={{
-                fontWeight: "700",
-                marginBottom: "6px"
-              }}>
-                {item.name}
-              </div>
+                        return (
+                          <div
+                            key={`${
+                              component.oilId || index
+                            }_${index}`}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "13px",
+                              marginBottom:
+                                index <
+                                oilComponents.length - 1
+                                  ? "6px"
+                                  : "0"
+                            }}
+                          >
+                            <span>
+                              {oilName}
+                            </span>
 
-              <div style={{
-                fontSize: "13px",
+                            <strong>
+                              {quantity} ml
+                            </strong>
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                )}
 
-                opacity: 0.7,
+                {/* Price */}
+                <div
+                  style={{
+                    fontWeight: "700",
+                    color: theme.colors.primary,
+                    marginBottom: "10px"
+                  }}
+                >
+                  {item.price} EGP
+                </div>
 
-                marginBottom: "10px"
-              }}>
-                {item.containerName}
-              </div>
+                {/* Add To Cart */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      selectedBranch !== "all" &&
+                      item.branchId !== selectedBranch
+                    ) {
+                      return;
+                    }
 
-              <div style={{
-                fontWeight: "700",
-
-                color:
-                  theme.colors.primary,
-
-                marginBottom: "10px"
-              }}>
-                {item.price} EGP
-              </div>
-
-              <button
-                type="button"
-
-                onClick={() => {
-
-                  if (
-                    selectedBranch !== "all" &&
-                    item.branchId !== selectedBranch
-                  ) {
-                    return;
-                  }
-
-                  const alreadyExists =
-                    cart.find(
+                    const alreadyExists = cart.find(
                       c =>
                         c.returnedItemId === item.id
                     );
 
-                  if (alreadyExists) {
-                    return;
-                  }
+                    if (alreadyExists) {
+                      return;
+                    }
 
-                  addToCart({
-                    id: item.productId,
+                    addToCart({
+                      id: item.productId,
 
-                    name: item.name,
+                      name: item.name,
 
-                    price: item.price,
+                      price: item.price,
 
-                    qty: 1,
+                      qty: 1,
 
-                    containerType:
-                      item.containerType || "",
+                      containerType:
+                        item.containerType || "",
 
-                    containerName:
-                      item.containerName || "",
+                      containerName:
+                        item.containerName || "",
 
-                    isReturned: true,
+                      isReturned: true,
 
-                    returnedItemId: item.id,
+                      returnedItemId: item.id,
 
-                    returnId: item.returnId,
+                      returnId: item.returnId,
 
-                    branchId: item.branchId
-                  });
+                      oilComponents: oilComponents.map(
+                        component => ({
+                          ...component
+                        })
+                      ),
 
-                  setShowReturned(false);
+                      branchId: item.branchId
+                    });
 
-                  setShowCart(true);
-                }}
+                    setShowReturned(false);
 
-                style={{
-                  width: "100%",
+                    setShowCart(true);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    background: theme.colors.primary,
+                    color: "#fff",
+                    cursor: "pointer"
+                  }}
+                >
+                  {t("cart.add")} 🛒
+                </button>
+              </div>
+            );
+          })}
 
-                  padding: "10px",
-
-                  borderRadius: "10px",
-
-                  border: "none",
-
-                  background:
-                    theme.colors.primary,
-
-                  color: "#fff",
-
-                  cursor: "pointer"
-                }}
-              >
-                {t("cart.add")} 🛒
-              </button>
-
+          {/* Empty State */}
+          {filteredReturnedItems.length === 0 && (
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                textAlign: "center",
+                padding: "30px 15px",
+                color: theme.colors.textSecondary || theme.colors.text,
+                opacity: 0.7
+              }}
+            >
+              {lang === "ar"
+                ? "لا توجد منتجات مرتجعة مطابقة للبحث"
+                : "No matching returned products found"}
             </div>
-          ))}
-
+          )}
         </div>
-
       </div>
-
     </AppModal>
   );
 }

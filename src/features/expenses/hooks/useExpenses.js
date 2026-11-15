@@ -10,64 +10,124 @@ import {
 import toast from "react-hot-toast";
 
 import { db } from "../../../firebase";
-import { createExpenseService, updateExpenseService } from "../services/expensesService";
 
-export default function useExpenses({
-  branchId,
-  role,
-  t,
-}) {
+import {
+  createExpenseService,
+  updateExpenseService,
+} from "../services/expensesService";
+
+import {
+  getTodayBusinessDate,
+  getRecordBusinessDate,
+} from "../utils/businessDate";
+
+export default function useExpenses({ branchId, role, t }) {
   const [expenses, setExpenses] = useState([]);
 
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [businessDate, setBusinessDate] = useState(
+    getTodayBusinessDate
+  );
 
   const [category, setCategory] = useState("إيجار");
   const [customCategory, setCustomCategory] = useState("");
-
   const [savedCategories, setSavedCategories] = useState([]);
 
   const [editingExpense, setEditingExpense] = useState(null);
-
   const [editAmount, setEditAmount] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editCategory, setEditCategory] = useState("عام");
+  const [editBusinessDate, setEditBusinessDate] = useState("");
 
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [isUpdatingExpense, setIsUpdatingExpense] = useState(false);
 
-  useEffect(() => {
-    if (!branchId) return;
+  // =========================================
+  // LOAD EXPENSES
+  // =========================================
 
-    const q =
-      role === "owner" && branchId === "all"
-        ? query(
-            collection(db, "expenses"),
-            orderBy("createdAt", "desc")
-          )
-        : query(
-            collection(db, "expenses"),
-            where("branchId", "==", branchId),
-            orderBy("createdAt", "desc")
-          );
+useEffect(() => {
+  if (!branchId) {
+    setExpenses([]);
+    return;
+  }
 
-    return onSnapshot(q, (snap) => {
-      setExpenses(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-      );
-    });
-  }, [branchId, role]);
+  console.log("EXPENSES QUERY:", {
+    branchId,
+    role,
+    isOwner: role === "owner",
+  });
+
+  const expensesQuery =
+    role === "owner" && branchId === "all"
+      ? query(
+          collection(db, "expenses"),
+          orderBy("createdAt", "desc")
+        )
+      : query(
+          collection(db, "expenses"),
+          where("branchId", "==", branchId),
+          orderBy("createdAt", "desc")
+        );
+
+  const unsubscribe = onSnapshot(
+    expensesQuery,
+    (snap) => {
+      const rows = snap.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      }));
+
+      console.log("EXPENSES SNAPSHOT:", {
+        count: rows.length,
+        branchId,
+      });
+
+      setExpenses(rows);
+    },
+    (error) => {
+      console.error("EXPENSES SNAPSHOT ERROR:", {
+        code: error.code,
+        message: error.message,
+      });
+
+      toast.error("حدث خطأ أثناء تحميل المصروفات");
+    }
+  );
+
+  return () => unsubscribe();
+}, [branchId, role]);
+
+  // =========================================
+  // SAVED CATEGORIES
+  // =========================================
 
   useEffect(() => {
     const existingCategories = expenses
-      .map((e) => e.category)
+      .map((expense) => expense.category)
       .filter(Boolean);
 
-    setSavedCategories([...new Set(existingCategories)]);
+    setSavedCategories([
+      ...new Set(existingCategories),
+    ]);
   }, [expenses]);
+
+  // =========================================
+  // EDIT BUSINESS DATE
+  // =========================================
+
+  useEffect(() => {
+    setEditBusinessDate(
+      editingExpense
+        ? getRecordBusinessDate(editingExpense)
+        : ""
+    );
+  }, [editingExpense]);
+
+  // =========================================
+  // ADD EXPENSE
+  // =========================================
 
   const handleAddExpense = async () => {
     if (isAddingExpense) return;
@@ -77,72 +137,150 @@ export default function useExpenses({
       return;
     }
 
-    if (!amount) {
+    if (
+      !amount ||
+      !Number.isFinite(Number(amount)) ||
+      Number(amount) <= 0
+    ) {
       toast.error(t("expenses.enterAmount"));
+      return;
+    }
+
+    if (!businessDate) {
+      toast.error("اختر تاريخ العملية");
+      return;
+    }
+
+    const finalCategory =
+      category === "➕ تصنيف جديد"
+        ? customCategory.trim()
+        : category;
+
+    if (!finalCategory) {
+      toast.error("اكتب التصنيف");
       return;
     }
 
     try {
       setIsAddingExpense(true);
 
-      const finalCategory =
-        category === "➕ تصنيف جديد"
-          ? customCategory
-          : category;
-
-      if (!finalCategory) {
-        toast.error("اكتب التصنيف");
-        return;
-      }
-
-      await createExpenseService({
+      console.log("CREATE EXPENSE PAYLOAD:", {
         amount: Number(amount),
         note,
         category: finalCategory,
         branchId,
+        businessDate,
       });
+
+      const result = await createExpenseService({
+        amount: Number(amount),
+        note,
+        category: finalCategory,
+        branchId,
+        businessDate,
+      });
+
+      console.log("CREATE EXPENSE RESULT:", result);
 
       setAmount("");
       setNote("");
+      setBusinessDate(getTodayBusinessDate());
       setCategory("إيجار");
       setCustomCategory("");
 
       toast.success("تم إضافة المصروف");
     } catch (err) {
-      console.error(err);
-      toast.error(t("common.error"));
+      console.error("CREATE EXPENSE ERROR:", {
+        code: err?.code,
+        message: err?.message,
+        details: err?.details,
+        branchId,
+        businessDate,
+      });
+
+      toast.error(
+        err?.message || t("common.error")
+      );
     } finally {
       setIsAddingExpense(false);
     }
   };
 
+  // =========================================
+  // UPDATE EXPENSE
+  // =========================================
+
   const handleUpdateExpense = async () => {
     if (!editingExpense || isUpdatingExpense) return;
+
+    if (
+      !editAmount ||
+      !Number.isFinite(Number(editAmount)) ||
+      Number(editAmount) <= 0
+    ) {
+      toast.error(t("expenses.enterAmount"));
+      return;
+    }
+
+    if (!editBusinessDate) {
+      toast.error("اختر تاريخ العملية");
+      return;
+    }
+
+    const finalCategory =
+      editCategory === "➕ تصنيف جديد"
+        ? customCategory.trim()
+        : editCategory;
+
+    if (!finalCategory) {
+      toast.error("اكتب التصنيف");
+      return;
+    }
 
     try {
       setIsUpdatingExpense(true);
 
-      const finalCategory =
-        editCategory === "➕ تصنيف جديد"
-          ? customCategory
-          : editCategory;
+      console.log("UPDATE EXPENSE PAYLOAD:", {
+        id: editingExpense.id,
+        amount: Number(editAmount),
+        category: finalCategory,
+        businessDate: editBusinessDate,
+      });
 
-      await updateExpenseService({
+      const result = await updateExpenseService({
         id: editingExpense.id,
         amount: Number(editAmount),
         note: editNote,
         category: finalCategory,
+        businessDate: editBusinessDate,
       });
 
+      console.log("UPDATE EXPENSE RESULT:", result);
+
       setEditingExpense(null);
+      setEditBusinessDate("");
 
       toast.success("تم تعديل المصروف");
-    } catch {
-      toast.error("حصل خطأ أثناء التعديل");
+    } catch (err) {
+      console.error("UPDATE EXPENSE ERROR:", {
+        code: err?.code,
+        message: err?.message,
+        details: err?.details,
+        expenseId: editingExpense.id,
+        businessDate: editBusinessDate,
+      });
+
+      toast.error(
+        err?.message || "حصل خطأ أثناء التعديل"
+      );
     } finally {
       setIsUpdatingExpense(false);
     }
   };
+
+  // =========================================
+  // CATEGORIES
+  // =========================================
 
   const defaultCategories = [
     "إيجار",
@@ -160,12 +298,14 @@ export default function useExpenses({
   ];
 
   const filterCategories = expenseCategories.filter(
-    (c) => c !== "➕ تصنيف جديد"
+    (item) => item !== "➕ تصنيف جديد"
   );
 
- 
+  // =========================================
+  // RETURN
+  // =========================================
 
-  return {
+    return {
     expenses,
 
     amount,
@@ -180,6 +320,9 @@ export default function useExpenses({
     customCategory,
     setCustomCategory,
 
+    businessDate,
+    setBusinessDate,
+
     editingExpense,
     setEditingExpense,
 
@@ -192,6 +335,9 @@ export default function useExpenses({
     editCategory,
     setEditCategory,
 
+    editBusinessDate,
+    setEditBusinessDate,
+
     isAddingExpense,
     isUpdatingExpense,
 
@@ -200,6 +346,5 @@ export default function useExpenses({
 
     expenseCategories,
     filterCategories,
-
   };
 }

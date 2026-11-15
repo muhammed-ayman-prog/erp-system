@@ -11,6 +11,39 @@ import AppTable from "../../../components/ui/AppTable";
 import { theme } from "../../../theme";
 import { useTranslate } from "../../../useTranslate";
 
+const getOperationDate = (row, lang) => {
+  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+
+  if (
+    typeof row.businessDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(row.businessDate)
+  ) {
+    const [year, month, day] = row.businessDate.split("-").map(Number);
+
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  const value = row.createdAt;
+
+  const date = value?.toDate
+    ? value.toDate()
+    : value?.seconds
+      ? new Date(value.seconds * 1000)
+      : value
+        ? new Date(value)
+        : null;
+
+  return date && !Number.isNaN(date.getTime())
+    ? date.toLocaleString(locale)
+    : "-";
+};
+
 export default function ExpensesTable({
   tableSort,
   handleTableSort,
@@ -24,49 +57,34 @@ export default function ExpensesTable({
   setEditCategory,
   setCustomCategory,
 }) {
-  const { t } = useTranslate();
+  const { t, lang } = useTranslate();
 
   const sortIcon = (key) => {
     if (tableSort.key !== key) return "";
 
-    return tableSort.direction === "asc"
-      ? " ▲"
-      : " ▼";
+    return tableSort.direction === "asc" ? " ▲" : " ▼";
   };
 
   const columns = [
     {
       key: "amount",
-      title:
-        t("expenses.amount") +
-        sortIcon("amount"),
-      onClick: () =>
-        handleTableSort("amount"),
+      title: t("expenses.amount") + sortIcon("amount"),
+      onClick: () => handleTableSort("amount"),
     },
-
     {
       key: "category",
-      title:
-        t("expenses.category") +
-        sortIcon("category"),
-      onClick: () =>
-        handleTableSort("category"),
+      title: t("expenses.category") + sortIcon("category"),
+      onClick: () => handleTableSort("category"),
     },
-
     {
       key: "note",
       title: t("expenses.note"),
     },
-
     {
       key: "date",
-      title:
-        t("common.date") +
-        sortIcon("date"),
-      onClick: () =>
-        handleTableSort("date"),
+      title: t("common.date") + sortIcon("date"),
+      onClick: () => handleTableSort("date"),
     },
-
     {
       key: "actions",
       title: t("common.actions"),
@@ -98,7 +116,6 @@ export default function ExpensesTable({
                 }}
               >
                 <Wallet size={16} />
-
                 {formatMoney(row.amount)} EGP
               </div>
             );
@@ -134,19 +151,12 @@ export default function ExpensesTable({
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  color:
-                    theme.colors.textSecondary,
+                  color: theme.colors.textSecondary,
                   whiteSpace: "nowrap",
                 }}
               >
                 <CalendarDays size={15} />
-
-                {new Date(
-                  row.createdAt?.seconds
-                    ? row.createdAt.seconds *
-                        1000
-                    : row.createdAt
-                ).toLocaleString()}
+                {getOperationDate(row, lang)}
               </div>
             );
 
@@ -156,27 +166,15 @@ export default function ExpensesTable({
                 size="sm"
                 variant="secondary"
                 title={t("common.edit")}
-                leftIcon={
-                  <Pencil size={15} />
-                }
+                leftIcon={<Pencil size={15} />}
                 onClick={(e) => {
                   e.stopPropagation();
 
                   setEditingExpense(row);
-
                   setCustomCategory("");
-
-                  setEditAmount(
-                    row.amount || ""
-                  );
-
-                  setEditNote(
-                    row.note || ""
-                  );
-
-                  setEditCategory(
-                    row.category || ""
-                  );
+                  setEditAmount(row.amount || "");
+                  setEditNote(row.note || "");
+                  setEditCategory(row.category || "");
                 }}
               />
             );

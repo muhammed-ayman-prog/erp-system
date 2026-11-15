@@ -23,15 +23,45 @@ const {
 
 const {
   paymentMethod,
-  loadingCheckout
+  loadingCheckout,
+  isSplitPayment,
+  splitPayments,
+  total
 } = checkoutState;
 
- const isCheckoutDisabled =
+// التحقق من مبالغ الدفع المقسّم
+const splitAmounts = ["cash", "visa", "instapay"].map(
+  (method) => {
+    const value = splitPayments?.[method];
+
+    return value === "" || value == null
+      ? 0
+      : Number(value);
+  }
+);
+
+const splitPaymentValid =
+  splitAmounts.every(
+    (amount) =>
+      Number.isFinite(amount) && amount >= 0
+  ) &&
+  splitAmounts.some((amount) => amount > 0) &&
+  splitAmounts.reduce(
+    (sum, amount) => sum + Math.round(amount * 100),
+    0
+  ) === Math.round(Number(total || 0) * 100);
+
+// تحديد صلاحية طريقة الدفع
+const paymentIsValid = isSplitPayment
+  ? splitPaymentValid
+  : Boolean(paymentMethod);
+
+const isCheckoutDisabled =
   loading ||
   !user ||
   loadingCheckout ||
   cart.length === 0 ||
-  !paymentMethod
+  !paymentIsValid;
 
   return (
     <>

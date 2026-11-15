@@ -1,3 +1,4 @@
+
 import { Download, Search } from "lucide-react";
 
 import AppButton from "../../../components/ui/AppButton";
@@ -8,27 +9,53 @@ import { useTranslate } from "../../../useTranslate";
 
 export default function ExpenseToolbar({
   tab,
-
   fromDate,
   toDate,
   setFromDate,
   setToDate,
-
   search,
   setSearch,
-
   selectedCategory,
   setSelectedCategory,
-
   selectedEmployee,
   setSelectedEmployee,
-
   filterCategories,
   employeeNames,
-
   onExport,
 }) {
   const { t } = useTranslate();
+
+  // تجهيز قائمة التصنيفات
+  const categories = [
+    ...new Set([
+      "إيجار",
+      "مرتبات",
+      "مواصلات",
+      "فواتير",
+      ...(Array.isArray(filterCategories)
+        ? filterCategories
+        : []),
+      ...(selectedCategory !== "all" && selectedCategory
+        ? [selectedCategory]
+        : []),
+    ]),
+  ].filter(
+    (category) =>
+      typeof category === "string" &&
+      category.trim() !== "" &&
+      category !== "➕ تصنيف جديد"
+  );
+
+  // ضمان ظهور اسم كل التصنيفات
+  const translatedLabel = t(
+    "expenses.filters.allCategories"
+  );
+
+  const allCategoriesLabel =
+    translatedLabel &&
+    translatedLabel !== "expenses.filters.allCategories"
+      ? translatedLabel
+      : "كل التصنيفات";
 
   return (
     <AppFilterBar>
@@ -52,9 +79,7 @@ export default function ExpenseToolbar({
         <AppInput
           type="date"
           value={fromDate}
-          onChange={(e) =>
-            setFromDate(e.target.value)
-          }
+          onChange={(e) => setFromDate(e.target.value)}
         />
       </div>
 
@@ -78,77 +103,72 @@ export default function ExpenseToolbar({
         <AppInput
           type="date"
           value={toDate}
-          onChange={(e) =>
-            setToDate(e.target.value)
-          }
+          onChange={(e) => setToDate(e.target.value)}
         />
       </div>
 
       {/* Search */}
-      <AppInput
-        value={search}
-        startIcon={<Search size={18} />}
-        placeholder={t("common.search")}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-        style={{
-          minWidth: 320,
-        }}
-      />
+<div
+  style={{
+    width: "100%",
+    minWidth: 0,
+  }}
+>
+  <AppInput
+    value={search}
+    startIcon={<Search size={18} />}
+    placeholder={t("common.search")}
+    onChange={(e) =>
+      setSearch(e.target.value)
+    }
+    style={{
+      width: "100%",
+      minWidth: 0,
+      boxSizing: "border-box",
+    }}
+  />
+</div>
 
       {/* Category / Employee */}
       {tab === "expenses" ? (
         <AppSelect
           value={selectedCategory}
           onChange={(e) =>
-            setSelectedCategory(
-              e.target.value
-            )
+            setSelectedCategory(e.target.value)
           }
         >
           <option value="all">
-            {t(
-              "expenses.filters.allCategories"
-            )}
+            {allCategoriesLabel}
           </option>
 
-          {filterCategories.map(
-            (category) => (
-              <option
-                key={category}
-                value={category}
-              >
-                {category}
-              </option>
-            )
-          )}
+          {categories.map((category) => (
+            <option
+              key={category}
+              value={category}
+            >
+              {category}
+            </option>
+          ))}
         </AppSelect>
       ) : (
         <AppSelect
           value={selectedEmployee}
           onChange={(e) =>
-            setSelectedEmployee(
-              e.target.value
-            )
+            setSelectedEmployee(e.target.value)
           }
         >
           <option value="all">
-            {t(
-              "expenses.filters.allEmployees"
-            )}
+            {t("expenses.filters.allEmployees")}
           </option>
 
-          {employeeNames.map(
-            (employee) => (
-              <option
-                key={employee}
-                value={employee}
-              >
-                {employee}
-              </option>
-            )
-          )}
+          {employeeNames.map((employee) => (
+            <option
+              key={employee}
+              value={employee}
+            >
+              {employee}
+            </option>
+          ))}
         </AppSelect>
       )}
 

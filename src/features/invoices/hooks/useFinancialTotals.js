@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 
 export default function useFinancialTotals({
@@ -5,7 +6,6 @@ export default function useFinancialTotals({
   returns = [],
 }) {
   return useMemo(() => {
-
     let salesTotal = 0;
 
     let cashSales = 0;
@@ -18,6 +18,10 @@ export default function useFinancialTotals({
     let refundVisa = 0;
     let refundInstapay = 0;
 
+    // ==============================
+    // SALES
+    // ==============================
+
     sales.forEach((sale) => {
       if (sale.status === "cancelled") return;
 
@@ -25,41 +29,92 @@ export default function useFinancialTotals({
 
       salesTotal += amount;
 
-      switch (
-        (sale.paymentMethod || "cash").toLowerCase()
+      // New invoices: split or single payments
+      if (
+        Array.isArray(sale.payments) &&
+        sale.payments.length > 0
       ) {
-        case "cash":
-          cashSales += amount;
-          break;
+        sale.payments.forEach((payment) => {
+          const method = String(
+            payment.method || ""
+          ).toLowerCase();
 
-        case "visa":
-          visaSales += amount;
-          break;
+          const paymentAmount = Number(
+            payment.amount || 0
+          );
 
-        case "instapay":
-          instapaySales += amount;
-          break;
+          if (
+            !Number.isFinite(paymentAmount) ||
+            paymentAmount < 0
+          ) {
+            return;
+          }
 
-        default:
-          break;
+          switch (method) {
+            case "cash":
+              cashSales += paymentAmount;
+              break;
+
+            case "visa":
+              visaSales += paymentAmount;
+              break;
+
+            case "instapay":
+              instapaySales += paymentAmount;
+              break;
+
+            default:
+              break;
+          }
+        });
+
+      } else {
+        // Backward compatibility: old invoices
+        switch (
+          String(
+            sale.paymentMethod || "cash"
+          ).toLowerCase()
+        ) {
+          case "cash":
+            cashSales += amount;
+            break;
+
+          case "visa":
+            visaSales += amount;
+            break;
+
+          case "instapay":
+            instapaySales += amount;
+            break;
+
+          default:
+            break;
+        }
       }
     });
 
+    // ==============================
+    // REFUNDS
+    // ==============================
+
     returns.forEach((refund) => {
       const isOil =
-  (refund.container || refund.containerType || "")
-    .toLowerCase() === "oil";
+        (
+          refund.container ||
+          refund.containerType ||
+          ""
+        ).toLowerCase() === "oil";
 
-const amount = isOil
-  ? Number(refund.price || 0)
-  : Number(refund.price || 0) * Number(refund.quantity || 0);
+      const amount = isOil
+        ? Number(refund.price || 0)
+        : Number(refund.price || 0) *
+          Number(refund.quantity || 0);
 
       refundTotal += amount;
 
       switch (
-        (
-          refund.refundPaymentMethod ||
-          "cash"
+        String(
+          refund.refundPaymentMethod || "cash"
         ).toLowerCase()
       ) {
         case "cash":
@@ -78,6 +133,7 @@ const amount = isOil
           break;
       }
     });
+
     return {
       salesTotal,
 
@@ -91,8 +147,7 @@ const amount = isOil
       refundVisa,
       refundInstapay,
 
-      netRevenue:
-        salesTotal - refundTotal,
+      netRevenue: salesTotal - refundTotal,
     };
   }, [sales, returns]);
 }

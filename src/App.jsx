@@ -73,15 +73,10 @@ function App() {
       <div className="global-bg-logo"></div>
 
       <Router
-
-        future={{
-
-          v7_startTransition: true,
-
-          v7_relativeSplatPath: true
-
-        }}
-      >
+  future={{
+    v7_relativeSplatPath: true
+  }}
+>
 
         <Suspense fallback={<div>Loading...</div>}>
 

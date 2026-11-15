@@ -1,44 +1,16 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../../../firebase";
 
-export const createExpenseService = async (payload) => {
-  const fn = httpsCallable(functions, "createExpense");
-  const result = await fn(payload);
+const callFunction = async (name, payload) => {
+  const callable = httpsCallable(functions, name);
+  const result = await callable(payload);
   return result.data;
 };
 
-export const updateExpenseService = async (payload) => {
-  const fn = httpsCallable(functions, "updateExpense");
-  const result = await fn(payload);
-  return result.data;
-};
-
-export const deleteExpenseService = async (payload) => {
-  const fn = httpsCallable(functions, "deleteExpense");
-  const result = await fn(payload);
-  return result.data;
-};
-
-export const createLoanService = async (payload) => {
-  const fn = httpsCallable(functions, "createLoan");
-  const result = await fn(payload);
-  return result.data;
-};
-
-export const updateLoanService = async (payload) => {
-  const fn = httpsCallable(functions, "updateLoan");
-  const result = await fn(payload);
-  return result.data;
-};
-
-export const createBonusService = async (payload) => {
-  const fn = httpsCallable(functions, "createBonus");
-  const result = await fn(payload);
-  return result.data;
-};
-
-export const updateBonusService = async (payload) => {
-  const fn = httpsCallable(functions, "updateBonus");
-  const result = await fn(payload);
-  return result.data;
-};
+export const createExpenseService = (payload) => callFunction("createExpense", payload);
+export const updateExpenseService = (payload) => callFunction("updateExpense", payload);
+export const deleteExpenseService = (payload) => callFunction("deleteExpense", payload);
+export const createLoanService = (payload) => callFunction("createLoan", payload);
+export const updateLoanService = (payload) => callFunction("updateLoan", payload);
+export const createBonusService = (payload) => callFunction("createBonus", payload);
+export const updateBonusService = (payload) => callFunction("updateBonus", payload);

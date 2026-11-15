@@ -13,6 +13,10 @@ export default function PopupFooter({
 
   oilCostPerML,
 
+  // الزيت الثاني
+  secondOil,
+  secondOilQty,
+
   addToCart,
   updateCartItem,
 
@@ -26,229 +30,289 @@ export default function PopupFooter({
   theme,
   t
 }) {
-
   const saleModeMap = {
-
     oil: "PURE_OIL",
-
     bottle: "BOTTLE",
-
     box: "BOX",
-
     sample: "SAMPLE"
   };
 
   return (
-
     <div className="popup-footer">
-
       <AppButton
         variant="secondary"
         onClick={resetPopup}
-        style={{
-          flex: 1
-        }}
+        style={{ flex: 1 }}
       >
         {t("common.close")}
       </AppButton>
 
       <AppButton
         className={`popup-submit ${
-          !isValid
-            ? "disabled"
-            : ""
+          !isValid ? "disabled" : ""
         }`}
-
         onClick={() => {
+          // ==================================
+          // 1) PREPARE QUANTITIES
+          // ==================================
+
+          const firstOilQty = Number(oilQty) || 0;
+          const secondQty = Number(secondOilQty) || 0;
+
+          const isBlendedOil =
+            needsOil && containerType !== "oil";
+
+          // ==================================
+          // 2) VALIDATE FIRST OIL
+          // ==================================
 
           if (
             needsOil &&
-            (
-              !oilQty ||
-              oilQty <= 0
-            )
+            !(firstOilQty > 0)
           ) {
-
-            setToastText(
-              t("products.enterOilQty")
-            );
-
+            setToastText(t("products.enterOilQty"));
             setShowToast(true);
+            return;
+          }
 
+          // ==================================
+          // 3) VALIDATE SECOND OIL
+          // ==================================
+
+          if (
+            isBlendedOil &&
+            secondOil &&
+            !(secondQty > 0)
+          ) {
+            setToastText("ادخل كمية الزيت الثاني");
+            setShowToast(true);
+            return;
+          }
+
+          // ==================================
+          // 4) PREVENT SAME OIL TWICE
+          // ==================================
+
+          if (
+            isBlendedOil &&
+            secondOil &&
+            String(secondOil.id) ===
+              String(selectedProduct.id)
+          ) {
+            setToastText("لا يمكن اختيار نفس الزيت مرتين");
+            setShowToast(true);
+            return;
+          }
+
+          // ==================================
+          // 5) VALIDATE PRODUCT
+          // ==================================
+
+          if (!isValid) {
+            setToastText(t("products.noPrice"));
+            setShowToast(true);
             return;
           }
 
           if (!price || price <= 0) {
-
-            setToastText(
-              t("products.noPrice")
-            );
-
+            setToastText(t("products.noPrice"));
             setShowToast(true);
-
             return;
           }
 
+          if (!selectedProduct?.id) {
+            setToastText(t("common.error"));
+            setShowToast(true);
+            return;
+          }
+
+          // ==================================
+          // 6) CALCULATE OIL COSTS
+          // ==================================
+
+          const firstOilCost =
+            needsOil
+              ? firstOilQty * (Number(oilCostPerML) || 0)
+              : 0;
+
+          const secondOilCost =
+            isBlendedOil && secondOil
+              ? secondQty * (Number(secondOil.cost) || 0)
+              : 0;
+
           const oilCost =
-            oilQty * oilCostPerML;
+            firstOilCost + secondOilCost;
+
+          // ==================================
+          // 7) BUILD OIL COMPONENTS
+          // ==================================
+
+          // الزيت الخام لا يستخدم تركيبة خلط
+          const oilComponents = isBlendedOil
+            ? [
+                {
+                  oilId: selectedProduct.id,
+                  oilName: selectedProduct.name,
+                  oilCategory: selectedProduct.category || "",
+                  quantityML: firstOilQty,
+                  costPerML: Number(oilCostPerML) || 0,
+                  cost: firstOilCost
+                },
+
+                ...(secondOil
+                  ? [
+                      {
+                        oilId: secondOil.id,
+                        oilName: secondOil.name,
+                        oilCategory: secondOil.category || "",
+                        quantityML: secondQty,
+                        costPerML: Number(secondOil.cost) || 0,
+                        cost: secondOilCost
+                      }
+                    ]
+                  : [])
+              ]
+            : [];
+
+          // ==================================
+          // 8) CALCULATE CONTAINER COST
+          // ==================================
 
           const containerCost =
-
             containerType === "oil"
-
               ? 0
-
-              : selectedSize?.cost || 0;
+              : Number(selectedSize?.cost) || 0;
 
           const overheadCost = 0;
 
+          // ==================================
+          // 9) CALCULATE TOTAL COST & PROFIT
+          // ==================================
+
           const unitCost =
-
-            oilCost +
-
-            containerCost +
-
-            overheadCost;
+            oilCost + containerCost + overheadCost;
 
           const profit =
-            price - unitCost;
+            Number(price) - unitCost;
+
           const pricePerMl =
-            containerType === "oil" && oilQty > 0
-              ? price / oilQty
+            containerType === "oil" && firstOilQty > 0
+              ? Number(price) / firstOilQty
               : 0;
 
           const margin =
-
-            price > 0
-
+            Number(price) > 0
               ? Number(
-                  (
-                    (
-                      profit / price
-                    ) * 100
-                  ).toFixed(2)
+                  ((profit / Number(price)) * 100).toFixed(2)
                 )
-
               : 0;
 
+          // ==================================
+          // 10) BUILD CART ITEM
+          // ==================================
+
           const item = {
-  id: selectedProduct.id,
+            id: selectedProduct.id,
+            name: selectedProduct.name,
 
-  name: selectedProduct.name,
+            category: selectedProduct.category || "",
+            subCategory: selectedProduct.subCategory || "",
+            type: selectedProduct.type || "",
 
-  category: selectedProduct.category || "",
+            stockQuantity: selectedProduct.quantity || 0,
 
-  subCategory: selectedProduct.subCategory || "",
+            itemType: "BLENDED_ITEM",
 
-  type: selectedProduct.type || "",
+            saleMode:
+              saleModeMap[containerType] || "UNKNOWN",
 
-  stockQuantity: selectedProduct.quantity || 0,
+            // البيانات القديمة للزيت الأول
+            oilId: selectedProduct.id,
+            oilName: selectedProduct.name,
+            oilCategory: selectedProduct.category || "",
+            oilQtyML: firstOilQty,
+            oilQty: firstOilQty,
 
-  itemType: "BLENDED_ITEM",
+            // تركيبة الزيوت
+            oilComponents,
 
-  saleMode:
-    saleModeMap[
-      containerType
-    ] || "UNKNOWN",
+            // بيانات العبوة
+            size:
+              selectedSize?.size ||
+              selectedSize?.name ||
+              "",
 
-  oilId: selectedProduct.id,
+            containerType,
 
-  oilName: selectedProduct.name,
+            containerName:
+              containerType === "oil"
+                ? "Pure Oil"
+                : selectedSize?.name?.trim() || containerType,
 
-  oilCategory: selectedProduct.category || "",
+            containerId:
+              containerType === "oil"
+                ? null
+                : selectedSize?.id || null,
 
-  oilQtyML: oilQty || 0,
+            // الأسعار والتكاليف
+            unitPrice: Number(price) || 0,
+            price: Number(price) || 0,
 
-  size:
-    selectedSize?.size ||
-    selectedSize?.name ||
-    "",
+            oilCostPerML: Number(oilCostPerML) || 0,
+            oilCost,
+            containerCost,
+            overheadCost,
+            unitCost,
+            profit,
+            margin,
 
-  containerType,
+            // الحفاظ على كمية العنصر عند التعديل
+            qty: editingItem?.qty ?? 1,
 
-  containerName:
-  containerType === "oil"
-    ? "Pure Oil"
-    : selectedSize?.name?.trim() || containerType,
+            // بيانات بيع الزيت الخام
+            selectedMl:
+              containerType === "oil"
+                ? firstOilQty
+                : null,
 
-  containerId:
-    containerType === "oil"
-      ? null
-      : selectedSize?.id || null,
+            pricePerMl
+          };
 
-  unitPrice: price || 0,
-
-  price: price || 0,
-
-  oilCostPerML,
-
-  oilCost,
-
-  containerCost,
-
-  overheadCost,
-
-  unitCost,
-
-  profit,
-
-  margin,
-
-  qty: editingItem?.qty ?? 1,
-
-  oilQty:
-    oilQty || 0,
-  selectedMl:
-    containerType === "oil"
-      ? oilQty
-      : null,
-
-  // جديد
-  pricePerMl
-};
+          // ==================================
+          // 11) ADD OR UPDATE CART ITEM
+          // ==================================
 
           const name = editingItem
-  ? updateCartItem(editingItem, item)
-  : addToCart(item);
+            ? updateCartItem(editingItem, item)
+            : addToCart(item);
 
-if (name) {
-  setToastText(
-    editingItem
-      ? `${name} updated 🔥`
-      : `${name} added 🔥`
-  );
+          // ==================================
+          // 12) SUCCESS
+          // ==================================
 
-  setShowToast(true);
+          if (name) {
+            setToastText(
+              editingItem
+                ? `${name} updated 🔥`
+                : `${name} added 🔥`
+            );
 
-  resetPopup();
-}
+            setShowToast(true);
+            resetPopup();
+          }
         }}
-
         style={{
           flex: 1,
-
-          background:
-
-            isValid
-
-              ? theme.colors.primary
-
-              : theme.colors.secondary,
-
-          color:
-
-            isValid
-
-              ? "#fff"
-
-              : theme.colors.text
+          background: isValid
+            ? theme.colors.primary
+            : theme.colors.secondary,
+          color: isValid
+            ? "#fff"
+            : theme.colors.text
         }}
       >
-
         {t("cart.add")}
-
       </AppButton>
-
     </div>
   );
 }

@@ -31,6 +31,18 @@ import toast from "react-hot-toast";
 import { isDateInRange } from "../../utils/dateFilter";
 import AppFilterChips from "../../components/ui/AppFilterChips";
 import { getTodayRange } from "../../utils/dateFilter";
+const isBusinessDateInRange = (record, fromDate, toDate) => {
+  if (!fromDate && !toDate) return true;
+
+  if (record.businessDate) {
+    return (
+      (!fromDate || record.businessDate >= fromDate) &&
+      (!toDate || record.businessDate <= toDate)
+    );
+  }
+
+  return isDateInRange(record.createdAt, fromDate, toDate);
+};
 export default function Expenses() {
   const { t } = useTranslate(); 
   const { user } = useAuth();
@@ -62,6 +74,8 @@ const loansHook = useLoans({
 });
 const {
   expenses,
+  businessDate,
+  setBusinessDate,
   amount,
   setAmount,
   note,
@@ -76,6 +90,8 @@ const {
   setEditAmount,
   editNote,
   setEditNote,
+  editBusinessDate,
+  setEditBusinessDate,
   editCategory,
   setEditCategory,
   isAddingExpense,
@@ -91,6 +107,7 @@ const bonusesHook = useBonuses({
 });
 const {
   loans,
+  employeeLoans,
   branchEmployees,
 
   selectedLoanEmployee,
@@ -101,6 +118,9 @@ const {
 
   loanNote,
   setLoanNote,
+
+  businessDate: loanBusinessDate,
+  setBusinessDate: setLoanBusinessDate,
 
   editingLoan,
   setEditingLoan,
@@ -113,6 +133,9 @@ const {
 
   editNote: loanEditNote,
   setEditNote: setLoanEditNote,
+
+  editBusinessDate: loanEditBusinessDate,
+  setEditBusinessDate: setLoanEditBusinessDate,
 
   isAddingLoan,
   isUpdatingLoan,
@@ -134,14 +157,23 @@ const {
   bonusNote,
   setBonusNote,
 
+  businessDate: bonusBusinessDate,
+  setBusinessDate: setBonusBusinessDate,
+
   editingBonus,
   setEditingBonus,
+
+  editEmployeeData: bonusEditEmployee,
+  setEditEmployeeData: setBonusEditEmployee,
 
   editAmount: bonusEditAmount,
   setEditAmount: setBonusEditAmount,
 
   editNote: bonusEditNote,
   setEditNote: setBonusEditNote,
+
+  editBusinessDate: bonusEditBusinessDate,
+  setEditBusinessDate: setBonusEditBusinessDate,
 
   isAddingBonus,
   isUpdatingBonus,
@@ -181,12 +213,7 @@ const filteredExpenses = useMemo(() => {
   return expenses.filter(e =>
 
   (
-    (!fromDate && !toDate) ||
-    isDateInRange(
-      e.createdAt,
-      fromDate,
-      toDate
-    )
+    isBusinessDateInRange(e, fromDate, toDate)
   )
 
   &&
@@ -270,39 +297,51 @@ const exportToExcel = () => {
       amount: e.amount,
       category: e.category || "عام",
       note: e.note || "",
-      date: new Date(
-        e.createdAt?.seconds
-          ? e.createdAt.seconds * 1000
-          : e.createdAt
-      ).toLocaleString()
+      date: e.businessDate || (
+  e.createdAt?.toDate
+    ? e.createdAt.toDate().toLocaleString()
+    : e.createdAt?.seconds
+      ? new Date(e.createdAt.seconds * 1000).toLocaleString()
+      : e.createdAt
+        ? new Date(e.createdAt).toLocaleString()
+        : ""
+)
     }));
   }
 
   if (tab === "loans") {
-    data = filteredLoans.map(l => ({
-      employee: l.employeeName,
-      amount: l.amount,
-      note: l.note || "",
-      date: new Date(
-        l.createdAt?.seconds
-          ? l.createdAt.seconds * 1000
+  data = filteredLoans.map(l => ({
+    employee: l.employeeName,
+    amount: l.amount,
+    note: l.note || "",
+    date: l.businessDate || (
+      l.createdAt?.toDate
+        ? l.createdAt.toDate().toLocaleString()
+        : l.createdAt?.seconds
+          ? new Date(l.createdAt.seconds * 1000).toLocaleString()
           : l.createdAt
-      ).toLocaleString()
-    }));
-  }
+            ? new Date(l.createdAt).toLocaleString()
+            : ""
+    )
+  }));
+}
 
   if (tab === "bonus") {
-    data = filteredBonuses.map(b => ({
-      employee: b.employeeName,
-      amount: b.amount,
-      note: b.note || "",
-      date: new Date(
-        b.createdAt?.seconds
-          ? b.createdAt.seconds * 1000
+  data = filteredBonuses.map(b => ({
+    employee: b.employeeName,
+    amount: b.amount,
+    note: b.note || "",
+    date: b.businessDate || (
+      b.createdAt?.toDate
+        ? b.createdAt.toDate().toLocaleString()
+        : b.createdAt?.seconds
+          ? new Date(b.createdAt.seconds * 1000).toLocaleString()
           : b.createdAt
-      ).toLocaleString()
-    }));
-  }
+            ? new Date(b.createdAt).toLocaleString()
+            : ""
+    )
+  }));
+}
 
   const worksheet =
     XLSX.utils.json_to_sheet(data);
@@ -452,6 +491,8 @@ const exportToExcel = () => {
     setCustomCategory={setCustomCategory}
     note={note}
     setNote={setNote}
+    businessDate={businessDate}
+    setBusinessDate={setBusinessDate}
     isAddingExpense={isAddingExpense}
     handleAddExpense={handleAddExpense}
     selectedEmployee={selectedEmployee}
@@ -490,6 +531,8 @@ const exportToExcel = () => {
   customCategory={customCategory}
   setCustomCategory={setCustomCategory}
   categories={expenseCategories}
+  businessDate={editBusinessDate}
+  setBusinessDate={setEditBusinessDate}
   loading={isUpdatingExpense}
   onSubmit={handleUpdateExpense}
 />
@@ -501,23 +544,25 @@ const exportToExcel = () => {
   employees={branchEmployees}
   amount={loanEditAmount}
   setAmount={setLoanEditAmount}
-
   note={loanEditNote}
   setNote={setLoanEditNote}
+  businessDate={loanEditBusinessDate}
+  setBusinessDate={setLoanEditBusinessDate}
   loading={isUpdatingLoan}
   onSubmit={handleUpdateLoan}
 />
 <EditBonusDialog
   open={!!editingBonus}
   onClose={() => setEditingBonus(null)}
-  employee={editEmployeeData}
-  setEmployee={setEditEmployeeData}
+  employee={bonusEditEmployee}
+  setEmployee={setBonusEditEmployee}
   employees={branchEmployees}
   amount={bonusEditAmount}
   setAmount={setBonusEditAmount}
-
   note={bonusEditNote}
   setNote={setBonusEditNote}
+  businessDate={bonusEditBusinessDate}
+  setBusinessDate={setBonusEditBusinessDate}
   loading={isUpdatingBonus}
   onSubmit={handleUpdateBonus}
 />
@@ -537,6 +582,9 @@ const exportToExcel = () => {
 
     loanNote={loanNote}
     setLoanNote={setLoanNote}
+
+    businessDate={loanBusinessDate}
+    setBusinessDate={setLoanBusinessDate}
 
     isAddingLoan={isAddingLoan}
     handleAddLoan={handleAddLoan}
@@ -571,6 +619,9 @@ const exportToExcel = () => {
     bonusNote={bonusNote}
     setBonusNote={setBonusNote}
 
+    businessDate={bonusBusinessDate}
+    setBusinessDate={setBonusBusinessDate}
+
     isAddingBonus={isAddingBonus}
     handleAddBonus={handleAddBonus}
 
@@ -581,7 +632,7 @@ const exportToExcel = () => {
 }
 
     setEditingBonus={setEditingBonus}
-    setEditEmployeeData={setEditEmployeeData}
+    setEditEmployeeData={setBonusEditEmployee}
     setEditAmount={setBonusEditAmount}
     setEditNote={setBonusEditNote}
   />

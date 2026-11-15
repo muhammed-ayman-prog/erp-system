@@ -6,10 +6,11 @@ import {
   Trash2,
   X,
   ChevronRight,
+  ArrowRight
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import { theme } from "../../theme";
 import { useTranslate } from "../../useTranslate";
 
@@ -31,6 +32,7 @@ import AppDrawer from "../../components/ui/AppDrawer";
 
 export default function Waste() {
   const { t, lang } = useTranslate();
+  const navigate = useNavigate();
 
   const {
     products,
@@ -212,16 +214,55 @@ export default function Waste() {
           PAGE HEADER
       ================================================== */}
 
-      <AppPageHeader
-        title={t("waste.title")}
-        subtitle={t("waste.subtitle")}
-        icon={
-          <Recycle
-            size={28}
-            color={theme.colors.primary}
-          />
-        }
-      />
+      {/* PAGE HEADER */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+    direction: "ltr",
+    width: "100%",
+    marginBottom: theme.spacing.xl
+  }}
+>
+  {/* Back To Sales - Left */}
+  <div
+    className="no-print"
+    style={{
+      flexShrink: 0
+    }}
+  >
+    <AppButton
+      variant="secondary"
+      leftIcon={<ArrowRight size={16} />}
+      onClick={() => navigate("/sales")}
+    >
+      رجوع للمبيعات
+    </AppButton>
+  </div>
+
+  {/* Waste Title - Right */}
+  <div
+    style={{
+      flex: 1,
+      minWidth: 200,
+      direction: lang === "ar" ? "rtl" : "ltr"
+    }}
+  >
+    <AppPageHeader
+      title={t("waste.title")}
+      subtitle={t("waste.subtitle")}
+      icon={
+        <Recycle
+          size={28}
+          color={theme.colors.primary}
+        />
+      }
+    />
+  </div>
+</div>
 
       {/* ==================================================
           STATS

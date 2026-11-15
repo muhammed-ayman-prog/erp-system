@@ -9,11 +9,8 @@ export default function SalesHeader({
   returnedItems,
   t
 }) {
-
   return (
-
     <PageHeader
-
       title={`🧾 ${t("navigation.sales")}`}
 
       subtitle={
@@ -26,7 +23,19 @@ export default function SalesHeader({
 
       actions={
         <>
-
+        {/* Daily Closing */}
+<AppButton
+  variant="secondary"
+  onClick={() => navigate("/daily-closing")}
+  style={{
+    background: "#16a34a",
+    color: "#fff",
+    border: "none",
+  }}
+>
+  🔒 {t("dailyClosing.title")}
+</AppButton>
+          {/* Invoices */}
           <AppButton
             onClick={() =>
               navigate("/invoices")
@@ -34,33 +43,60 @@ export default function SalesHeader({
           >
             📄 {t("invoices.title")}
           </AppButton>
+        
 
+          {/* Expenses */}
           <AppButton
             variant="secondary"
+            onClick={() =>
+              navigate("/expenses")
+            }
+            style={{
+              background: "#0D9488",
+              color: "#fff",
+              border: "none"
+            }}
+          >
+            💰 المصروفات
+          </AppButton>
 
+          {/* Waste */}
+          <AppButton
+            variant="secondary"
+            onClick={() =>
+              navigate("/waste")
+            }
+            style={{
+              background: "#64748b",
+              color: "#fff",
+              border: "none"
+            }}
+          >
+            🗑️ الهدر
+          </AppButton>
+
+          {/* Returned Items */}
+          <AppButton
+            variant="secondary"
             onClick={() =>
               setShowReturned(true)
             }
-
             style={{
               background: "#f59e0b",
               color: "#fff",
-              border: "none",
+              border: "none"
             }}
           >
             📦 {t("returns.title")}
             {" "}
             ({returnedItems.length})
           </AppButton>
-
         </>
       }
 
       style={{
-        marginBottom: "16px",
+        marginBottom: "16px"
       }}
     />
-
   );
-
 }

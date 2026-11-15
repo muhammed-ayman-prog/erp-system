@@ -1,3 +1,4 @@
+
 import AppButton from "../../../components/ui/AppButton";
 import AppCard from "../../../components/ui/AppCard";
 import AppInput from "../../../components/ui/AppInput";
@@ -6,34 +7,30 @@ import { useTranslate } from "../../../useTranslate";
 
 export default function BonusForm({
   branchEmployees = [],
-
   selectedBonusEmployee,
   setSelectedBonusEmployee,
-
   bonusAmount,
   setBonusAmount,
-
   bonusNote,
   setBonusNote,
-
+  businessDate,
+  setBusinessDate,
   loading,
-
   onSubmit,
 }) {
   const { t } = useTranslate();
 
+  const today = new Date();
+  const todayDate = `${today.getFullYear()}-${String(
+    today.getMonth() + 1
+  ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
   return (
     <AppCard
       padding="lg"
-      style={{
-        marginBottom: 20,
-      }}
+      style={{ marginBottom: 20 }}
     >
-      <h3
-        style={{
-          marginBottom: 18,
-        }}
-      >
+      <h3 style={{ marginBottom: 18 }}>
         {t("expenses.addBonus")}
       </h3>
 
@@ -62,10 +59,7 @@ export default function BonusForm({
           </option>
 
           {branchEmployees.map((employee) => (
-            <option
-              key={employee.id}
-              value={employee.id}
-            >
+            <option key={employee.id} value={employee.id}>
               {employee.name}
             </option>
           ))}
@@ -76,17 +70,30 @@ export default function BonusForm({
           inputMode="decimal"
           placeholder={t("common.amount")}
           value={bonusAmount}
-          onChange={(e) =>
-            setBonusAmount(e.target.value)
-          }
+          onChange={(e) => setBonusAmount(e.target.value)}
         />
+
+        <div>
+          <label style={dateLabelStyle}>
+            تاريخ العملية
+          </label>
+          <AppInput
+            type="date"
+            value={businessDate}
+            max={todayDate}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value && value <= todayDate) {
+                setBusinessDate(value);
+              }
+            }}
+          />
+        </div>
 
         <AppInput
           placeholder={t("common.note")}
           value={bonusNote}
-          onChange={(e) =>
-            setBonusNote(e.target.value)
-          }
+          onChange={(e) => setBonusNote(e.target.value)}
         />
 
         <AppButton
@@ -97,6 +104,14 @@ export default function BonusForm({
           {t("expenses.addBonus")}
         </AppButton>
       </div>
-    </AppCard>  
+    </AppCard>
   );
 }
+
+const dateLabelStyle = {
+  display: "block",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#64748b",
+  marginBottom: 7,
+};

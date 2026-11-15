@@ -4,6 +4,172 @@ const { withLog } = require("./utils/withLog");
 const branches = require("./branches");
 admin.initializeApp();
 
+const validateBusinessDate = (value) => {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid business date"
+    );
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day)
+  );
+
+  // التأكد من أن التاريخ صحيح فعليًا
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid business date"
+    );
+  }
+
+  // حساب تاريخ اليوم حسب توقيت مصر
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const dateParts = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value])
+  );
+
+  const todayCairo =
+    `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+
+  // منع أي تاريخ مستقبلي
+  if (value > todayCairo) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Business date cannot be in the future"
+    );
+  }
+
+  return value;
+};
+
+// Keep the same key format used by DailyClosing.jsx (YYYY-M-D).
+const toStoredBusinessDateKey = (value) => {
+  const [year, month, day] = value.split("-");
+  return `${Number(year)}-${Number(month)}-${Number(day)}`;
+};
+
+// Legacy records without businessDate are assigned to the same 3:00 AM
+// business-day boundary used by DailyClosing.jsx, using Cairo time.
+const getRecordBusinessDate = (record) => {
+  if (
+    typeof record?.businessDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.businessDate)
+  ) {
+    return record.businessDate;
+  }
+
+  const rawCreatedAt = record?.createdAt;
+  const createdAt =
+    rawCreatedAt && typeof rawCreatedAt.toDate === "function"
+      ? rawCreatedAt.toDate()
+      : rawCreatedAt instanceof Date
+        ? rawCreatedAt
+        : rawCreatedAt?.seconds
+          ? new Date(rawCreatedAt.seconds * 1000)
+          : rawCreatedAt
+            ? new Date(rawCreatedAt)
+            : null;
+
+  if (!createdAt || Number.isNaN(createdAt.getTime())) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Cannot determine the business date for this legacy record"
+    );
+  }
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(createdAt);
+
+  const dateParts = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value])
+  );
+
+  const cairoDate = new Date(
+    Date.UTC(
+      Number(dateParts.year),
+      Number(dateParts.month) - 1,
+      Number(dateParts.day)
+    )
+  );
+
+  if (Number(dateParts.hour) < 3) {
+    cairoDate.setUTCDate(cairoDate.getUTCDate() - 1);
+  }
+
+  const year = cairoDate.getUTCFullYear();
+  const month = String(cairoDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(cairoDate.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+// A missing status is treated as closed for compatibility with existing
+// dailyClosings documents. Only an explicit "reopened" status unlocks a day.
+const assertBusinessDateIsOpen = async (branchId, businessDate) => {
+  if (!branchId || !businessDate) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Branch and business date are required"
+    );
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("dailyClosings")
+    .where("branchId", "==", branchId)
+    .where("businessDate", "==", toStoredBusinessDateKey(businessDate))
+    .get();
+
+  const hasActiveClosing = snapshot.docs.some(
+    (doc) => doc.data()?.status !== "reopened"
+  );
+
+  if (hasActiveClosing) {
+    throw new HttpsError(
+      "failed-precondition",
+      "This business day is closed. An owner must reopen it before changing its transactions."
+    );
+  }
+};
+
+const assertRecordBusinessDateIsOpen = async (branchId, record, nextBusinessDate) => {
+  const originalBusinessDate = getRecordBusinessDate(record);
+
+  // The original day must be open even when the user tries to move the
+  // transaction to another date.
+  await assertBusinessDateIsOpen(branchId, originalBusinessDate);
+
+  if (nextBusinessDate && nextBusinessDate !== originalBusinessDate) {
+    await assertBusinessDateIsOpen(branchId, nextBusinessDate);
+  }
+
+  return originalBusinessDate;
+};
+
+
 exports.createUser = onCall(
   withLog({
 
@@ -351,11 +517,14 @@ exports.createExpense = onCall(
       }
 
       const {
-        amount,
-        note,
-        category,
-        branchId,
-      } = request.data;
+  amount,
+  note,
+  category,
+  branchId,
+  businessDate,
+} = request.data;
+
+const validBusinessDate = validateBusinessDate(businessDate);
 
       if (
         !amount ||
@@ -368,18 +537,21 @@ exports.createExpense = onCall(
         );
       }
 
+      await assertBusinessDateIsOpen(branchId, validBusinessDate);
+
       const expenseRef =
         await admin
           .firestore()
           .collection("expenses")
           .add({
             amount: Number(amount),
-            note: note || "",
-            category,
-            branchId,
-            userId: auth.uid,
-            createdAt:
-              admin.firestore.FieldValue.serverTimestamp(),
+note: note || "",
+category,
+branchId,
+businessDate: validBusinessDate,
+userId: auth.uid,
+createdAt:
+  admin.firestore.FieldValue.serverTimestamp(),
           });
       const branchSnap = await admin
   .firestore()
@@ -403,17 +575,19 @@ const branchName =
         before: null,
 
         after: {
-          amount: Number(amount),
-          note: note || "",
-          category,
-          branchId
-        },
+  amount: Number(amount),
+  note: note || "",
+  category,
+  branchId,
+  businessDate: validBusinessDate,
+},
 
         logDetails: {
-          amount: Number(amount),
-          category,
-          note: note || ""
-        }
+  amount: Number(amount),
+  category,
+  note: note || "",
+  businessDate: validBusinessDate,
+}
       };
     }
   )
@@ -427,8 +601,13 @@ exports.updateExpense = onCall(
     },
     async (request) => {
 
-      const { id, amount, note, category } =
-        request.data;
+      const {
+  id,
+  amount,
+  note,
+  category,
+  businessDate,
+} = request.data;
 
       const expenseRef = admin
         .firestore()
@@ -447,12 +626,24 @@ exports.updateExpense = onCall(
 
       const before =
         snap.data();
+      const updateData = {
+  amount: Number(amount),
+  note: note || "",
+  category,
+};
 
-      await expenseRef.update({
-        amount: Number(amount),
-        note: note || "",
-        category,
-      });
+if (businessDate !== undefined) {
+  updateData.businessDate =
+    validateBusinessDate(businessDate);
+}
+const originalBusinessDate = await assertRecordBusinessDateIsOpen(
+  before.branchId,
+  before,
+  updateData.businessDate || undefined
+);
+const updatedBusinessDate =
+  updateData.businessDate || before.businessDate || originalBusinessDate;
+      await expenseRef.update(updateData);
 
       const branchSnap =
         await admin
@@ -484,23 +675,22 @@ exports.updateExpense = onCall(
             before.note,
           category:
             before.category,
+          businessDate: before.businessDate || "",
         },
 
         after: {
-          amount:
-            Number(amount),
-          note:
-            note || "",
-          category,
-        },
+  amount: Number(amount),
+  note: note || "",
+  category,
+  businessDate: updatedBusinessDate,
+},
 
         logDetails: {
-          amount:
-            Number(amount),
-          note:
-            note || "",
-          category,
-        },
+  amount: Number(amount),
+  note: note || "",
+  category,
+  businessDate: updatedBusinessDate,
+},
       };
     }
   )
@@ -534,6 +724,11 @@ exports.deleteExpense = onCall(
 
       const before =
         snap.data();
+
+      await assertRecordBusinessDateIsOpen(
+        before.branchId,
+        before
+      );
 
       const branchSnap =
         await admin
@@ -586,26 +781,36 @@ exports.createLoan = onCall(
     async (request) => {
 
       const {
-        employeeId,
-        employeeName,
-        amount,
-        note,
-        branchId,
-      } = request.data;
+  employeeId,
+  employeeName,
+  amount,
+  note,
+  branchId,
+  businessDate,
+} = request.data;
+
+const validBusinessDate = validateBusinessDate(businessDate);
+
+      if (!branchId || !employeeId || !amount) {
+        throw new HttpsError("invalid-argument", "Missing fields");
+      }
+
+      await assertBusinessDateIsOpen(branchId, validBusinessDate);
 
       const loanRef =
         await admin
           .firestore()
           .collection("loans")
           .add({
-            employeeId,
-            employeeName,
-            amount: Number(amount),
-            note: note || "",
-            branchId,
-            createdAt:
-              admin.firestore.FieldValue.serverTimestamp(),
-          });
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+  branchId,
+  businessDate: validBusinessDate,
+  createdAt:
+    admin.firestore.FieldValue.serverTimestamp(),
+});
 
       const branchSnap =
         await admin
@@ -633,18 +838,20 @@ exports.createLoan = onCall(
         before: null,
 
         after: {
-          employeeId,
-          employeeName,
-          amount: Number(amount),
-          note: note || "",
-        },
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+  businessDate: validBusinessDate,
+},
 
         logDetails: {
-          employeeId,
-          employee: employeeName,
-          amount: Number(amount),
-          note: note || "",
-        },
+  employeeId,
+  employee: employeeName,
+  amount: Number(amount),
+  note: note || "",
+  businessDate: validBusinessDate,
+},
       };
     }
   )
@@ -658,12 +865,13 @@ exports.updateLoan = onCall(
     },
     async (request) => {
 
-      const {
+    const {
   id,
   employeeId,
   employeeName,
   amount,
   note,
+  businessDate,
 } = request.data;
 
       const ref =
@@ -684,13 +892,26 @@ exports.updateLoan = onCall(
 
       const before =
         snap.data();
-
-      await ref.update({
+      const updateData = {
   employeeId,
   employeeName,
   amount: Number(amount),
   note: note || "",
-});
+};
+
+if (businessDate !== undefined) {
+  updateData.businessDate =
+    validateBusinessDate(businessDate);
+}
+
+const originalBusinessDate = await assertRecordBusinessDateIsOpen(
+  before.branchId,
+  before,
+  updateData.businessDate || undefined
+);
+const updatedBusinessDate =
+  updateData.businessDate || before.businessDate || originalBusinessDate;
+await ref.update(updateData);
 
       const branchSnap =
         await admin
@@ -715,30 +936,31 @@ exports.updateLoan = onCall(
         targetName:
           employeeName,
 
-        before,
+        before: {
+  ...before,
+  businessDate: before.businessDate || "",
+},
 
-        after: {
-          employeeId,
-          employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
-        },
+after: {
+  employeeId,
+  employeeName,
+  amount: Number(amount),
+  note: note || "",
+  businessDate: updatedBusinessDate,
+},
 
         logDetails: {
-          employeeId,
-          employee:
-            employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
-        },
+  employeeId,
+  employee: employeeName,
+  amount: Number(amount),
+  note: note || "",
+  businessDate: updatedBusinessDate,
+},
       };
     }
   )
 );
+
 exports.createBonus = onCall(
   withLog(
     {
@@ -747,70 +969,80 @@ exports.createBonus = onCall(
       severity: "success",
     },
     async (request) => {
-
       const {
-  employeeId,
-  employeeName,
-  amount,
-  note,
-  branchId,
-} = request.data;
+        employeeId,
+        employeeName,
+        amount,
+        note,
+        branchId,
+        businessDate,
+      } = request.data;
 
-      const bonusRef =
-        await admin
-          .firestore()
-          .collection("bonuses")
-          .add({
-  employeeId,
-  employeeName,
-  amount: Number(amount),
-  note: note || "",
-  branchId,
-  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-});
+      const validBusinessDate =
+        validateBusinessDate(businessDate);
 
-      const branchSnap =
-        await admin
-          .firestore()
-          .collection("branches")
-          .doc(branchId)
-          .get();
+      if (!branchId || !employeeId || !amount) {
+        throw new HttpsError("invalid-argument", "Missing fields");
+      }
+
+      await assertBusinessDateIsOpen(branchId, validBusinessDate);
+
+      const bonusRef = await admin
+        .firestore()
+        .collection("bonuses")
+        .add({
+          employeeId,
+          employeeName,
+          amount: Number(amount),
+          note: note || "",
+          branchId,
+          businessDate: validBusinessDate,
+          createdAt:
+            admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+      const branchSnap = await admin
+        .firestore()
+        .collection("branches")
+        .doc(branchId)
+        .get();
 
       return {
         success: true,
 
         branchId,
 
-        branchName:
-          branchSnap.exists
-            ? branchSnap.data().name
-            : "",
+        branchName: branchSnap.exists
+          ? branchSnap.data().name
+          : "",
 
-        targetId:
-          bonusRef.id,
+        targetId: bonusRef.id,
 
-        targetName:
-          employeeName,
+        targetName: employeeName,
 
         before: null,
 
         after: {
-  employeeId,
-  employeeName,
-  amount: Number(amount),
-  note: note || "",
-},
+          employeeId,
+          employeeName,
+          amount: Number(amount),
+          note: note || "",
+          businessDate: validBusinessDate,
+        },
 
         logDetails: {
-  employeeId,
-  employee: employeeName,
-  amount: Number(amount),
-  note: note || "",
-},
+          employeeId,
+          employee: employeeName,
+          amount: Number(amount),
+          note: note || "",
+          businessDate: validBusinessDate,
+        },
       };
     }
   )
 );
+
+
 exports.updateBonus = onCall(
   withLog(
     {
@@ -819,23 +1051,21 @@ exports.updateBonus = onCall(
       severity: "warning",
     },
     async (request) => {
-
       const {
-  id,
-  employeeId,
-  employeeName,
-  amount,
-  note,
-} = request.data;
+        id,
+        employeeId,
+        employeeName,
+        amount,
+        note,
+        businessDate,
+      } = request.data;
 
-      const ref =
-        admin
-          .firestore()
-          .collection("bonuses")
-          .doc(id);
+      const ref = admin
+        .firestore()
+        .collection("bonuses")
+        .doc(id);
 
-      const snap =
-        await ref.get();
+      const snap = await ref.get();
 
       if (!snap.exists) {
         throw new HttpsError(
@@ -844,63 +1074,188 @@ exports.updateBonus = onCall(
         );
       }
 
-      const before =
-        snap.data();
+      const before = snap.data();
 
-      await ref.update({
-  employeeId,
-  employeeName,
-  amount: Number(amount),
-  note: note || "",
-});
+      const updateData = {
+        employeeId,
+        employeeName,
+        amount: Number(amount),
+        note: note || "",
+      };
 
-      const branchSnap =
-        await admin
-          .firestore()
-          .collection("branches")
-          .doc(before.branchId)
-          .get();
+      if (businessDate !== undefined) {
+  updateData.businessDate =
+    validateBusinessDate(businessDate);
+}
+
+      const originalBusinessDate = await assertRecordBusinessDateIsOpen(
+        before.branchId,
+        before,
+        updateData.businessDate || undefined
+      );
+      const updatedBusinessDate =
+        updateData.businessDate ||
+        before.businessDate ||
+        originalBusinessDate;
+
+      await ref.update(updateData);
+
+      const branchSnap = await admin
+        .firestore()
+        .collection("branches")
+        .doc(before.branchId)
+        .get();
 
       return {
         success: true,
 
-        branchId:
-          before.branchId,
+        branchId: before.branchId,
 
-        branchName:
-          branchSnap.exists
-            ? branchSnap.data().name
-            : "",
+        branchName: branchSnap.exists
+          ? branchSnap.data().name
+          : "",
 
         targetId: id,
 
-        targetName:
-          employeeName,
+        targetName: employeeName,
 
-        before,
+        before: {
+          ...before,
+          businessDate: before.businessDate || "",
+        },
 
         after: {
           employeeId,
           employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
+          amount: Number(amount),
+          note: note || "",
+          businessDate: updatedBusinessDate,
         },
 
         logDetails: {
           employeeId,
-          employee:
-            employeeName,
-          amount:
-            Number(amount),
-          note:
-            note || "",
+          employee: employeeName,
+          amount: Number(amount),
+          note: note || "",
+          businessDate: updatedBusinessDate,
         },
       };
     }
   )
 );
+
+exports.reopenDailyClosing = onCall(
+  withLog(
+    {
+      action: "REOPEN_DAILY_CLOSING",
+      module: "DailyClosing",
+      severity: "warning",
+    },
+    async (request) => {
+      const auth = request.auth;
+
+      if (!auth) {
+        throw new HttpsError("unauthenticated", "Login first");
+      }
+
+      const callerSnap = await admin
+        .firestore()
+        .collection("users")
+        .doc(auth.uid)
+        .get();
+
+      if (!callerSnap.exists) {
+        throw new HttpsError("not-found", "User not found");
+      }
+
+      const caller = callerSnap.data();
+
+      if (caller.role !== "owner") {
+        throw new HttpsError(
+          "permission-denied",
+          "Only owner can reopen a daily closing"
+        );
+      }
+
+      const { branchId, businessDate } = request.data || {};
+      if (!branchId) {
+        throw new HttpsError("invalid-argument", "Branch is required");
+      }
+
+      const validBusinessDate = validateBusinessDate(businessDate);
+      const storedBusinessDate = toStoredBusinessDateKey(validBusinessDate);
+      const db = admin.firestore();
+
+      const closingSnap = await db
+        .collection("dailyClosings")
+        .where("branchId", "==", branchId)
+        .where("businessDate", "==", storedBusinessDate)
+        .get();
+
+      const closedDocs = closingSnap.docs.filter(
+        (doc) => doc.data()?.status !== "reopened"
+      );
+
+      if (closedDocs.length === 0) {
+        throw new HttpsError(
+          "failed-precondition",
+          "There is no active daily closing to reopen"
+        );
+      }
+
+      const batch = db.batch();
+      const reopenedAt = admin.firestore.FieldValue.serverTimestamp();
+
+      closedDocs.forEach((doc) => {
+        batch.update(doc.ref, {
+          status: "reopened",
+          reopenedAt,
+          reopenedBy: auth.uid,
+          reopenedByName: caller.name || caller.displayName || "Owner",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      await batch.commit();
+
+      const branchSnap = await db
+        .collection("branches")
+        .doc(branchId)
+        .get();
+
+      const branchName = branchSnap.exists
+        ? branchSnap.data().name || ""
+        : "";
+
+      return {
+        success: true,
+        branchId,
+        branchName,
+        targetId: closedDocs.map((doc) => doc.id).join(","),
+        targetName: `Daily Closing ${validBusinessDate}`,
+        before: {
+          status: "closed",
+          businessDate: validBusinessDate,
+          closingCount: closedDocs.length,
+        },
+        after: {
+          status: "reopened",
+          businessDate: validBusinessDate,
+          closingCount: closedDocs.length,
+          reopenedBy: auth.uid,
+          reopenedByName: caller.name || caller.displayName || "Owner",
+        },
+        logDetails: {
+          businessDate: validBusinessDate,
+          branchId,
+          branchName,
+          reopenedClosingCount: closedDocs.length,
+        },
+      };
+    }
+  )
+);
+
 exports.createBranch =
   branches.createBranch;
 

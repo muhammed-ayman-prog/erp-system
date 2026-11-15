@@ -13,6 +13,60 @@ export function useSales(
     ?.toString()
     ?.trim()
     ?.toLowerCase();
+  const getOilCompositionKey = (item) => {
+  if (
+    (item?.containerType || "").toLowerCase().trim() === "oil"
+  ) {
+    return "";
+  }
+
+  const components =
+    Array.isArray(item?.oilComponents) &&
+    item.oilComponents.length > 0
+      ? item.oilComponents
+      : Number(item?.oilQty) > 0
+      ? [{
+          oilId: item.oilId || item.id,
+          quantityML: item.oilQty
+        }]
+      : [];
+
+  return components
+    .map(component =>
+      `${normalize(component.oilId || component.id || "")}:${Number(
+        component.quantityML ?? component.oilQty ?? 0
+      )}`
+    )
+    .sort()
+    .join("|");
+};
+
+const isSameCartItem = (a, b) => {
+  if (!a || !b) return false;
+
+  const sameBase =
+    normalize(a.id) === normalize(b.id) &&
+    normalize(a.size) === normalize(b.size) &&
+    normalize(a.containerType) === normalize(b.containerType);
+
+  if (!sameBase) return false;
+
+  if (Boolean(a.isReturned) !== Boolean(b.isReturned)) {
+    return false;
+  }
+
+  if (
+    a.isReturned &&
+    String(a.returnedItemId || "") !== String(b.returnedItemId || "")
+  ) {
+    return false;
+  }
+
+  return (
+    getOilCompositionKey(a) ===
+    getOilCompositionKey(b)
+  );
+};
   const {
   setToastText,
   setShowToast
@@ -38,40 +92,43 @@ useEffect(() => {
   }
 }, []);
 
-  const addToCart = (product) => {
+const addToCart = (product) => {
+  const isReturned = Boolean(product?.isReturned);
 
-  const originalProduct =
-    productsWithStock.find(
-      p => p.id === product.id
-    );
+  const originalProduct = productsWithStock.find(
+    p => p.id === product.id
+  );
 
-  if (!originalProduct) return;
+  // المنتج العادي لازم يكون موجود ومتوفر في المخزون
+  // المنتج المرتجع له مخزون مستقل في returned_items
+  if (!isReturned) {
+    if (!originalProduct) return;
 
-  if (originalProduct.quantity <= 0) {
+    if (Number(originalProduct.quantity) <= 0) {
+      showToast(
+        setToastText,
+        setShowToast,
+        "المنتج خلص ❌"
+      );
 
-    showToast(
-  setToastText,
-  setShowToast,
-  "المنتج خلص ❌"
-);
-
-    return;
+      return;
+    }
   }
 
   setCart(prev => {
-
     const existing = prev.find(
-      (item) =>
-        normalize(item.id) === normalize(product.id) &&
-        normalize(item.size) === normalize(product.size) &&
-        normalize(item.containerType) === normalize(product.containerType)
+      item => isSameCartItem(item, product)
     );
+
+    // كل قطعة مرتجعة لها مستند مستقل
+    if (existing && isReturned) {
+      return prev;
+    }
 
     if (
       existing &&
-      existing.qty >= originalProduct.quantity
+      existing.qty >= Number(originalProduct.quantity)
     ) {
-
       showToast(
         setToastText,
         setShowToast,
@@ -82,11 +139,8 @@ useEffect(() => {
     }
 
     if (existing) {
-
-      return prev.map((item) =>
-        normalize(item.id) === normalize(product.id) &&
-        normalize(item.size) === normalize(product.size) &&
-        normalize(item.containerType) === normalize(product.containerType)
+      return prev.map(item =>
+        isSameCartItem(item, product)
           ? {
               ...item,
               qty: item.qty + 1
@@ -110,12 +164,10 @@ useEffect(() => {
 const updateCartItem = (originalItem, updatedItem) => {
   setCart(prev =>
     prev.map(item =>
-      normalize(item.id) === normalize(originalItem.id) &&
-      normalize(item.size) === normalize(originalItem.size) &&
-      normalize(item.containerType) === normalize(originalItem.containerType)
+      isSameCartItem(item, originalItem)
         ? {
             ...updatedItem,
-            qty: originalItem.qty ?? 1,
+            qty: originalItem.qty ?? 1
           }
         : item
     )
@@ -128,14 +180,13 @@ const removeItem = (target) => {
     prev.filter(
       (item) =>
         !(
-          normalize(item.id) === normalize(target.id) &&
-          normalize(item.size) === normalize(target.size) &&
-          normalize(item.containerType) === normalize(target.containerType)
+          isSameCartItem(item, target)
         )
     )
   );
 };
 const increaseQty = (target) => {
+  if (target.isReturned) return;
   const product = productsWithStock.find(p => p.id === target.id);
 
   if (!product || product.quantity <= 0) return;
@@ -147,9 +198,7 @@ const increaseQty = (target) => {
 
   setCart(prev =>
     prev.map(item =>
-      normalize(item.id) === normalize(target.id) &&
-      normalize(item.size) === normalize(target.size) &&
-      normalize(item.containerType) === normalize(target.containerType)
+      isSameCartItem(item, target)
         ? item.containerType === "oil"
           ? (() => {
     const newMl = (item.selectedMl ?? item.oilQty) + 1;
@@ -172,9 +221,7 @@ const decreaseQty = (target) => {
   setCart(prev =>
     prev
       .map(item =>
-        normalize(item.id) === normalize(target.id) &&
-        normalize(item.size) === normalize(target.size) &&
-        normalize(item.containerType) === normalize(target.containerType)
+        isSameCartItem(item, target)
           ? item.containerType === "oil"
             ? (() => {
   const newMl = (item.selectedMl ?? item.oilQty) - 1;
@@ -383,11 +430,19 @@ const handleCheckout = async (
     customerName,
     customerPhone,
     saleDate,
+    setSaleDate,
     playCheckoutSound,
     employeeId,
     employeeName,
     user,
     paymentMethod,
+
+// Split Payment
+    isSplitPayment = false,
+    splitPayments = {},
+    setIsSplitPayment,
+    setSplitPayments,
+
     selectedBranch,
     setToastText,
     setShowToast,
@@ -401,9 +456,110 @@ const handleCheckout = async (
     setCustomerName,
     setCustomerPhone,
   } = params;   
-if (!paymentMethod) {
-  showToast(setToastText, setShowToast,"اختار طريقة الدفع ❗");
-  return;
+// ====================================
+// PAYMENT VALIDATION
+// ====================================
+
+let checkoutPayments = [];
+
+let resolvedPaymentMethod = paymentMethod;
+
+if (isSplitPayment) {
+
+  const allowedMethods = [
+    "cash",
+    "visa",
+    "instapay"
+  ];
+
+  const invalidAmount = Object.entries(
+    splitPayments || {}
+  ).some(([method, value]) => {
+    return (
+      allowedMethods.includes(method) &&
+      value !== "" &&
+      (
+        !Number.isFinite(Number(value)) ||
+        Number(value) < 0
+      )
+    );
+  });
+
+  if (invalidAmount) {
+    showToast(
+      setToastText,
+      setShowToast,
+      "راجع مبالغ الدفع ❗"
+    );
+    return;
+  }
+
+  checkoutPayments = allowedMethods
+    .map(method => ({
+      method,
+      amount: Number(splitPayments?.[method] || 0)
+    }))
+    .filter(payment => payment.amount > 0);
+
+  if (checkoutPayments.length === 0) {
+    showToast(
+      setToastText,
+      setShowToast,
+      "أدخل مبلغ دفع واحد على الأقل ❗"
+    );
+    return;
+  }
+
+  const paidCents = checkoutPayments.reduce(
+    (sum, payment) =>
+      sum + Math.round(payment.amount * 100),
+    0
+  );
+
+  const totalCents = Math.round(
+    Number(total || 0) * 100
+  );
+
+  if (paidCents < totalCents) {
+    showToast(
+      setToastText,
+      setShowToast,
+      "المبلغ المدفوع أقل من إجمالي الفاتورة ❗"
+    );
+    return;
+  }
+
+  if (paidCents > totalCents) {
+    showToast(
+      setToastText,
+      setShowToast,
+      "المبلغ المدفوع أكبر من إجمالي الفاتورة ❗"
+    );
+    return;
+  }
+
+  resolvedPaymentMethod =
+    checkoutPayments.length > 1
+      ? "mixed"
+      : checkoutPayments[0].method;
+
+} else {
+
+  if (!paymentMethod) {
+    showToast(
+      setToastText,
+      setShowToast,
+      "اختار طريقة الدفع ❗"
+    );
+    return;
+  }
+
+  checkoutPayments = [
+    {
+      method: paymentMethod,
+      amount: Number(total || 0)
+    }
+  ];
 }
 
 if (cart.length === 0) {
@@ -438,19 +594,22 @@ if (!employeeId || !employeeName?.trim()) {
 
   try {
     const invoiceNumber = await processCheckout({
-      
-      cart,
-      branchToUse: selectedBranch,
-      total,
-      paymentMethod,
-      customerName,
-      customerPhone,
 
-      employeeId,
-      employeeName,
-      saleDate,
-      user
-    });
+  cart,
+  branchToUse: selectedBranch,
+  total,
+
+  paymentMethod: resolvedPaymentMethod,
+  payments: checkoutPayments,
+
+  customerName,
+  customerPhone,
+
+  employeeId,
+  employeeName,
+  saleDate,
+  user
+});
 
     showToast(setToastText, setShowToast, `Invoice: ${invoiceNumber} ✅`);
     playCheckoutSound?.();
@@ -462,8 +621,16 @@ if (!employeeId || !employeeName?.trim()) {
     setOilQty(0);
     setDiscount(0);
     setPaymentMethod("");
+    setIsSplitPayment?.(false);
+
+    setSplitPayments?.({
+      cash: "",
+      visa: "",
+      instapay: ""
+    });
     setCustomerName("");
     setCustomerPhone("");
+    setSaleDate?.("");
 
   } catch (error) {
     console.error(error);

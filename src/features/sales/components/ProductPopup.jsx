@@ -21,7 +21,8 @@ export default function ProductPopup({
   setSubTab,
   setMainTab,
   isMusk,
-  popupState
+  popupState,
+  onAddSecondOil
 }) {
   const {
   isMobile,
@@ -53,10 +54,15 @@ export default function ProductPopup({
   setSelectedSize,
 
   oilQty,
-  setOilQty,
+setOilQty,
 
-  editingItem,
-  setEditingItem
+secondOil,
+setSecondOil,
+secondOilQty,
+setSecondOilQty,
+
+editingItem,
+setEditingItem
 } = popupState;
 
 const isFrenchBox =
@@ -65,15 +71,14 @@ const isFrenchBox =
     ?.includes("french") &&
 
   containerType === "box";
+const productCategory =
+  selectedProduct?.category?.toLowerCase() || "";
+
 const needsOil =
-
-  selectedProduct?.category === "French" ||
-
-  selectedProduct?.category
-    ?.toLowerCase()
-    ?.includes("oriental") ||
-
+  productCategory.includes("french") ||
+  productCategory.includes("oriental") ||
   isMusk;
+
 const price =
   isFrenchBox
 
@@ -100,10 +105,15 @@ const price =
       )
 
     : 0;
-    const isValid =
+   const isValid =
   containerType === "oil"
-    ? oilQty && oilQty > 0 && price > 0
-    : selectedSize && price > 0;
+    ? Number(oilQty) > 0 && price > 0
+    : Boolean(
+        selectedSize &&
+        price > 0 &&
+        (!needsOil || Number(oilQty) > 0) &&
+        (!secondOil || Number(secondOilQty) > 0)
+      );
 const btnStyle =
   popupButtonStyle(theme);
 const getContainerButtonStyle = (
@@ -131,12 +141,14 @@ const getContainerButtonStyle = (
 
 const resetPopup = () => {
   setShowPopup(false);
-
+  
   setSelectedSize(null);
-
   setPopupStep(null);
 
   setOilQty(0);
+
+  setSecondOil(null);
+  setSecondOilQty(0);
 
   setEditingItem(null);
 };
@@ -361,15 +373,138 @@ if (!popupState.showPopup) return null;
 />
 
 {/* 🔥 هنا تحط input الزيت */}
-{(
-  needsOil
-) && (
-  <PopupOilInput
-  oilQty={oilQty}
-  setOilQty={setOilQty}
-  theme={theme}
-  t={t}
-/>
+{needsOil && (
+  <>
+    {/* الزيت الأول */}
+    <PopupOilInput
+      oilQty={oilQty}
+      setOilQty={setOilQty}
+      theme={theme}
+      t={t}
+    />
+
+   {/* الزيت الثاني - للعبوات فقط */}
+{containerType !== "oil" && (
+  <div
+    style={{
+      marginTop: "16px",
+      padding: "14px",
+      borderRadius: "12px",
+      border: `1px solid ${theme.colors.border}`,
+      background: theme.colors.background
+    }}
+  >
+    <div
+      style={{
+        fontWeight: 700,
+        marginBottom: "12px"
+      }}
+    >
+      {lang === "ar"
+        ? "الزيت الثاني"
+        : "Second Oil"}
+    </div>
+
+    {!secondOil ? (
+      <button
+        type="button"
+        onClick={onAddSecondOil}
+        style={{
+          width: "100%",
+          padding: "13px",
+          borderRadius: "10px",
+          border: `1px dashed ${theme.colors.primary}`,
+          background: theme.colors.secondary,
+          color: theme.colors.primary,
+          cursor: "pointer",
+          fontWeight: 700,
+          fontSize: "14px"
+        }}
+      >
+        + {lang === "ar"
+          ? "إضافة زيت تاني"
+          : "Add Second Oil"}
+      </button>
+    ) : (
+      <>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "10px",
+            marginBottom: "12px"
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 600 }}>
+              {secondOil.name}
+            </div>
+
+            <div
+              style={{
+                fontSize: "12px",
+                color: theme.colors.textSecondary,
+                marginTop: "4px"
+              }}
+            >
+              {secondOil.category}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              onClick={onAddSecondOil}
+              style={{
+                border: "none",
+                background: theme.colors.secondary,
+                color: theme.colors.primary,
+                padding: "7px 10px",
+                borderRadius: "8px",
+                cursor: "pointer"
+              }}
+            >
+              {lang === "ar" ? "تغيير" : "Change"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSecondOil(null);
+                setSecondOilQty(0);
+              }}
+              style={{
+                border: "none",
+                background: "#fee2e2",
+                color: "#dc2626",
+                padding: "7px 10px",
+                borderRadius: "8px",
+                cursor: "pointer"
+              }}
+            >
+              {lang === "ar" ? "إزالة" : "Remove"}
+            </button>
+          </div>
+        </div>
+
+        <p style={{ marginBottom: "7px" }}>
+          {lang === "ar"
+            ? "كمية الزيت الثاني بالملليلتر"
+            : "Second oil quantity (ML)"}
+        </p>
+
+        <PopupOilInput
+          oilQty={secondOilQty}
+          setOilQty={setSecondOilQty}
+          theme={theme}
+          t={t}
+        />
+      </>
+    )}
+  </div>
+)}
+  </>
 )}
         <br />
 
@@ -395,8 +530,10 @@ if (!popupState.showPopup) return null;
           oilCostPerML={
             selectedProduct?.cost || 0
           }
+          secondOil={secondOil}
+          secondOilQty={secondOilQty}
 
-          addToCart={addToCart}addToCart={addToCart}
+          addToCart={addToCart}
 
           updateCartItem={updateCartItem}
 

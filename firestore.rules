@@ -368,30 +368,10 @@
       // =====================================
 
       match /expenses/{expenseId} {
-
-        allow read:
-          if isLoggedIn() &&
-          hasBranchAccess(
-            resource.data.branchId
-          );
-
-        allow create:
-          if isLoggedIn() &&
-          hasBranchAccess(
-            request.resource.data.branchId
-          );
-
-        allow update:
-          if isLoggedIn() &&
-          (
-            isOwner() ||
-            isSupervisor() ||
-            isBranchManager()
-          );
-
-        allow delete:
-          if false;
-      }
+  allow read: if isLoggedIn() && hasBranchAccess(resource.data.branchId);
+  // All writes go through callable Cloud Functions (Admin SDK).
+  allow create, update, delete: if false;
+}
       // =====================================
   // WASTE
   // =====================================
@@ -424,48 +404,20 @@
   // =====================================
 
   match /bonuses/{bonusId} {
-
-    allow read:
-    if isLoggedIn() &&
-    hasBranchAccess(
-      resource.data.branchId
-    );
-
-    allow create, update:
-    if isLoggedIn() &&
-    (
-      isOwner() ||
-      isSupervisor()
-    ) &&
-    hasBranchAccess(
-      request.resource.data.branchId
-    );
-
-    allow delete:
-      if false;
-  }
+  allow read: if isLoggedIn() && hasBranchAccess(resource.data.branchId);
+  // All writes go through callable Cloud Functions (Admin SDK).
+  allow create, update, delete: if false;
+}
 
   // =====================================
   // LOANS
   // =====================================
 
   match /loans/{loanId} {
-
-    allow read:
-    if isLoggedIn() &&
-    hasBranchAccess(
-      resource.data.branchId
-    );
-
-    allow create, update:
-    if isLoggedIn() &&
-    hasBranchAccess(
-      request.resource.data.branchId
-    );
-
-    allow delete:
-      if false;
-  }
+  allow read: if isLoggedIn() && hasBranchAccess(resource.data.branchId);
+  // All writes go through callable Cloud Functions (Admin SDK).
+  allow create, update, delete: if false;
+}
 
   // =====================================
   // RETURNED STOCK
@@ -571,32 +523,9 @@
 // =====================================
 
 match /dailyClosings/{closingId} {
-
-  allow read:
-    if isLoggedIn() &&
-    hasBranchAccess(
-      resource.data.branchId
-    );
-
-  allow create:
-    if isLoggedIn() &&
-    hasBranchAccess(
-      request.resource.data.branchId
-    );
-
-  allow update:
-    if isLoggedIn() &&
-    (
-      isOwner() ||
-      isSupervisor() ||
-      isBranchManager()
-    ) &&
-    hasBranchAccess(
-      resource.data.branchId
-    );
-
-  allow delete:
-    if false;
+  allow read: if isLoggedIn() && hasBranchAccess(resource.data.branchId);
+  // Close/reopen operations are managed by callable Cloud Functions only.
+  allow create, update, delete: if false;
 }
     }
   }

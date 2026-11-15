@@ -1,6 +1,6 @@
   import { db } from "../../firebase";
   import useInvoices from "./hooks/useInvoices";
-  import { useEffect,useState } from "react";
+  import { useEffect, useState, useMemo } from "react";
   import printInvoice from "./utils/printInvoice";
   import AppPageHeader from "../../components/ui/AppPageHeader";
 import AppFilterBar from "../../components/ui/AppFilterBar";
@@ -13,6 +13,7 @@ import AppCard from "../../components/ui/AppCard";
   updateDoc,
   serverTimestamp,
   writeBatch,
+  runTransaction,
   query,
   where,
   collection,
@@ -43,6 +44,8 @@ import AppCard from "../../components/ui/AppCard";
   import { useAuth } from "../../store/useAuth";
   import { getTodayRange } from "../../utils/dateFilter.js";
   import useResponsive from "./hooks/useResponsive";
+  import { ArrowRight } from "lucide-react";
+  import AppButton from "../../components/ui/AppButton";
 import {
   getKey,
   isFullyRefunded,
@@ -254,12 +257,104 @@ const filteredReturns = useReturnFilters({
   branchFilter,
   showBranchFilter,
 });
+const combinedRows = useMemo(() => {
+  // تجهيز فواتير البيع
+  const saleRows = filteredInvoices.map((sale) => ({
+    ...sale,
+    rowType: "sale",
+    rowId: `sale-${sale.id}`,
+  }));
+
+  // تجميع مستندات المرتجعات حسب returnId
+  const returnGroups = new Map();
+
+  filteredReturns.forEach((item) => {
+    const groupId = item.returnId || item.id;
+
+    if (!returnGroups.has(groupId)) {
+      returnGroups.set(groupId, {
+        ...item,
+        id: groupId,
+        rowId: `return-${groupId}`,
+        rowType: "return",
+        totalRefund: 0,
+        totalQuantity: 0,
+        products: [],
+      });
+    }
+
+    const group = returnGroups.get(groupId);
+
+    group.totalRefund += Number(item.price || 0);
+    group.totalQuantity += Number(item.quantity || 0);
+
+    if (
+      item.productName &&
+      !group.products.includes(item.productName)
+    ) {
+      group.products.push(item.productName);
+    }
+  });
+
+  const returnRows = Array.from(returnGroups.values()).map(
+    (item) => {
+      const originalInvoice = sales.find(
+        (sale) => sale.id === item.invoiceDocId
+      );
+
+      return {
+        ...item,
+        invoiceNumber:
+          item.invoiceId ||
+          originalInvoice?.invoiceNumber ||
+          "-",
+        customerName: originalInvoice?.customerName || "-",
+        branchName:
+          item.branchName || originalInvoice?.branchName || "-",
+        paymentMethod: item.refundPaymentMethod || "cash",
+        refundDate: item.refundDate,
+        originalInvoice,
+      };
+    }
+  );
+
+  const getTimestamp = (value) => {
+    if (!value) return 0;
+
+    if (typeof value.toMillis === "function") {
+      return value.toMillis();
+    }
+
+    if (value.seconds) {
+      return value.seconds * 1000;
+    }
+
+    const date = new Date(value).getTime();
+    return Number.isNaN(date) ? 0 : date;
+  };
+
+  return [...saleRows, ...returnRows].sort((a, b) => {
+    const dateA = getTimestamp(
+      a.rowType === "return"
+        ? a.refundDate
+        : a.saleDate || a.createdAt
+    );
+
+    const dateB = getTimestamp(
+      b.rowType === "return"
+        ? b.refundDate
+        : b.saleDate || b.createdAt
+    );
+
+    return dateB - dateA;
+  });
+}, [filteredInvoices, filteredReturns, sales]);
  const {
       page,
       setPage,
       paginated,
       totalPages,
-    } = usePagination(filteredInvoices)
+    } = usePagination(combinedRows);
 
     
     const [cancelReason, setCancelReason] = useState("");
@@ -278,37 +373,33 @@ const filteredReturns = useReturnFilters({
     const confirmAction = async () => {
       if (!selectedInvoice) return;
 
-      if (action === "cancel") await handleCancel({
-  inv: selectedInvoice,
-  reason: cancelReason.trim(),
+      if (action === "cancel") {
+  await handleCancel({
+    inv: selectedInvoice,
+    reason: cancelReason.trim(),
 
-  db,
-  user,
-  t,
-  toast,
+    db,
+    user,
+    t,
+    toast,
 
-  writeBatch,
-  query,
-  collection,
-  where,
-  getDocs,
-  doc,
-  increment,
-  serverTimestamp,
+    runTransaction,
+    query,
+    collection,
+    where,
+    getDocs,
+    doc,
+    increment,
+    serverTimestamp,
 
-  setInvoices,
+    setInvoices,
+    branchName,
+    selectedBranch,
 
-  branchName,
-  selectedBranch,
-
-  isFullyRefunded,
-
-  updateDoc,
-
-  logAction,
-
-  setCancelling,
-});
+    logAction,
+    setCancelling,
+  });
+}
 
       setShowConfirm(false);
       setAction("");
@@ -375,14 +466,108 @@ const {
     (selectedInvoice?.refundedAmount || 0)
   );
  
+const handleSelectInvoiceRow = async (row) => {
+  setDropdownOpen(false);
 
+  // فاتورة بيع عادية
+  if (row.rowType !== "return") {
+    setSelectedInvoice(row);
+    return;
+  }
+
+  // البحث عن الفاتورة الأصلية
+  const originalInvoice =
+    row.originalInvoice ||
+    sales.find((sale) => sale.id === row.invoiceDocId);
+
+  if (originalInvoice) {
+    setSelectedInvoice(originalInvoice);
+    return;
+  }
+
+  // جلب الفاتورة من Firestore عند عدم وجودها محليًا
+  if (!row.invoiceDocId) {
+    toast.error(
+      lang === "ar"
+        ? "رقم الفاتورة الأصلية غير متاح"
+        : "Original invoice reference is missing"
+    );
+    return;
+  }
+
+  try {
+    const invoiceSnap = await getDoc(
+      doc(db, "sales", row.invoiceDocId)
+    );
+
+    if (!invoiceSnap.exists()) {
+      toast.error(
+        lang === "ar"
+          ? "الفاتورة الأصلية غير موجودة"
+          : "Original invoice not found"
+      );
+      return;
+    }
+
+    setSelectedInvoice({
+      id: invoiceSnap.id,
+      ...invoiceSnap.data(),
+    });
+  } catch (error) {
+    console.error("Error loading original invoice:", error);
+
+    toast.error(
+      lang === "ar"
+        ? "حدث خطأ أثناء تحميل الفاتورة"
+        : "Failed to load original invoice"
+    );
+  }
+};
     return (
       <div style={{ padding: isMobile ? 12 : 20 }}>
         
-        <AppPageHeader
-    title={t("invoices.title")}
-    subtitle={t("invoices.subtitle")}
-/>
+        {/* Invoices Page Header */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+    direction: "ltr",
+    width: "100%",
+  }}
+>
+  {/* Back Button - Far Left */}
+  <div
+    className="no-print"
+    style={{
+      flexShrink: 0,
+    }}
+  >
+    <AppButton
+      variant="secondary"
+      leftIcon={<ArrowRight size={16} />}
+      onClick={() => navigate("/sales")}
+    >
+      رجوع للمبيعات
+    </AppButton>
+  </div>
+
+  {/* Page Title - Right */}
+  <div
+    style={{
+      flex: 1,
+      minWidth: 200,
+      direction: lang === "ar" ? "rtl" : "ltr",
+    }}
+  >
+    <AppPageHeader
+      title={t("invoices.title")}
+      subtitle={t("invoices.subtitle")}
+    />
+  </div>
+</div>
         {/* 💰 CARDS */}
        <InvoiceCards
           totals={totals}
@@ -420,24 +605,25 @@ const {
           flexWrap: isMobile ? "wrap" : "nowrap"
         }}>
           <InvoiceTable
-            isMobile={isMobile}
-            loadingSales={loadingSales}
-            paginated={paginated}
-            selectedInvoice={selectedInvoice}
-            setSelectedInvoice={setSelectedInvoice}
-            theme={theme}
-            t={t}
-            page={page}
-            setPage={setPage}
-            totalPages={totalPages}
-            handleRowHover={handleRowHover}
-            handleRowLeave={handleRowLeave}
-            formatDate={formatDate}
-            isFullyRefunded={isFullyRefunded}
-            lang={lang}
-            dropdownOpen={dropdownOpen}
-            setDropdownOpen={setDropdownOpen}
-          />
+  isMobile={isMobile}
+  loadingSales={loadingSales || loadingReturns}
+  paginated={paginated}
+  selectedInvoice={selectedInvoice}
+  setSelectedInvoice={setSelectedInvoice}
+  onSelectRow={handleSelectInvoiceRow}
+  theme={theme}
+  t={t}
+  page={page}
+  setPage={setPage}
+  totalPages={totalPages}
+  handleRowHover={handleRowHover}
+  handleRowLeave={handleRowLeave}
+  formatDate={formatDate}
+  isFullyRefunded={isFullyRefunded}
+  lang={lang}
+  dropdownOpen={dropdownOpen}
+  setDropdownOpen={setDropdownOpen}
+/>
 
           {/* SIDE PANEL */}
           <AppCard

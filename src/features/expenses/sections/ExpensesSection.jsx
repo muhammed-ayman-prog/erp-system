@@ -68,6 +68,8 @@ export default function ExpensesSection(props) {
         setCustomCategory={setCustomCategory}
         note={note}
         setNote={setNote}
+        businessDate={props.businessDate}
+        setBusinessDate={props.setBusinessDate}
         loading={isAddingExpense}
         onSubmit={handleAddExpense}
       />

@@ -142,8 +142,9 @@ export default function InvoiceSummary(props) {
       </div>
 
       <InvoiceTotalCard
+        selectedInvoice={selectedInvoice}
         netTotal={netTotal}
-        theme={theme}
+        lang={lang}
       />
 
       <div

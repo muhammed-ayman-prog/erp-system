@@ -1,37 +1,44 @@
+
 import { useMemo } from "react";
 
 export function useVisibleProducts({
   productsWithStock,
   mainTab,
   subTab,
-  search
+  search,
 }) {
-
-  const normalizedSearch =
-    search.trim().toLowerCase();
+  const normalizedSearch = (search || "").trim().toLowerCase();
 
   return useMemo(() => {
+    if (!Array.isArray(productsWithStock)) return [];
 
     return productsWithStock
 
+      // فلترة المنتجات
       .filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        const category = (p.category || "").toLowerCase();
 
-        const tab =
-          (mainTab || "").toLowerCase();
+        // ✅ البحث الشامل في جميع الأقسام
+        if (normalizedSearch) {
+          return (
+            name.includes(normalizedSearch) ||
+            category.includes(normalizedSearch)
+          );
+        }
 
-        const cat =
-          (p.category || "").toLowerCase();
+        // ✅ لو مفيش بحث، نعرض القسم المختار فقط
+        const tab = (mainTab || "").toLowerCase();
+
+        const cat = category;
 
         if (tab === "french") {
           return cat.includes("french");
         }
 
         if (tab === "oriental") {
-
           if (subTab) {
-
-            const parts =
-              cat.split("-");
+            const parts = cat.split("-");
 
             return (
               parts[0] === "oriental" &&
@@ -43,18 +50,14 @@ export function useVisibleProducts({
         }
 
         if (tab === "body") {
-
           if (subTab) {
-            return cat.includes(
-              subTab.toLowerCase()
-            );
+            return cat.includes(subTab.toLowerCase());
           }
 
           return cat.includes("body");
         }
 
         if (tab === "original") {
-
           return (
             cat.includes("original") ||
             p.type === "original"
@@ -64,17 +67,10 @@ export function useVisibleProducts({
         return false;
       })
 
+      // ✅ ترتيب المنتجات حسب المخزون
       .sort((a, b) => {
-
-        if (
-          a.quantity > 5 &&
-          b.quantity <= 5
-        ) return -1;
-
-        if (
-          a.quantity <= 5 &&
-          b.quantity > 5
-        ) return 1;
+        if (a.quantity > 5 && b.quantity <= 5) return -1;
+        if (a.quantity <= 5 && b.quantity > 5) return 1;
 
         if (
           a.quantity > 0 &&
@@ -88,29 +84,13 @@ export function useVisibleProducts({
           b.quantity <= 5
         ) return 1;
 
-        return (a.name || "")
-          .localeCompare(
-            b.name || ""
-          );
-      })
-
-      .filter((p) =>
-
-        (p.name || "")
-          .toLowerCase()
-          .includes(normalizedSearch)
-
-        ||
-
-        (p.category || "")
-          .toLowerCase()
-          .includes(normalizedSearch)
-      );
+        return (a.name || "").localeCompare(b.name || "");
+      });
 
   }, [
     productsWithStock,
     mainTab,
     subTab,
-    normalizedSearch
+    normalizedSearch,
   ]);
 }

@@ -9,10 +9,10 @@ import {
   onSnapshot,
   orderBy,
   query,
-  where,
-  addDoc,
-  serverTimestamp
+  where
 } from "firebase/firestore";
+
+import { httpsCallable } from "firebase/functions";
 
 import {
   BadgeDollarSign,
@@ -29,7 +29,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-import { db } from "../firebase";
+import { db, functions } from "../firebase";
 
 import { useAuth } from "../store/useAuth";
 
@@ -39,6 +39,9 @@ import { useTranslate } from "../useTranslate";
 
 import { theme } from "../theme";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import AppButton from "../components/ui/AppButton";
+import { ArrowRight } from "lucide-react";
 // ======================================================
 // HELPERS
 // ======================================================
@@ -56,26 +59,34 @@ const BUSINESS_DAY_CUTOFF = 3;
 const getBusinessDate = (
   date = new Date()
 ) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(date));
 
-  const d = new Date(date);
+  const values = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value])
+  );
 
-  if (
-    d.getHours() <
-    BUSINESS_DAY_CUTOFF
-  ) {
+  const d = new Date(Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day)
+  ));
 
-    d.setDate(
-      d.getDate() - 1
-    );
-
+  if (Number(values.hour) < BUSINESS_DAY_CUTOFF) {
+    d.setUTCDate(d.getUTCDate() - 1);
   }
 
   return new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate()
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate()
   );
-
 };
 
 const isBusinessDay = (
@@ -125,6 +136,103 @@ const getBusinessDateKey = (
   }-${d.getDate()}`;
 
 };
+const toInputDate = (date = new Date()) => {
+  const d = new Date(date);
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const toStoredBusinessDateKey = (inputDate) => {
+  if (!inputDate) return "";
+
+  const [year, month, day] = inputDate.split("-");
+
+  return `${Number(year)}-${Number(month)}-${Number(day)}`;
+};
+
+const getTimestampDate = (value) => {
+  if (!value) return null;
+
+  if (typeof value.toDate === "function") {
+    return value.toDate();
+  }
+
+  if (typeof value.seconds === "number") {
+    return new Date(value.seconds * 1000);
+  }
+
+  const date = value instanceof Date
+    ? value
+    : new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const isSelectedBusinessDay = (value, selectedDate) => {
+  const date = getTimestampDate(value);
+
+  if (!date || !selectedDate) return false;
+
+  const businessDate = getBusinessDate(date);
+
+  return toInputDate(businessDate) === selectedDate;
+};
+// مطابقة تاريخ العملية مع دعم السجلات القديمة
+const matchesSelectedBusinessDate = (record, selectedDate) => {
+  if (!record || !selectedDate) return false;
+
+  // السجلات الجديدة تعتمد على تاريخ العملية
+  if (
+    typeof record.businessDate === "string" &&
+    record.businessDate.trim()
+  ) {
+    return record.businessDate === selectedDate;
+  }
+
+  // السجلات القديمة تعتمد على createdAt
+  return isSelectedBusinessDay(
+    record.createdAt,
+    selectedDate
+  );
+};
+
+
+const isSaleOnSelectedDate = (sale, selectedDate) => {
+  // أولاً: الاعتماد على تاريخ العمل الجديد
+  if (
+    typeof sale.businessDate === "string" &&
+    sale.businessDate.trim()
+  ) {
+    return sale.businessDate === selectedDate;
+  }
+
+  // توافق مع الفواتير القديمة
+  const saleDate = getTimestampDate(sale.saleDate);
+  const createdAt = getTimestampDate(sale.createdAt);
+
+  if (saleDate && createdAt) {
+    const difference = Math.abs(
+      saleDate.getTime() - createdAt.getTime()
+    );
+
+    // لو تاريخ البيع مختلف عن وقت التسجيل،
+    // فغالباً ده تاريخ اختاره الـ Owner يدوياً
+    if (difference > 60 * 1000) {
+      return toInputDate(saleDate) === selectedDate;
+    }
+  }
+
+  // الفواتير العادية القديمة
+  return isSelectedBusinessDay(
+    saleDate || sale.createdAt,
+    selectedDate
+  );
+};
+
 const formatDate = (
   timestamp,
   lang
@@ -187,9 +295,9 @@ const cardStyle = {
 // ======================================================
 
 export default function DailyClosing() {
+  const navigate = useNavigate();
 
-  const { user } =
-    useAuth();
+  const { user } = useAuth();
 
   const {
     selectedBranch
@@ -246,6 +354,8 @@ const [
   alreadyClosed,
   setAlreadyClosed
 ] = useState(false);
+const [wasReopened, setWasReopened] = useState(false);
+const [reopening, setReopening] = useState(false);
 
   const isOwner =
     user?.role === "owner";
@@ -259,26 +369,49 @@ const [
   // ======================================================
   // FETCH BRANCHES
   // ======================================================
+  const [selectedBusinessDate, setSelectedBusinessDate] = useState(
+  () => toInputDate(getBusinessDate())
+);
+useEffect(() => {
+  if (!branchToUse || branchToUse === "all" || !selectedBusinessDate) {
+    setAlreadyClosed(false);
+    setWasReopened(false);
+    return;
+  }
 
-  useEffect(() => {
+  const businessDate = toStoredBusinessDateKey(selectedBusinessDate);
 
-    const unsub = onSnapshot(
-      collection(db, "branches"),
-      snap => {
+  const q = query(
+    collection(db, "dailyClosings"),
+    where("branchId", "==", branchToUse),
+    where("businessDate", "==", businessDate)
+  );
 
-        setBranches(
-          snap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-        );
+  const unsub = onSnapshot(
+    q,
+    (snap) => {
+      // Old documents without a status remain locked as closed.
+      const activeClosings = snap.docs.filter(
+        (doc) => doc.data()?.status !== "reopened"
+      );
 
-      }
-    );
+      setAlreadyClosed(activeClosings.length > 0);
+      setWasReopened(
+        snap.docs.some((doc) => doc.data()?.status === "reopened")
+      );
+    },
+    (error) => {
+      console.error("Daily closing status error:", error);
+      toast.error(
+        lang === "ar"
+          ? "تعذر التحقق من حالة التقفيل"
+          : "Could not check closing status"
+      );
+    }
+  );
 
-    return () => unsub();
-
-  }, []);
+  return () => unsub();
+}, [branchToUse, selectedBusinessDate, lang]);
 
   // ======================================================
   // SALES
@@ -571,275 +704,228 @@ const [
     branchToUse,
     isOwner
   ]);
-// ======================================================
-// DAILY CLOSING STATUS
-// ======================================================
 
-useEffect(() => {
+const todaySales = useMemo(() => {
+  return sales.filter((item) => {
+    if (item.status === "cancelled") return false;
 
-  if (!branchToUse)
-    return;
+    return isSaleOnSelectedDate(
+      item,
+      selectedBusinessDate
+    );
+  });
+}, [sales, selectedBusinessDate]);
 
-  const businessDate =
-    getBusinessDateKey();
-
-  const q = query(
-    collection(
-      db,
-      "dailyClosings"
-    ),
-
-    where(
-      "branchId",
-      "==",
-      branchToUse
-    ),
-
-    where(
-      "businessDate",
-      "==",
-      businessDate
+const todayRefunds = useMemo(() => {
+  return refunds.filter((item) =>
+    isSelectedBusinessDay(
+      item.refundDate,
+      selectedBusinessDate
     )
   );
+}, [refunds, selectedBusinessDate]);
 
-  const unsub = onSnapshot(
-    q,
-    snap => {
-
-      setAlreadyClosed(
-        !snap.empty
-      );
-
-    }
+const todayExpenses = useMemo(() => {
+  return expenses.filter((item) =>
+    matchesSelectedBusinessDate(
+      item,
+      selectedBusinessDate
+    )
   );
+}, [expenses, selectedBusinessDate]);
 
-  return () => unsub();
+const todayLoans = useMemo(() => {
+  return loans.filter((item) =>
+    matchesSelectedBusinessDate(
+      item,
+      selectedBusinessDate
+    )
+  );
+}, [loans, selectedBusinessDate]);
 
-}, [branchToUse]);
-  // ======================================================
-  // TODAY FILTER
-  // ======================================================
+const todayBonuses = useMemo(() => {
+  return bonuses.filter((item) =>
+    matchesSelectedBusinessDate(
+      item,
+      selectedBusinessDate
+    )
+  );
+}, [bonuses, selectedBusinessDate]);
 
-  const todaySales =
-    useMemo(() => {
-
-      return sales.filter(
-        item => {
-
-          if (
-            item.status ===
-            "cancelled"
-          ) {
-            return false;
-          }
-
-          return isBusinessDay(
-            item.createdAt
-          );
-
-        }
-      );
-
-    }, [sales]);
-
-  const todayRefunds =
-    useMemo(() => {
-
-      return refunds.filter(
-        item =>
-          isBusinessDay(
-            item.refundDate
-          )
-      );
-
-    }, [refunds]);
-
-  const todayExpenses =
-    useMemo(() => {
-
-      return expenses.filter(
-        item =>
-          isBusinessDay(
-            item.createdAt
-          )
-      );
-
-    }, [expenses]);
-
-  const todayLoans =
-    useMemo(() => {
-
-      return loans.filter(
-        item =>
-          isBusinessDay(
-            item.createdAt
-          )
-      );
-
-    }, [loans]);
-
-  const todayBonuses =
-    useMemo(() => {
-
-      return bonuses.filter(
-        item =>
-          isBusinessDay(
-            item.createdAt
-          )
-      );
-
-    }, [bonuses]);
+ 
 
   // ======================================================
   // ANALYTICS
   // ======================================================
 
-  const analytics = useMemo(() => {
+  
+const analytics = useMemo(() => {
+  let totalSales = 0;
 
-    let totalSales = 0;
+  let cashSales = 0;
+  let visaSales = 0;
+  let instapaySales = 0;
 
-    let cashSales = 0;
+  let invoices = 0;
 
-    let visaSales = 0;
+  let totalRefunds = 0;
+  let refundCash = 0;
+  let refundVisa = 0;
+  let refundInstapay = 0;
 
-    let instapaySales = 0;
+  // =================================
+  // SALES
+  // =================================
 
-    let invoices = 0;
+  todaySales.forEach((sale) => {
+    invoices++;
 
-    todaySales.forEach(
-      sale => {
+    const total = Number(sale.total || 0);
+    totalSales += total;
 
-        invoices++;
+    // الفواتير الجديدة: payments
+    // الفواتير القديمة: paymentMethod
+    const payments =
+      Array.isArray(sale.payments) &&
+      sale.payments.length > 0
+        ? sale.payments
+        : [
+            {
+              method: sale.paymentMethod || "cash",
+              amount: total,
+            },
+          ];
 
-        const total =
-          Number(
-            sale.total || 0
-          );
+    payments.forEach((payment) => {
+      const method = String(
+        payment.method || ""
+      ).toLowerCase();
 
-        totalSales += total;
+      const amount = Number(payment.amount || 0);
 
-        const method =
-          (
-            sale.paymentMethod ||
-            ""
-          ).toLowerCase();
+      switch (method) {
+        case "cash":
+          cashSales += amount;
+          break;
 
-        if (
-          method === "cash"
-        ) {
-          cashSales += total;
-        }
+        case "visa":
+          visaSales += amount;
+          break;
 
-        else if (
-          method === "visa"
-        ) {
-          visaSales += total;
-        }
+        case "instapay":
+          instapaySales += amount;
+          break;
 
-        else if (
-          method ===
-          "instapay"
-        ) {
-          instapaySales +=
-            total;
-        }
-
+        default:
+          break;
       }
-    );
+    });
+  });
 
-    const totalRefunds =
-  todayRefunds.reduce(
+  // =================================
+  // REFUNDS
+  // =================================
 
+  todayRefunds.forEach((item) => {
+    // الحفاظ على طريقة حساب المرتجعات الحالية
+    const amount =
+      Number(item.price || 0) *
+      Number(item.quantity || 1);
+
+    totalRefunds += amount;
+
+    const method = String(
+      item.refundPaymentMethod || "cash"
+    ).toLowerCase();
+
+    switch (method) {
+      case "cash":
+        refundCash += amount;
+        break;
+
+      case "visa":
+        refundVisa += amount;
+        break;
+
+      case "instapay":
+        refundInstapay += amount;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  // =================================
+  // EXPENSES / LOANS / BONUSES
+  // =================================
+
+  const totalExpenses = todayExpenses.reduce(
     (acc, item) =>
-
-      acc +
-
-      (
-        Number(item.price || 0)
-
-        *
-
-        Number(
-          item.quantity || 1
-        )
-      ),
-
+      acc + Number(item.amount || 0),
     0
   );
 
-    const totalExpenses =
-      todayExpenses.reduce(
-        (acc, item) =>
-          acc +
-          Number(
-            item.amount || 0
-          ),
-        0
-      );
+  const totalLoans = todayLoans.reduce(
+    (acc, item) =>
+      acc + Number(item.amount || 0),
+    0
+  );
 
-    const totalLoans =
-      todayLoans.reduce(
-        (acc, item) =>
-          acc +
-          Number(
-            item.amount || 0
-          ),
-        0
-      );
+  const totalBonuses = todayBonuses.reduce(
+    (acc, item) =>
+      acc + Number(item.amount || 0),
+    0
+  );
 
-    const totalBonuses =
-      todayBonuses.reduce(
-        (acc, item) =>
-          acc +
-          Number(
-            item.amount || 0
-          ),
-        0
-      );
+  // =================================
+  // EXPECTED BALANCES
+  // =================================
 
-    const expectedCash =
+  const expectedCash =
+    cashSales -
+    refundCash -
+    totalExpenses -
+    totalLoans -
+    totalBonuses;
 
-      cashSales
+  const expectedVisa =
+    visaSales - refundVisa;
 
-      - totalRefunds
+  const expectedInstapay =
+    instapaySales - refundInstapay;
 
-      - totalExpenses
+  return {
+    totalSales,
 
-      - totalLoans
+    cashSales,
+    visaSales,
+    instapaySales,
 
-      - totalBonuses;
+    totalRefunds,
+    refundCash,
+    refundVisa,
+    refundInstapay,
 
-    return {
+    totalExpenses,
+    totalLoans,
+    totalBonuses,
 
-      totalSales,
+    invoices,
 
-      cashSales,
+    expectedCash,
+    expectedVisa,
+    expectedInstapay,
+  };
 
-      visaSales,
+}, [
+  todaySales,
+  todayRefunds,
+  todayExpenses,
+  todayLoans,
+  todayBonuses
+]);
 
-      instapaySales,
-
-      invoices,
-
-      totalRefunds,
-
-      totalExpenses,
-
-      totalLoans,
-
-      totalBonuses,
-
-      expectedCash
-
-    };
-
-  }, [
-    todaySales,
-    todayRefunds,
-    todayExpenses,
-    todayLoans,
-    todayBonuses
-  ]);
 const cashDifference =
 
   Number(actualCash || 0)
@@ -848,11 +934,24 @@ const cashDifference =
 
 const visaDifference =
   Number(actualVisa || 0) -
-  analytics.visaSales;
+  analytics.expectedVisa;
 
 const instapayDifference =
   Number(actualInstapay || 0) -
-  analytics.instapaySales;
+  analytics.expectedInstapay;
+const visaDifferenceStatus =
+  visaDifference === 0
+    ? "matched"
+    : visaDifference > 0
+    ? "over"
+    : "short";
+
+const instapayDifferenceStatus =
+  instapayDifference === 0
+    ? "matched"
+    : instapayDifference > 0
+    ? "over"
+    : "short";
 
 
 
@@ -863,7 +962,10 @@ const differenceStatus =
     : cashDifference > 0
     ? "over"
     : "short";
-
+const allPaymentsMatched =
+  cashDifference === 0 &&
+  visaDifference === 0 &&
+  instapayDifference === 0;
   // ======================================================
   // BRANCH NAME
   // ======================================================
@@ -883,8 +985,86 @@ const differenceStatus =
   // ======================================================
   // LOADING
   // ======================================================
-const handleSaveClosing = async () => {
+const handleReopenClosing = async () => {
+  if (!isOwner) {
+    toast.error(
+      lang === "ar"
+        ? "إعادة فتح اليومية متاحة للـ Owner فقط"
+        : "Only the owner can reopen a daily closing"
+    );
+    return;
+  }
 
+  if (!branchToUse || branchToUse === "all" || !selectedBusinessDate) {
+    toast.error(
+      lang === "ar"
+        ? "اختر فرعًا وتاريخ اليومية أولاً"
+        : "Select a branch and business date first"
+    );
+    return;
+  }
+
+  const confirmed = window.confirm(
+    lang === "ar"
+      ? `هل أنت متأكد من إعادة فتح يومية ${selectedBusinessDate}؟ ستصبح العمليات الخاصة بهذا اليوم قابلة للتعديل مرة أخرى.`
+      : `Reopen the daily closing for ${selectedBusinessDate}? Transactions for this day will become editable again.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setReopening(true);
+
+    const reopenDailyClosing = httpsCallable(
+      functions,
+      "reopenDailyClosing"
+    );
+
+    await reopenDailyClosing({
+      branchId: branchToUse,
+      businessDate: selectedBusinessDate,
+    });
+
+    toast.success(
+      lang === "ar"
+        ? "تمت إعادة فتح اليومية بنجاح. يمكنك الآن تعديل العمليات."
+        : "Daily closing reopened. You can now edit its transactions."
+    );
+  } catch (error) {
+    console.error("Reopen Daily Closing Error:", error);
+    toast.error(
+      error?.message ||
+        (lang === "ar"
+          ? "تعذر إعادة فتح اليومية"
+          : "Failed to reopen daily closing")
+    );
+  } finally {
+    setReopening(false);
+  }
+};
+
+const handleSaveClosing = async () => {
+  if (!selectedBusinessDate) {
+  toast.error(
+    lang === "ar"
+      ? "يرجى اختيار تاريخ اليومية"
+      : "Please select a business date"
+  );
+  return;
+}
+
+if (
+  Number(actualCash) < 0 ||
+  Number(actualVisa || 0) < 0 ||
+  Number(actualInstapay || 0) < 0
+) {
+  toast.error(
+    lang === "ar"
+      ? "المبالغ لا يمكن أن تكون سالبة"
+      : "Amounts cannot be negative"
+  );
+  return;
+}
   if (branchToUse === "all") {
     toast.error(
   lang === "ar"
@@ -893,14 +1073,7 @@ const handleSaveClosing = async () => {
 );
     return;
   }
-  if (Number(actualCash) < 0) {
-  toast.error(
-    lang === "ar"
-      ? "قيمة الكاش لا يمكن أن تكون سالبة."
-      : "Actual cash cannot be negative."
-  );
-  return;
-}
+  
 
   if (alreadyClosed) {
 
@@ -917,83 +1090,38 @@ const handleSaveClosing = async () => {
 
       setSaving(true);
 
-      await addDoc(
-        collection(
-          db,
-          "dailyClosings"
-        ),
-
-        {
-          branchId:
-            branchToUse,
-
-          branchName,
-
-          
-
-          expectedCash:
-            analytics.expectedCash,
-
-          actualCash:
-            Number(
-              actualCash || 0
-            ),
-          expectedVisa: analytics.visaSales,
-            actualVisa: Number(actualVisa || 0),
-            visaDifference,
-
-            expectedInstapay: analytics.instapaySales,
-            actualInstapay: Number(actualInstapay || 0),
-            instapayDifference,
-
-          difference:
-            cashDifference,
-
-          differenceStatus,
-
-          totalSales:
-            analytics.totalSales,
-
-          cashSales:
-            analytics.cashSales,
-
-          visaSales:
-            analytics.visaSales,
-
-          instapaySales:
-            analytics.instapaySales,
-
-          refunds:
-            analytics.totalRefunds,
-
-          expenses:
-            analytics.totalExpenses,
-
-          loans:
-            analytics.totalLoans,
-
-          bonuses:
-            analytics.totalBonuses,
-
-          invoices:
-            analytics.invoices,
-
-          notes:
-            closingNotes,
-
-          createdBy:
-            user?.name || "",
-
-          userId:
-            user?.uid || "",
-
-          businessDate:
-            getBusinessDateKey(),
-
-            createdAt:
-            serverTimestamp()
-        }
+      const createDailyClosing = httpsCallable(
+        functions,
+        "createDailyClosing"
       );
+
+      await createDailyClosing({
+        branchId: branchToUse,
+        businessDate: selectedBusinessDate,
+        expectedCash: analytics.expectedCash,
+        actualCash: Number(actualCash || 0),
+        expectedVisa: analytics.expectedVisa,
+        actualVisa: Number(actualVisa || 0),
+        visaDifference,
+        visaDifferenceStatus,
+        expectedInstapay: analytics.expectedInstapay,
+        actualInstapay: Number(actualInstapay || 0),
+        instapayDifference,
+        instapayDifferenceStatus,
+        difference: cashDifference,
+        differenceStatus,
+        allPaymentsMatched,
+        totalSales: analytics.totalSales,
+        cashSales: analytics.cashSales,
+        visaSales: analytics.visaSales,
+        instapaySales: analytics.instapaySales,
+        refunds: analytics.totalRefunds,
+        expenses: analytics.totalExpenses,
+        loans: analytics.totalLoans,
+        bonuses: analytics.totalBonuses,
+        invoices: analytics.invoices,
+        notes: closingNotes,
+      });
 
       toast.success(
   lang === "ar"
@@ -1090,100 +1218,132 @@ const handleSaveClosing = async () => {
       {/* HEADER */}
       {/* ====================================================== */}
 
-      <div
-        style={{
-          display: "flex",
+     
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: isMobile
+      ? "1fr"
+      : "minmax(0, 1fr) auto minmax(0, 1fr)",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 24,
+  }}
+>
+  {/* Page Title - Right */}
+  <div
+    style={{
+      gridColumn: "1",
+      justifySelf: "start",
+      textAlign: lang === "ar" ? "right" : "left",
+    }}
+  >
+    <h1
+      style={{
+        margin: 0,
+        fontSize: isMobile ? 26 : 36,
+        fontWeight: 800,
+        color: theme.colors.text,
+      }}
+    >
+      {t("dailyClosing.title")}
+    </h1>
 
-          justifyContent:
-            "space-between",
+    <div
+      style={{
+        marginTop: 7,
+        color: theme.colors.textSecondary,
+        fontSize: 14,
+      }}
+    >
+      {branchName}
+    </div>
+  </div>
 
-          alignItems:
-            "flex-start",
+  {/* Centered Business Date */}
+  <div
+    style={{
+      gridColumn: isMobile ? "1" : "2",
+      justifySelf: "center",
+      width: isMobile ? "100%" : 245,
+      boxSizing: "border-box",
+      padding: "12px 16px",
+      borderRadius: 18,
+      background:
+        "linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%)",
+      border: "1px solid #BFDBFE",
+      boxShadow: "0 8px 24px rgba(37,99,235,0.08)",
+    }}
+  >
+    <label
+      style={{
+        display: "block",
+        fontSize: 12,
+        fontWeight: 700,
+        color: "#1D4ED8",
+        marginBottom: 5,
+      }}
+    >
+      {lang === "ar" ? "تاريخ اليومية" : "Business Date"}
+    </label>
 
-          flexWrap: "wrap",
+    <input
+      type="date"
+      value={selectedBusinessDate}
+      max={toInputDate(getBusinessDate())}
+      onChange={(e) => {
+        setSelectedBusinessDate(e.target.value);
+        setActualCash("");
+        setActualVisa("");
+        setActualInstapay("");
+        setClosingNotes("");
+      }}
+      style={{
+        width: "100%",
+        boxSizing: "border-box",
+        border: "1px solid #DBEAFE",
+        borderRadius: 10,
+        padding: "9px 10px",
+        background: "#FFFFFF",
+        color: theme.colors.text,
+        fontSize: 14,
+        fontWeight: 700,
+        outline: "none",
+        cursor: "pointer",
+      }}
+    />
 
-          gap: 20,
+    <div
+      style={{
+        marginTop: 5,
+        fontSize: 10,
+        color: theme.colors.textSecondary,
+      }}
+    >
+      {lang === "ar"
+        ? "حدد اليوم المراد مراجعته"
+        : "Select the day to review"}
+    </div>
+  </div>
 
-          marginBottom: 24
-        }}
-      >
+  {/* Back Button - Left */}
+  <div
+    style={{
+      gridColumn: isMobile ? "1" : "3",
+      justifySelf: isMobile ? "stretch" : "end",
+    }}
+  >
+    <AppButton
+      block={isMobile}
+      variant="secondary"
+      leftIcon={<ArrowRight size={16} />}
+      onClick={() => navigate("/sales")}
+    >
+      {lang === "ar" ? "رجوع للمبيعات" : "Back to Sales"}
+    </AppButton>
+  </div>
+</div>
 
-        <div>
-
-          <h1
-            style={{
-              margin: 0,
-
-              fontSize:
-                isMobile ? 28 : 36,
-
-              fontWeight: 800,
-
-              color:
-                theme.colors.text
-            }}
-          >
-             {t("dailyClosing.title")}
-          </h1>
-
-          <div
-            style={{
-              marginTop: 8,
-
-              color:
-                theme.colors.textSecondary,
-
-              fontSize: 15
-            }}
-          >
-            {branchName}
-          </div>
-
-        </div>
-
-        <div
-          style={{
-            ...cardStyle,
-
-            display: "flex",
-
-            alignItems: "center",
-
-            gap: 10,
-
-            padding:
-              "12px 18px",
-
-            fontSize: 14,
-
-            color:
-              theme.colors.textSecondary
-          }}
-        >
-
-          <CalendarDays
-            size={18}
-          />
-
-          {getBusinessDate().toLocaleDateString(
-            lang === "ar"
-              ? "ar-EG"
-              : "en-US",
-            {
-              weekday:
-                "long",
-
-              year: "numeric",
-
-              month: "long",
-
-              day: "numeric"
-            }
-          )}
-
-        </div>
-
-      </div>
 
       {/* ====================================================== */}
       {/* SUMMARY */}
@@ -1193,13 +1353,9 @@ const handleSaveClosing = async () => {
         style={{
           display: "grid",
 
-          gridTemplateColumns:
-
-            isMobile
-
-              ? "1fr"
-
-              : "repeat(auto-fit,minmax(260px,1fr))",
+          gridTemplateColumns: isMobile
+          ? "repeat(2, minmax(0, 1fr))"
+          : "repeat(5, minmax(0, 1fr))",
 
           gap: 18,
 
@@ -1421,10 +1577,8 @@ const handleSaveClosing = async () => {
             />
 
             <ReconRow
-              title={t("dailyClosing.refunds")}
-              value={
-                analytics.totalRefunds
-              }
+              title={lang === "ar" ? "مرتجعات الكاش" : "Cash Refunds"}
+              value={analytics.refundCash}
             />
 
             <ReconRow
@@ -1546,6 +1700,7 @@ const handleSaveClosing = async () => {
           min="0"
           inputMode="numeric"
           value={actualCash}
+          onWheel={(e) => e.currentTarget.blur()}
 
           onChange={(e) =>
             setActualCash(
@@ -1579,15 +1734,21 @@ const handleSaveClosing = async () => {
         <label>الفيزا الفعلية</label>
 <input
   type="number"
+  min="0"
+  inputMode="decimal"
   value={actualVisa}
   onChange={(e) => setActualVisa(e.target.value)}
+  onWheel={(e) => e.currentTarget.blur()}
 />
 
 <label>الإنستاباي الفعلي</label>
 <input
   type="number"
+  min="0"
+  inputMode="decimal"
   value={actualInstapay}
   onChange={(e) => setActualInstapay(e.target.value)}
+  onWheel={(e) => e.currentTarget.blur()}
 />
 
       </div>
@@ -1660,29 +1821,62 @@ const handleSaveClosing = async () => {
   <div
     style={{
       marginBottom: 16,
-
       padding: "14px 16px",
-
       borderRadius: 14,
-
       background: "#dcfce7",
-
       color: "#166534",
-
       fontWeight: 700,
-
       fontSize: 14
     }}
   >
-
     {lang === "ar"
-
       ? "تم إغلاق اليومية لهذا اليوم"
-
       : "Daily closing already completed"}
-
   </div>
 
+)}
+
+{alreadyClosed && isOwner && (
+  <button
+    type="button"
+    onClick={handleReopenClosing}
+    disabled={reopening || saving}
+    style={{
+      minHeight: 48,
+      padding: "0 22px",
+      marginBottom: 16,
+      border: "1px solid #f59e0b",
+      borderRadius: 12,
+      background: "#fffbeb",
+      color: "#92400e",
+      fontSize: 14,
+      fontWeight: 800,
+      cursor: reopening || saving ? "not-allowed" : "pointer",
+      opacity: reopening ? 0.65 : 1
+    }}
+  >
+    {reopening
+      ? (lang === "ar" ? "جارٍ إعادة فتح اليومية..." : "Reopening...")
+      : (lang === "ar" ? "إعادة فتح اليومية للتعديل" : "Reopen Daily Closing")}
+  </button>
+)}
+
+{wasReopened && !alreadyClosed && (
+  <div
+    style={{
+      marginBottom: 16,
+      padding: "14px 16px",
+      borderRadius: 14,
+      background: "#fff7ed",
+      color: "#9a3412",
+      fontWeight: 700,
+      fontSize: 14
+    }}
+  >
+    {lang === "ar"
+      ? "تمت إعادة فتح اليومية. التعديلات مسموحة الآن، وبعد الانتهاء احفظ تقفيلًا جديدًا."
+      : "This daily closing was reopened. Transactions can be edited; save a new closing when finished."}
+  </div>
 )}
       {/* BUTTON */}
 
@@ -1694,7 +1888,6 @@ const handleSaveClosing = async () => {
         disabled={
           saving ||
           alreadyClosed ||
-          actualCash === "" ||
           branchToUse === "all"
         }
 
@@ -1722,7 +1915,6 @@ const handleSaveClosing = async () => {
           cursor:
   saving ||
   alreadyClosed ||
-  actualCash === "" ||
   branchToUse === "all"
     ? "not-allowed"
     : "pointer",
@@ -1783,110 +1975,101 @@ const handleSaveClosing = async () => {
       >
 
         <ClosingInfoRow
-          label={
-            lang === "ar"
-              ? "الكاش المتوقع"
-              : "Expected Cash"
-          }
-          value={
-            analytics.expectedCash
-          }
-        />
+  label="الكاش المتوقع"
+  value={analytics.expectedCash}
+/>
 
-        <ClosingInfoRow
-          label={
-            lang === "ar"
-              ? t("dailyClosing.actualCash")
-              : "Actual Cash"
-          }
-          value={
-            Number(
-              actualCash || 0
-            )
-          }
-        />
+<ClosingInfoRow
+  label="الكاش الفعلي"
+  value={Number(actualCash || 0)}
+/>
 
-        <ClosingInfoRow
-          label={
-            lang === "ar"
-              ? "الفرق"
-              : "Difference"
-          }
-          value={cashDifference}
-          color={
-            differenceStatus ===
-            "matched"
+<ClosingInfoRow
+  label="فرق الكاش"
+  value={cashDifference}
+  color={
+    differenceStatus === "matched"
+      ? theme.colors.success
+      : differenceStatus === "over"
+      ? theme.colors.warning
+      : theme.colors.danger
+  }
+/>
 
-              ? theme.colors.success
+<div style={{ margin: "16px 0", borderTop: `1px dashed ${theme.colors.border}` }} />
 
-              : differenceStatus ===
-                "over"
+<ClosingInfoRow
+  label="الفيزا المتوقعة"
+  value={analytics.expectedVisa}
+/>
 
-              ? theme.colors.warning
+<ClosingInfoRow
+  label="الفيزا الفعلية"
+  value={Number(actualVisa || 0)}
+/>
 
-              : theme.colors.danger
-          }
-        />
+<ClosingInfoRow
+  label="فرق الفيزا"
+  value={visaDifference}
+  color={
+    visaDifferenceStatus === "matched"
+      ? theme.colors.success
+      : visaDifferenceStatus === "over"
+      ? theme.colors.warning
+      : theme.colors.danger
+  }
+/>
+
+<div style={{ margin: "16px 0", borderTop: `1px dashed ${theme.colors.border}` }} />
+
+<ClosingInfoRow
+  label="الإنستاباي المتوقع"
+  value={analytics.expectedInstapay}
+/>
+
+<ClosingInfoRow
+  label="الإنستاباي الفعلي"
+  value={Number(actualInstapay || 0)}
+/>
+
+<ClosingInfoRow
+  label="فرق الإنستاباي"
+  value={instapayDifference}
+  color={
+    instapayDifferenceStatus === "matched"
+      ? theme.colors.success
+      : instapayDifferenceStatus === "over"
+      ? theme.colors.warning
+      : theme.colors.danger
+  }
+/>
 
         <div
-          style={{
-            marginTop: 20,
+  style={{
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 14,
 
-            padding: 16,
+    background: allPaymentsMatched
+      ? "#dcfce7"
+      : "#fef3c7",
 
-            borderRadius: 14,
+    color: allPaymentsMatched
+      ? "#166534"
+      : "#92400e",
 
-            background:
-              differenceStatus ===
-              "matched"
-
-                ? "#dcfce7"
-
-                : differenceStatus ===
-                  "over"
-
-                ? "#fef3c7"
-
-                : "#fee2e2",
-
-            color:
-              differenceStatus ===
-              "matched"
-
-                ? "#166534"
-
-                : differenceStatus ===
-                  "over"
-
-                ? "#92400e"
-
-                : "#991b1b",
-
-            fontWeight: 700,
-
-            textAlign: "center"
-          }}
-        >
-
-          {differenceStatus ===
-          "matched"
-
-            ? lang === "ar"
-              ? t("dailyClosing.cashMatched")
-              : "Cash Matched"
-
-            : differenceStatus ===
-              "over"
-
-            ? lang === "ar"
-              ? "زيادة في الكاش"
-              : "Cash Over"
-
-            : lang === "ar"
-            ? "عجز في الكاش"
-            : "Cash Shortage"}
-
-        </div>
+    fontWeight: 700,
+    textAlign: "center"
+  }}
+>
+  {allPaymentsMatched
+    ? lang === "ar"
+      ? "كل الحسابات مطابقة"
+      : "All Payments Matched"
+    : lang === "ar"
+    ? "يوجد فرق في وسائل الدفع"
+    : "Payment Differences Found"}
+</div>
 
       </div>
 
@@ -2138,6 +2321,8 @@ const handleSaveClosing = async () => {
 // COMPONENTS
 // ======================================================
 
+
+
 function StatCard({
   title,
   value,
@@ -2145,119 +2330,81 @@ function StatCard({
   color,
   isMoney = true
 }) {
+  const isNegative = isMoney && Number(value) < 0;
 
   return (
-
     <div
       style={{
         ...cardStyle,
-
-        padding: 24,
-
-        minHeight: 145,
-
-        position: "relative",
-
-        overflow: "hidden"
+        padding: 18,
+        minHeight: 125,
+        borderRadius: 18,
+        boxShadow: "0 2px 8px rgba(15,23,42,0.035)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        gap: 16,
       }}
     >
-
-      <div
-        style={{
-          position:
-            "absolute",
-
-          top: -25,
-
-          right: -25,
-
-          width: 90,
-
-          height: 90,
-
-          borderRadius:
-            "50%",
-
-          background:
-            `${color}15`
-        }}
-      />
-
+      {/* Icon + Title */}
       <div
         style={{
           display: "flex",
-
-          justifyContent:
-            "space-between",
-
-          marginBottom: 20
+          alignItems: "center",
+          gap: 10,
+          minWidth: 0,
         }}
       >
-
         <div
           style={{
-            width: 48,
-
-            height: 48,
-
-            borderRadius: 14,
-
+            width: 36,
+            height: 36,
+            minWidth: 36,
+            borderRadius: 10,
             display: "flex",
-
-            alignItems:
-              "center",
-
-            justifyContent:
-              "center",
-
-            background:
-              `${color}15`,
-
-            color
+            alignItems: "center",
+            justifyContent: "center",
+            background: `${color}12`,
+            color,
           }}
         >
           {icon}
         </div>
 
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: theme.colors.textSecondary,
+            lineHeight: 1.5,
+          }}
+        >
+          {title}
+        </div>
       </div>
 
+      {/* Value */}
       <div
+        dir="ltr"
         style={{
-          fontSize: 15,
-
-          marginBottom: 12,
-
-          color:
-            theme.colors.textSecondary,
-
-          fontWeight: 600
-        }}
-      >
-        {title}
-      </div>
-
-      <div
-        style={{
-          fontSize: "clamp(28px,5vw,36px)",
-
+          fontSize: "clamp(24px, 3vw, 30px)",
           fontWeight: 800,
-
-          color:
-            theme.colors.text
+          color: isNegative
+            ? "#DC2626"
+            : theme.colors.text,
+          textAlign: "right",
+          lineHeight: 1.2,
+          fontVariantNumeric: "tabular-nums",
+          unicodeBidi: "isolate",
         }}
       >
-        {isMoney
-          ? formatMoney(
-              value
-            )
-          : value}
+        {isMoney ? formatMoney(value) : value}
       </div>
-
     </div>
-
   );
-
 }
+
+
 
 function ReconRow({
   title,

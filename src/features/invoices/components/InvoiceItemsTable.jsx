@@ -1,9 +1,11 @@
+
+import { useState } from "react";
 import {
   Package,
   Droplets,
+  ChevronDown,
 } from "lucide-react";
 
-import AppBadge from "../../../components/ui/AppBadge";
 import AppCard from "../../../components/ui/AppCard";
 import { theme } from "../../../theme";
 
@@ -13,18 +15,18 @@ export default function InvoiceItemsTable({
   lang,
   getKey,
 }) {
-  if (
-    !selectedInvoice.items?.length
-  ) {
+  const [expandedItems, setExpandedItems] = useState(
+    () => new Set()
+  );
+
+  if (!selectedInvoice.items?.length) {
     return (
-      <AppCard>
+      <AppCard padding="md">
         <div
           style={{
             textAlign: "center",
-            color:
-              theme.colors.textSecondary,
-            padding:
-              theme.spacing.xl,
+            color: theme.colors.textSecondary,
+            padding: 16,
           }}
         >
           {t("common.noData")}
@@ -33,221 +35,437 @@ export default function InvoiceItemsTable({
     );
   }
 
+  const formatNumber = (value) =>
+    Number(value || 0).toLocaleString(
+      lang === "ar" ? "ar-EG" : "en-US"
+    );
+
+  const toggleExpanded = (key) => {
+    setExpandedItems((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  };
+
   return (
-    <>
-      {selectedInvoice.items.map(
-        (item, index) => {
-          const isOil =
-            (
-              item.containerType || ""
-            ).toLowerCase() === "oil";
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {selectedInvoice.items.map((item, index) => {
+        const type = (item.containerType || "")
+          .toLowerCase()
+          .trim();
 
-          const oilMl =
-            item.selectedMl ??
-            ((item.oilQty || 0) * (item.qty || 0));
+        const isOil = type === "oil";
 
-          const qty = isOil
-            ? `${oilMl} ${t("common.ml")}`
-            : item.qty;
+        const isReadyProduct =
+          type === "original" ||
+          type === "ready" ||
+          type === "cream" ||
+          type === "مخمرية";
 
-          const total =
-            item.total ??
-            (
-              isOil
-                ? (item.pricePerMl || 0) *
-                  (item.selectedMl ?? item.oilQty)
-                : (item.price || 0) * (item.qty || 0)
-            );
+        const qtyNumber = Number(item.qty ?? 1);
 
-          return (
-            <AppCard
-              key={`${getKey(item)}_${index}`}
-              hover
+        const oilSoldMl = Number(
+          item.selectedMl ?? item.oilQty ?? 0
+        );
+
+        // دعم مكونات الزيوت في الفواتير الجديدة والقديمة
+        const oilComponents =
+          Array.isArray(item.oilComponents) &&
+          item.oilComponents.length > 0
+            ? item.oilComponents
+            : Number(item.oilQty) > 0
+              ? [
+                  {
+                    oilId: item.oilId || item.id,
+                    oilName: item.oilName || item.name,
+                    oilCategory: item.oilCategory || "",
+                    quantityML: Number(item.oilQty),
+                  },
+                ]
+              : [];
+
+        const normalizedOilComponents =
+          oilComponents.map((component) => ({
+            ...component,
+            displayName:
+              component.oilName ||
+              component.name ||
+              item.oilName ||
+              item.name,
+            quantityPerUnit: Number(
+              component.quantityML ??
+              component.oilQty ??
+              0
+            ),
+          }));
+
+        const totalOilUsed =
+          normalizedOilComponents.reduce(
+            (sum, component) =>
+              sum + component.quantityPerUnit * qtyNumber,
+            0
+          );
+
+        const hasOilUsage =
+          !isOil &&
+          !isReadyProduct &&
+          normalizedOilComponents.some(
+            (component) => component.quantityPerUnit > 0
+          );
+
+        const qty = isOil
+          ? `${formatNumber(oilSoldMl)} ${t("common.ml")}`
+          : formatNumber(qtyNumber);
+
+        const unitPrice = isOil
+          ? item.pricePerMl ?? item.price ?? 0
+          : item.price ?? 0;
+
+        const total =
+          item.total ??
+          (
+            isOil
+              ? Number(item.pricePerMl || 0) * oilSoldMl
+              : Number(item.price || 0) * qtyNumber
+          );
+
+        const rowKey = `${getKey?.(item) || item.id || item.productId || item.name || "item"}_${index}`;
+
+        const isExpanded = expandedItems.has(rowKey);
+
+        const productDescription = isOil
+          ? lang === "ar"
+            ? "زيت خام"
+            : "Pure Oil"
+          : item.containerName ||
+            item.sizeLabel ||
+            [
+              item.containerType,
+              item.size,
+            ]
+              .filter(Boolean)
+              .join(" • ");
+
+        return (
+          <div
+            key={rowKey}
+            style={{
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radius.md,
+              background: theme.colors.card,
+              overflow: "hidden",
+            }}
+          >
+            {/* Product */}
+            <div
               style={{
-                marginBottom:
-                  theme.spacing.lg,
+                padding: "11px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
               }}
             >
               <div
                 style={{
                   display: "flex",
-                  justifyContent:
-                    "space-between",
-                  alignItems:
-                    "flex-start",
-                  gap: theme.spacing.md,
-                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 10,
+                  flex: 1,
+                  minWidth: 130,
                 }}
               >
                 <div
                   style={{
-                    flex: 1,
-                    minWidth: 220,
+                    width: 34,
+                    height: 34,
+                    minWidth: 34,
+                    borderRadius: 9,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: theme.colors.primarySoft,
+                    color: theme.colors.primary,
                   }}
                 >
+                  <Package size={17} />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
                   <div
                     style={{
-                      display: "flex",
-                      alignItems:
-                        "center",
-                      gap: theme.spacing.sm,
-                      marginBottom:
-                        theme.spacing.xs,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: theme.colors.text,
+                      overflowWrap: "anywhere",
                     }}
                   >
-                    <Package
-                      size={18}
-                      color={
-                        theme.colors
-                          .primary
-                      }
-                    />
+                    {item.name || "-"}
+                  </div>
 
+                  {productDescription && (
                     <div
                       style={{
-                        fontWeight: 700,
-                        fontSize: 16,
+                        marginTop: 3,
+                        fontSize: 11,
+                        color: theme.colors.textSecondary,
                       }}
                     >
-                      {item.name}
+                      {productDescription}
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      color:
-                        theme.colors
-                          .textSecondary,
-                      fontSize: 13,
-                    }}
-                  >
-                    {isOil
-                      ? lang === "ar"
-                        ? "زيت خام"
-                        : "Pure Oil"
-                      : item.containerName ||
-                        item.sizeLabel ||
-                        [
-                          item.containerType,
-                          item.size,
-                        ]
-                          .filter(Boolean)
-                          .join(" • ")}
-                  </div>
+                  )}
                 </div>
-
-                <AppBadge
-                  color="primary"
-                >
-                  {qty}
-                </AppBadge>
               </div>
-
-              {isOil && (
-                <div
-                  style={{
-                    marginTop:
-                      theme.spacing.md,
-                  }}
-                >
-                  <AppBadge
-                    color="info"
-                    icon={
-                      <Droplets
-                        size={14}
-                      />
-                    }
-                  >
-                    {t("products.oil")} : {item.selectedMl ?? item.oilQty} {t("common.ml")}
-                  </AppBadge>
-                </div>
-              )}
 
               <div
                 style={{
-                  marginTop:
-                    theme.spacing.lg,
-
-                  paddingTop:
-                    theme.spacing.md,
-
-                  borderTop: `1px dashed ${theme.colors.border}`,
-
-                  display: "flex",
-
-                  justifyContent:
-                    "space-between",
-
-                  alignItems: "center",
-
-                  flexWrap: "wrap",
-
-                  gap: theme.spacing.md,
+                  padding: "5px 9px",
+                  borderRadius: 7,
+                  background: theme.colors.cardSoft,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                  color: theme.colors.text,
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color:
-                        theme.colors
-                          .textSecondary,
-                    }}
-                  >
-                    {t(
-                      "cart.price"
-                    )}
-                  </div>
+                {lang === "ar" ? "الكمية:" : "Qty:"} {qty}
+              </div>
+            </div>
 
-                  <div
-                    style={{
-                      fontWeight: 700,
-                    }}
-                  >
-                    {(
-                      item.price ||
-                      0
-                    ).toLocaleString()}{" "}
-                    EGP
-                  </div>
+            {/* Price Summary */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+                padding: "9px 12px",
+                background: theme.colors.cardSoft,
+                borderTop: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: theme.colors.textSecondary,
+                    marginBottom: 3,
+                  }}
+                >
+                  {isOil
+                    ? lang === "ar"
+                      ? "سعر المللي"
+                      : "Price / ml"
+                    : t("cart.price")}
                 </div>
 
                 <div
                   style={{
-                    textAlign: "right",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: theme.colors.text,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color:
-                        theme.colors
-                          .textSecondary,
-                    }}
-                  >
-                    {t(
-                      "cart.total"
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 800,
-                      color:
-                        theme.colors
-                          .primary,
-                    }}
-                  >
-                    {total.toLocaleString()}{" "}
-                    EGP
-                  </div>
+                  {formatNumber(unitPrice)} EGP
                 </div>
               </div>
-            </AppCard>
-          );
-        }
-      )}
-    </>
+
+              <div style={{ textAlign: "end" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: theme.colors.textSecondary,
+                    marginBottom: 3,
+                  }}
+                >
+                  {t("cart.total")}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 800,
+                    color: theme.colors.primary,
+                  }}
+                >
+                  {formatNumber(total)} EGP
+                </div>
+              </div>
+            </div>
+
+            {/* Expandable Oil Details */}
+            {hasOilUsage && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(rowKey)}
+                  aria-expanded={isExpanded}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "10px 12px",
+                    border: 0,
+                    borderTop: `1px solid ${theme.colors.border}`,
+                    background: "transparent",
+                    color: theme.colors.primary,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                    }}
+                  >
+                    <Droplets size={15} />
+
+                    {lang === "ar"
+                      ? `تفاصيل الزيوت المستخدمة (${normalizedOilComponents.length})`
+                      : `Oil Details (${normalizedOilComponents.length})`}
+                  </span>
+
+                  <ChevronDown
+                    size={17}
+                    style={{
+                      transform: isExpanded
+                        ? "rotate(180deg)"
+                        : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                    }}
+                  />
+                </button>
+
+                {isExpanded && (
+                  <div
+                    style={{
+                      padding: "0 12px 12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 7,
+                    }}
+                  >
+                    {normalizedOilComponents.map(
+                      (component, componentIndex) => {
+                        const componentTotal =
+                          component.quantityPerUnit * qtyNumber;
+
+                        return (
+                          <div
+                            key={`${component.oilId || componentIndex}_${componentIndex}`}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                              padding: "9px 10px",
+                              borderRadius: 8,
+                              background: theme.colors.cardSoft,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div style={{ minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: theme.colors.text,
+                                }}
+                              >
+                                {component.displayName}
+                              </div>
+
+                              {component.oilCategory && (
+                                <div
+                                  style={{
+                                    fontSize: 10,
+                                    color: theme.colors.textSecondary,
+                                    marginTop: 2,
+                                  }}
+                                >
+                                  {component.oilCategory}
+                                </div>
+                              )}
+
+                              <div
+                                style={{
+                                  fontSize: 10,
+                                  color: theme.colors.textSecondary,
+                                  marginTop: 3,
+                                }}
+                              >
+                                {formatNumber(component.quantityPerUnit)}{" "}
+                                {t("common.ml")} /{" "}
+                                {lang === "ar" ? "عبوة" : "bottle"}
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                textAlign: "end",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: theme.colors.primary,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {formatNumber(componentTotal)}{" "}
+                              {t("common.ml")}
+                            </div>
+                          </div>
+                        );
+                      }
+                    )}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingTop: 9,
+                        borderTop: `1px dashed ${theme.colors.border}`,
+                        fontSize: 11,
+                      }}
+                    >
+                      <span style={{ color: theme.colors.textSecondary }}>
+                        {lang === "ar"
+                          ? `عدد العبوات: ${formatNumber(qtyNumber)}`
+                          : `Containers: ${formatNumber(qtyNumber)}`}
+                      </span>
+
+                      <strong
+                        style={{
+                          color: theme.colors.primary,
+                          fontSize: 13,
+                        }}
+                      >
+                        {lang === "ar"
+                          ? "إجمالي الزيت:"
+                          : "Total Oil:"}{" "}
+                        {formatNumber(totalOilUsed)} {t("common.ml")}
+                      </strong>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }

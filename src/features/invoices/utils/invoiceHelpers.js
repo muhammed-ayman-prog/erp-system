@@ -1,9 +1,113 @@
-export const getKey = (item) =>
-  `${item.productId || item.id}_${
-    (item.containerType || item.container || "")
+// ======================================
+// OIL COMPOSITION KEY
+// ======================================
+
+const getOilCompositionKey = (item) => {
+  const containerType = (
+    item.containerType ||
+    item.container ||
+    ""
+  )
+    .toLowerCase()
+    .trim();
+
+  // بيع الزيت الخام له مسار منفصل
+  if (containerType === "oil") {
+    return "";
+  }
+
+  // الخلطات الجديدة
+  // أو الفواتير القديمة ذات الزيت الواحد
+  const components =
+    Array.isArray(item.oilComponents) &&
+    item.oilComponents.length > 0
+      ? item.oilComponents
+      : (() => {
+          const oilQty = Number(
+            item.oilQty ??
+            item.oilQtyML ??
+            item.originalOilQty ??
+            0
+          );
+
+          const oilId =
+            item.oilId ||
+            item.id ||
+            item.productId;
+
+          return oilId && oilQty > 0
+            ? [
+                {
+                  oilId,
+                  quantityML: oilQty
+                }
+              ]
+            : [];
+        })();
+
+  return components
+    .map((component) => {
+      const oilId =
+        component.oilId ||
+        component.id ||
+        component.productId ||
+        "";
+
+      const quantity = Number(
+        component.quantityML ??
+        component.oilQty ??
+        0
+      );
+
+      return {
+        oilId: String(oilId).trim(),
+        quantity
+      };
+    })
+    .filter(
+      component =>
+        component.oilId &&
+        Number.isFinite(component.quantity) &&
+        component.quantity > 0
+    )
+    .map(
+      component =>
+        `${component.oilId}:${component.quantity}`
+    )
+    .sort()
+    .join("|");
+};
+
+
+// ======================================
+// GET ITEM KEY
+// ======================================
+
+export const getKey = (item) => {
+  const baseKey = [
+    item.productId || item.id || "",
+
+    (
+      item.containerType ||
+      item.container ||
+      ""
+    )
       .toLowerCase()
-      .trim()
-  }_${item.size}`;
+      .trim(),
+
+    item.size || ""
+  ].join("_");
+
+  const compositionKey =
+    getOilCompositionKey(item);
+
+  return `${baseKey}_${compositionKey}`;
+};
+
+
+// ======================================
+// CHECK FULL REFUND
+// ======================================
 
 export const isFullyRefunded = (
   refundedQty,
@@ -21,6 +125,11 @@ export const isFullyRefunded = (
 
   return productsDone && oilsDone;
 };
+
+
+// ======================================
+// GET INVOICE STATUS
+// ======================================
 
 export const getInvoiceStatus = (
   invoice,
@@ -52,14 +161,14 @@ export const getInvoiceStatus = (
             .toLowerCase() === "oil"
       )
       .reduce(
-  (sum, i) =>
-    sum +
-    (
-      i.selectedMl ??
-      ((i.oilQty || 0) * (i.qty || 0))
-    ),
-  0
-) || 0;
+        (sum, i) =>
+          sum +
+          (
+            i.selectedMl ??
+            ((i.oilQty || 0) * (i.qty || 0))
+          ),
+        0
+      ) || 0;
 
   const fullyRefunded =
     isFullyRefunded(
@@ -75,7 +184,7 @@ export const getInvoiceStatus = (
       text: t("invoices.cancelled"),
       refundedQty,
       refundedMl,
-      fullyRefunded,
+      fullyRefunded
     };
   }
 
@@ -85,7 +194,7 @@ export const getInvoiceStatus = (
       text: t("invoices.refunded"),
       refundedQty,
       refundedMl,
-      fullyRefunded,
+      fullyRefunded
     };
   }
 
@@ -100,7 +209,7 @@ export const getInvoiceStatus = (
       ),
       refundedQty,
       refundedMl,
-      fullyRefunded,
+      fullyRefunded
     };
   }
 
@@ -109,9 +218,14 @@ export const getInvoiceStatus = (
     text: t("invoices.completed"),
     refundedQty,
     refundedMl,
-    fullyRefunded,
+    fullyRefunded
   };
 };
+
+
+// ======================================
+// GET SALE TYPE
+// ======================================
 
 export const getSaleType = (
   invoice,
@@ -123,22 +237,27 @@ export const getSaleType = (
         color: "warning",
         text: t(
           "invoices.returnResale"
-        ),
+        )
       };
 
     case "MIXED":
       return {
         color: "purple",
-        text: t("invoices.mixed"),
+        text: t("invoices.mixed")
       };
 
     default:
       return {
         color: "success",
-        text: t("invoices.sale"),
+        text: t("invoices.sale")
       };
   }
 };
+
+
+// ======================================
+// FORMAT DATE
+// ======================================
 
 export const formatDate = (value) => {
   if (!value?.seconds) return "-";
@@ -147,6 +266,11 @@ export const formatDate = (value) => {
     value.seconds * 1000
   ).toLocaleDateString();
 };
+
+
+// ======================================
+// FORMAT DATE TIME
+// ======================================
 
 export const formatDateTime = (
   value

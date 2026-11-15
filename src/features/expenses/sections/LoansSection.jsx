@@ -32,6 +32,8 @@ export default function LoansSection(props) {
         setLoanAmount={props.setLoanAmount}
         loanNote={props.loanNote}
         setLoanNote={props.setLoanNote}
+        businessDate={props.businessDate}
+        setBusinessDate={props.setBusinessDate}
         loading={props.isAddingLoan}
         onSubmit={props.handleAddLoan}
       />

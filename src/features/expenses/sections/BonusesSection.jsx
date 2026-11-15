@@ -34,6 +34,8 @@ export default function BonusSection(props) {
         setBonusAmount={props.setBonusAmount}
         bonusNote={props.bonusNote}
         setBonusNote={props.setBonusNote}
+        businessDate={props.businessDate}
+        setBusinessDate={props.setBusinessDate}
         loading={props.isAddingBonus}
         onSubmit={props.handleAddBonus}
       />
