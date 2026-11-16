@@ -215,6 +215,62 @@ const isReadyProduct =
   quantity: increment(item.refundQty)
 });
 
+const restoredProductId = isOil
+  ? (item.oilId || item.id)
+  : (item.productId || item.id);
+
+batch.set(doc(collection(db, "stock")), {
+
+  productId: restoredProductId,
+
+  productName: item.name || "المنتج",
+
+  quantity: Number(item.refundQty),
+
+  type: "refund",
+
+  direction: "IN",
+
+  movementType: "REFUND",
+
+  movementSource: "REFUND",
+
+  source: "REFUND",
+
+  productType: isOil
+    ? "RAW_OIL"
+    : "READY_PRODUCT",
+
+  unit: isOil ? "ML" : "PCS",
+
+  branchId: selectedInvoice.branchId,
+
+  branchName:
+    selectedInvoice.branchName ||
+    branchName ||
+    selectedBranch ||
+    "",
+
+  invoiceDocId: selectedInvoice.id,
+
+  invoiceId: selectedInvoice.invoiceNumber || "",
+
+  returnId: refundBatchId,
+
+  employeeId: user?.uid || null,
+
+  employeeName:
+    user?.displayName ||
+    user?.name ||
+    user?.email ||
+    "",
+
+  createdAt: serverTimestamp()
+
+});
+
+
+
   } else {
 
     // ✅ كل قطعة تبقى document مستقل

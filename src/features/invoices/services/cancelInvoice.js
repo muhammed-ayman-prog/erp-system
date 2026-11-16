@@ -107,37 +107,49 @@ if (customerRef) {
         const returnedItemsToRestore = new Map();
         const returnDocsToRestore = new Map();
 
-        const addInventoryRestore = (
-          productId,
-          quantity,
-          productName
-        ) => {
-          if (!productId) {
-            throw new Error("MISSING_INVENTORY_PRODUCT_ID");
-          }
+       
+const addInventoryRestore = (
+  productId,
+  quantity,
+  productName,
+  unit = "PCS",
+  productType = "CONTAINER"
+) => {
+  if (!productId) {
+    throw new Error("MISSING_INVENTORY_PRODUCT_ID");
+  }
 
-          const amount = Number(quantity) || 0;
+  const amount = Number(quantity) || 0;
 
-          if (!Number.isFinite(amount) || amount <= 0) {
-            return;
-          }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return;
+  }
 
-          const key = String(productId);
+  const key = String(productId);
 
-          if (inventoryRestores.has(key)) {
-            inventoryRestores.get(key).quantity += amount;
-          } else {
-            inventoryRestores.set(key, {
-              ref: doc(
-                db,
-                "inventory",
-                `${freshInvoice.branchId}_${productId}`
-              ),
-              quantity: amount,
-              productName: productName || "المنتج"
-            });
-          }
-        };
+  if (inventoryRestores.has(key)) {
+    inventoryRestores.get(key).quantity += amount;
+  } else {
+    inventoryRestores.set(key, {
+      productId: key,
+
+      ref: doc(
+        db,
+        "inventory",
+        `${freshInvoice.branchId}_${productId}`
+      ),
+
+      quantity: amount,
+
+      productName: productName || "المنتج",
+
+      unit,
+
+      productType
+    });
+  }
+};
+
 
         // ==================================
         // COLLECT RESTORATIONS
@@ -202,10 +214,12 @@ if (customerRef) {
             );
 
             addInventoryRestore(
-              oilId,
-              oilQuantity,
-              item.oilName || item.name
-            );
+  oilId,
+  oilQuantity,
+  item.oilName || item.name,
+  "ML",
+  "RAW_OIL"
+);
 
             continue;
           }
@@ -222,10 +236,12 @@ if (customerRef) {
 
           if (isReadyProduct) {
             addInventoryRestore(
-              item.id,
-              qty,
-              item.name
-            );
+  item.id,
+  qty,
+  item.name,
+  "PCS",
+  "READY_PRODUCT"
+);
 
             continue;
           }
@@ -237,10 +253,12 @@ if (customerRef) {
           const containerId = item.containerId || item.id;
 
           addInventoryRestore(
-            containerId,
-            qty,
-            item.containerName || item.name
-          );
+  containerId,
+  qty,
+  item.containerName || item.name,
+  "PCS",
+  "CONTAINER"
+);
 
           // ==================================
           // OIL COMPONENTS
@@ -276,10 +294,12 @@ if (customerRef) {
             );
 
             addInventoryRestore(
-              oilId,
-              quantityPerBottle * qty,
-              component.oilName || item.name
-            );
+  oilId,
+  quantityPerBottle * qty,
+  component.oilName || item.name,
+  "ML",
+  "RAW_OIL"
+);
           }
         }
 
@@ -336,11 +356,65 @@ if (
         // WRITE RESTORED INVENTORY
         // ==================================
 
-        for (const restore of inventoryRestores.values()) {
-          transaction.update(restore.ref, {
-            quantity: increment(restore.quantity)
-          });
-        }
+        
+for (const restore of inventoryRestores.values()) {
+
+  // 1. استرجاع الكمية للمخزون الفعلي
+  transaction.update(restore.ref, {
+    quantity: increment(restore.quantity)
+  });
+
+  // 2. تسجيل حركة IN في سجل المخزون
+  const stockRef = doc(collection(db, "stock"));
+
+  transaction.set(stockRef, {
+    productId: restore.productId,
+
+    productName: restore.productName,
+
+    quantity: restore.quantity,
+
+    type: "cancel",
+
+    direction: "IN",
+
+    movementType: "INVOICE_CANCEL",
+
+    movementSource: "INVOICE_CANCEL",
+
+    source: "INVOICE_CANCEL",
+
+    productType: restore.productType,
+
+    unit: restore.unit,
+
+    branchId: freshInvoice.branchId,
+
+    branchName:
+      freshInvoice.branchName ||
+      branchName ||
+      selectedBranch ||
+      "",
+
+    invoiceDocId: inv.id,
+
+    invoiceId:
+      freshInvoice.invoiceNumber ||
+      inv.invoiceNumber ||
+      "",
+
+    employeeId: user?.uid || null,
+
+    employeeName:
+      user?.displayName ||
+      user?.name ||
+      user?.email ||
+      "",
+
+    createdAt: serverTimestamp()
+  });
+}
+
 
         // ==================================
         // RESTORE RESOLD RETURNED ITEMS

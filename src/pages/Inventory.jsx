@@ -474,53 +474,87 @@ const statsMap = useMemo(() => {
   const end = new Date(start);
   end.setMonth(end.getMonth() + 1);
 
-  stockData.forEach((s) => {
+  
+stockData.forEach((s) => {
+  if (!s.productId) return;
 
-    if (!s.productId) return;
+  // تجاهل إعادة بيع المنتجات المرتجعة:
+  // لأنها لا تخصم من المخزون العادي
+  const recordType = String(s.type || "").toLowerCase();
 
-    if (!map[s.productId]) {
-      map[s.productId] = {
-        opening: 0,
-        inQty: 0,
-        outQty: 0,
-        closing: 0
-      };
+  const movementType = String(
+    s.movementType || s.movementSource || ""
+  ).toUpperCase();
+
+  if (
+    recordType === "resell" ||
+    movementType === "RETURN_RESALE"
+  ) {
+    return;
+  }
+
+  if (!s.createdAt) return;
+
+  const date = new Date(
+    s.createdAt?.seconds
+      ? s.createdAt.seconds * 1000
+      : s.createdAt
+  );
+
+  if (Number.isNaN(date.getTime())) return;
+
+  const quantity = Number(s.quantity) || 0;
+
+  if (quantity <= 0) return;
+
+  if (!map[s.productId]) {
+    map[s.productId] = {
+      opening: 0,
+      inQty: 0,
+      outQty: 0,
+      closing: 0
+    };
+  }
+
+  const stat = map[s.productId];
+
+  // تحديد اتجاه الحركة
+  const explicitDirection = String(
+    s.direction || ""
+  ).toUpperCase();
+
+  const direction =
+    explicitDirection === "IN" ||
+    explicitDirection === "OUT"
+      ? explicitDirection
+      : ["sale", "waste"].includes(recordType)
+      ? "OUT"
+      : "IN";
+
+  // قبل الشهر: حساب Opening
+  if (date < start) {
+    if (direction === "OUT") {
+      stat.opening -= quantity;
+    } else {
+      stat.opening += quantity;
     }
+  }
 
-    const stat = map[s.productId];
-
-    if (!s.createdAt) return;
-
-const date = new Date(
-  s.createdAt?.seconds
-    ? s.createdAt.seconds * 1000
-    : s.createdAt
-);
-
-    // قبل الشهر
-    if (date < start) {
-      if (
-  s.direction === "OUT"
-) {
-        stat.opening -= s.quantity;
-      } else {
-        stat.opening += s.quantity;
-      }
+  // خلال الشهر: حساب In و Out
+  if (date >= start && date < end) {
+    if (direction === "OUT") {
+      stat.outQty += quantity;
+    } else {
+      stat.inQty += quantity;
     }
+  }
 
-    // خلال الشهر
-    if (date >= start && date < end) {
-      if (
-  s.direction === "OUT"
-) {
-        stat.outQty += s.quantity;
-      } else {
-        stat.inQty += s.quantity;
-      }
-    }
+  stat.closing =
+    stat.opening +
+    stat.inQty -
+    stat.outQty;
+});
 
-    stat.closing = stat.opening + stat.inQty - stat.outQty;
-  });
     // 🔄 TRANSFERS
   transfers.forEach(t => {
     if (!t.productId) return;

@@ -1,20 +1,19 @@
-    import {
-    runTransaction,
-    doc,
-    addDoc,
-    collection,
-    serverTimestamp,
-    increment,
-    query,
-    where,
-    getDocs,
-    getDoc,
-    Timestamp
-  } from "firebase/firestore";
-    import { db } from "../../../firebase";
-    import logAction
-    from "../../../utils/logAction";
-    const BUSINESS_DAY_CUTOFF = 3;
+import {
+  runTransaction,
+  doc,
+  collection,
+  serverTimestamp,
+  increment,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  Timestamp
+} from "firebase/firestore";
+import { db } from "../../../firebase";
+import logAction
+from "../../../utils/logAction";
+const BUSINESS_DAY_CUTOFF = 3;
 
 // تاريخ يوم العمل بصيغة YYYY-MM-DD
 const getBusinessDateKey = (date = new Date()) => {
@@ -310,6 +309,234 @@ const saleType =
 // ======================================
 
 const saleRef = doc(collection(db, "sales"));
+
+// ======================================
+// PREPARE STOCK MOVEMENTS
+// ======================================
+
+const stockMovements = [];
+
+const pushStockMovement = (data) => {
+  const quantity = Number(data.quantity) || 0;
+
+  if (!data.productId || quantity <= 0) {
+    return;
+  }
+
+  stockMovements.push({
+    ref: doc(collection(db, "stock")),
+    data: {
+      ...data,
+      quantity
+    }
+  });
+};
+
+for (const item of cart) {
+
+  // المنتجات المرتجعة المعاد بيعها
+  // لا تخصم من المخزون العادي
+  if (item.isReturned) continue;
+
+  const itemType = String(
+    item.containerType || ""
+  ).toLowerCase().trim();
+
+  const itemQty = Number(item.qty) || 1;
+
+  // ==================================
+  // PURE OIL
+  // ==================================
+
+  if (itemType === "oil") {
+
+    const oilId = item.oilId || item.id;
+
+    const oilQuantity = Number(
+      item.selectedMl ??
+      (Number(item.oilQty || 0) * itemQty)
+    );
+
+    const oilCostPerML =
+      Number(item.oilCostPerML) || 0;
+
+    pushStockMovement({
+
+      productId: oilId,
+
+      productName: item.oilName || item.name,
+
+      quantity: oilQuantity,
+
+      type: "sale",
+
+      direction: "OUT",
+
+      movementType: "SALE",
+
+      movementSource: "SALE",
+
+      source: "SALE",
+
+      productType: "RAW_OIL",
+
+      unit: "ML",
+
+      unitCost: oilCostPerML,
+
+      totalCost: oilCostPerML * oilQuantity,
+
+      price: item.price || 0,
+
+      total:
+        (Number(item.pricePerMl) || 0) *
+        oilQuantity
+    });
+
+    continue;
+  }
+
+  // ==================================
+  // READY PRODUCT
+  // ==================================
+
+  const isReadyProduct =
+    itemType === "original" ||
+    itemType === "ready" ||
+    itemType === "cream" ||
+    itemType === "مخمرية";
+
+  const primaryProductId = isReadyProduct
+    ? item.id
+    : (item.containerId || item.id);
+
+  // ==================================
+  // CONTAINER / READY PRODUCT
+  // ==================================
+
+  const containerCost =
+    Number(item.containerCost) || 0;
+
+  const itemPrice =
+    Number(item.price) || 0;
+
+  pushStockMovement({
+
+    productId: primaryProductId,
+
+    productName: item.name,
+
+    quantity: itemQty,
+
+    type: "sale",
+
+    direction: "OUT",
+
+    movementType: "SALE",
+
+    movementSource: "SALE",
+
+    source: "SALE",
+
+    productType: isReadyProduct
+      ? "READY_PRODUCT"
+      : "CONTAINER",
+
+    unit: "PCS",
+
+    unitCost: containerCost,
+
+    totalCost: containerCost * itemQty,
+
+    price: itemPrice,
+
+    total: itemPrice * itemQty
+
+  });
+
+  // ==================================
+  // OIL COMPONENTS
+  // ==================================
+
+  const oilComponents =
+    Array.isArray(item.oilComponents) &&
+    item.oilComponents.length > 0
+      ? item.oilComponents
+      : Number(item.oilQty) > 0
+      ? [
+          {
+            oilId: item.oilId || item.id,
+            oilName: item.oilName || item.name,
+            quantityML: Number(item.oilQty),
+            costPerML: Number(item.oilCostPerML) || 0,
+            cost: Number(item.oilCost) || 0
+          }
+        ]
+      : [];
+
+  oilComponents.forEach((component, index) => {
+
+    const oilId =
+      component.oilId || component.id;
+
+    const quantityPerBottle = Number(
+      component.quantityML ??
+      component.oilQty ??
+      0
+    );
+
+    if (!oilId || quantityPerBottle <= 0) {
+      return;
+    }
+
+    const costPerML =
+      Number(component.costPerML) || 0;
+
+    const componentCost =
+      Number(component.cost) || 0;
+
+    pushStockMovement({
+
+      productId: oilId,
+
+      productName:
+        component.oilName || item.name,
+
+      quantity: quantityPerBottle * itemQty,
+
+      type: "sale",
+
+      direction: "OUT",
+
+      movementType: "SALE",
+
+      movementSource: "SALE",
+
+      source: "SALE",
+
+      productType: "RAW_OIL",
+
+      unit: "ML",
+
+      unitCost: costPerML,
+
+      totalCost: componentCost * itemQty,
+
+      price:
+        index === 0
+          ? item.pricePerMl || 0
+          : 0,
+
+      total:
+        index === 0
+          ? (Number(item.price) || 0) * itemQty
+          : 0
+
+    });
+
+  });
+}
+
 const isOwnerBackdatedSale =
   user?.role === "owner" && Boolean(saleDate);
 
@@ -786,6 +1013,41 @@ await runTransaction(db, async (transaction) => {
     );
   }
 
+// ==================================
+// SAVE STOCK MOVEMENTS ATOMICALLY
+// ==================================
+
+const stockEmployeeName =
+  employeeName ||
+  user?.displayName ||
+  user?.name ||
+  user?.email ||
+  "Unknown Employee";
+
+for (const movement of stockMovements) {
+
+  transaction.set(movement.ref, {
+
+    ...movement.data,
+
+    branchId: branchToUse,
+
+    branchName,
+
+    invoiceDocId: saleRef.id,
+
+    invoiceNumber: nextInvoiceNumber,
+
+    employeeId: employeeId || null,
+
+    employeeName: stockEmployeeName,
+
+    createdAt: serverTimestamp()
+
+  });
+
+}
+
   // Mark returned products as sold
   for (const item of returnedCartItems) {
 
@@ -936,181 +1198,6 @@ businessDate,
   // Keep invoice number for the return value and logs
   invoiceNumber = nextInvoiceNumber;
 });
-
-    // 🟢 تسجيل الحركة في stock (بعد نجاح العملية)
-    try {
-
-    await Promise.all(
-      cart.flatMap(item => {
-        const arr = [];
-
-        arr.push(
-          addDoc(collection(db, "stock")  , {
-            productId: item.containerType === "oil"
-      ? item.id
-      : item.containerId || item.id,
-            productName: item.name,
-            quantity:
-              item.containerType === "oil"
-                ? (item.selectedMl ?? item.oilQty)
-                : item.qty,
-            type: item.isReturned ? "resell" : "sale",
-            movementType: item.isReturned
-              ? "RETURN_RESALE"
-              : "SALE",
-
-            movementSource:
-              item.isReturned
-                ? "RETURN_RESALE"
-                : "SALE",
-
-            direction: "OUT",
-            source: "SALE",
-
-            productType:
-              item.isReturned
-                ? "RETURNED_PRODUCT"
-                : item.containerType === "oil"
-                ? "RAW_OIL"
-                : "CONTAINER",
-
-            unit:
-              item.containerType === "oil"
-                ? "ML"
-                : "PCS",
-
-            unitCost:
-              item.containerType === "oil"
-                ? item.oilCostPerML || 0
-                : item.containerCost || 0,
-
-           totalCost:
-            item.containerType === "oil"
-              ? (item.oilCostPerML || 0) *
-                (item.selectedMl ?? item.oilQty)
-                : (Number(item.containerCost) || 0) *
-                  (Number(item.qty) || 1),
-            price: item.price || 0,
-            total:
-                item.containerType === "oil"
-                ? (item.pricePerMl || 0) *
-                    (item.selectedMl ?? item.oilQty)
-                  : (item.price || 0) * item.qty,
-            branchId: branchToUse,
-            branchName: branchName,
-            employeeId:
-              employeeId || null,
-
-            employeeName:
-              employeeName ||
-              user?.displayName ||
-              user?.name ||
-              user?.email ||
-              "Unknown Employee",
-            createdAt: serverTimestamp()
-          })
-        );
-
-       if (
-  !item.isReturned &&
-  item.containerType !== "oil"
-) {
-  const oilComponents =
-    Array.isArray(item.oilComponents) &&
-    item.oilComponents.length > 0
-      ? item.oilComponents
-      : Number(item.oilQty) > 0
-      ? [
-          {
-            oilId: item.oilId || item.id,
-            oilName: item.oilName || item.name,
-            quantityML: Number(item.oilQty),
-            costPerML: Number(item.oilCostPerML) || 0,
-            cost: Number(item.oilCost) || 0
-          }
-        ]
-      : [];
-
-  const itemQuantity = Number(item.qty) || 1;
-
-  oilComponents.forEach((component, index) => {
-    const quantityPerBottle = Number(
-      component.quantityML ?? component.oilQty ?? 0
-    );
-
-    if (
-      !component.oilId ||
-      quantityPerBottle <= 0
-    ) {
-      return;
-    }
-
-    const costPerML =
-      Number(component.costPerML) || 0;
-
-    const componentCost = Number(component.cost) || 0;
-
-    arr.push(
-      addDoc(collection(db, "stock"), {
-        productId: component.oilId,
-        productName: component.oilName || item.name,
-
-        quantity: quantityPerBottle * itemQuantity,
-
-        type: "sale",
-        movementType: "SALE",
-        movementSource: "SALE",
-        direction: "OUT",
-        source: "SALE",
-
-        productType: "RAW_OIL",
-        unit: "ML",
-
-        unitCost: costPerML,
-
-        totalCost:
-          componentCost * itemQuantity,
-
-        // قيمة البيع تسجل مرة واحدة فقط
-        // لتجنب تكرار الإيراد عند وجود زيتين
-        price:
-          index === 0
-            ? item.pricePerMl || 0
-            : 0,
-
-        total:
-          index === 0
-            ? (item.price || 0) * itemQuantity
-            : 0,
-
-        branchId: branchToUse,
-        branchName,
-
-        employeeId: employeeId || null,
-
-        employeeName:
-          employeeName ||
-          user?.displayName ||
-          user?.name ||
-          user?.email ||
-          "Unknown Employee",
-
-        createdAt: serverTimestamp()
-      })
-    );
-  });
-}
-
-        return arr;
-      })
-    );
-
-  } catch (err) {
-  console.error(
-    "Invoice saved, but stock movement logging failed:",
-    err
-  );
-}
 try {
     await logAction({
 

@@ -409,7 +409,17 @@ export const createWasteTransaction =
               // Stock Movement
               // ----------------------------------------
 
-              type: "waste",
+              
+type: "waste",
+
+direction: "OUT",
+
+movementType: "WASTE",
+
+movementSource: "WASTE",
+
+source: "WASTE",
+
 
               // ----------------------------------------
               // Waste Operation
