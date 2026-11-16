@@ -323,6 +323,7 @@ export const translations = {
     },
 
     common: {
+      details:"Details",
       clearFilters: "Clear Filters",
       clearAll: "Clear All",
       clear: "Clear",
@@ -1355,6 +1356,7 @@ export const translations = {
     },
 
     common: {
+      details:"التفاصيل",
       clearFilters: "مسح الفلاتر",
       clearAll: "مسح الكل",
       clear: "مسح",

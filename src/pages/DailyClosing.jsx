@@ -354,6 +354,7 @@ const [
   alreadyClosed,
   setAlreadyClosed
 ] = useState(false);
+const [closingStatusLoaded, setClosingStatusLoaded] = useState(false);
 const [wasReopened, setWasReopened] = useState(false);
 const [reopening, setReopening] = useState(false);
 
@@ -372,12 +373,17 @@ const [reopening, setReopening] = useState(false);
   const [selectedBusinessDate, setSelectedBusinessDate] = useState(
   () => toInputDate(getBusinessDate())
 );
+
 useEffect(() => {
   if (!branchToUse || branchToUse === "all" || !selectedBusinessDate) {
+    setClosingStatusLoaded(false);
     setAlreadyClosed(false);
     setWasReopened(false);
     return;
   }
+
+  // Lock inputs until Firestore confirms the closing status.
+  setClosingStatusLoaded(false);
 
   const businessDate = toStoredBusinessDateKey(selectedBusinessDate);
 
@@ -390,18 +396,41 @@ useEffect(() => {
   const unsub = onSnapshot(
     q,
     (snap) => {
-      // Old documents without a status remain locked as closed.
       const activeClosings = snap.docs.filter(
         (doc) => doc.data()?.status !== "reopened"
       );
 
       setAlreadyClosed(activeClosings.length > 0);
+
       setWasReopened(
         snap.docs.some((doc) => doc.data()?.status === "reopened")
       );
+
+      // Restore saved values if the day is closed.
+      if (activeClosings.length > 0) {
+        const savedClosing = activeClosings[0].data();
+
+        setActualCash(String(savedClosing.actualCash ?? ""));
+        setActualVisa(String(savedClosing.actualVisa ?? ""));
+        setActualInstapay(String(savedClosing.actualInstapay ?? ""));
+        setClosingNotes(savedClosing.notes || "");
+      } else {
+        // Clear values when the day is reopened.
+        setActualCash("");
+        setActualVisa("");
+        setActualInstapay("");
+        setClosingNotes("");
+      }
+
+      // Firestore confirmed the closing status.
+      setClosingStatusLoaded(true);
     },
     (error) => {
       console.error("Daily closing status error:", error);
+
+      // Keep inputs locked if status cannot be verified.
+      setClosingStatusLoaded(false);
+
       toast.error(
         lang === "ar"
           ? "تعذر التحقق من حالة التقفيل"
@@ -412,6 +441,7 @@ useEffect(() => {
 
   return () => unsub();
 }, [branchToUse, selectedBusinessDate, lang]);
+
 
   // ======================================================
   // SALES
@@ -1129,11 +1159,7 @@ if (
     : "Daily closing saved successfully"
 );
 
-      setActualCash("");
-      setActualVisa("");
-      setActualInstapay("");
-
-      setClosingNotes("");
+      
 
     }
 
@@ -1292,12 +1318,16 @@ if (
       value={selectedBusinessDate}
       max={toInputDate(getBusinessDate())}
       onChange={(e) => {
-        setSelectedBusinessDate(e.target.value);
-        setActualCash("");
-        setActualVisa("");
-        setActualInstapay("");
-        setClosingNotes("");
-      }}
+  setClosingStatusLoaded(false);
+  setAlreadyClosed(false);
+  setWasReopened(false);
+
+  setSelectedBusinessDate(e.target.value);
+  setActualCash("");
+  setActualVisa("");
+  setActualInstapay("");
+  setClosingNotes("");
+}}
       style={{
         width: "100%",
         boxSizing: "border-box",
@@ -1607,477 +1637,955 @@ if (
         </div>
 
       </div>
-    <div
+    
+{/* ====================================================== */}
+{/* DAILY CLOSING - PROFESSIONAL SECTION */}
+{/* ====================================================== */}
+
+<div
   style={{
     ...cardStyle,
-
-    padding: 28,
-
-    marginBottom: 28
+    padding: 0,
+    overflow: "hidden",
+    marginBottom: 28,
+    borderRadius: 24,
   }}
 >
-
+  {/* HEADER */}
   <div
     style={{
+      padding: isMobile ? 18 : "24px 28px",
       display: "flex",
-
-      justifyContent:
-        "space-between",
-
-      alignItems:
-        "flex-start",
-
+      alignItems: "center",
+      justifyContent: "space-between",
       flexWrap: "wrap",
-
-      gap: 28
+      gap: 16,
+      background: "linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%)",
+      borderBottom: "1px solid #DBEAFE",
     }}
   >
-
-    {/* LEFT */}
-
-    <div
-      style={{
-        flex: 1,
-
-        minWidth: 280
-      }}
-    >
-
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div
         style={{
-          fontSize: 22,
-
-          fontWeight: 800,
-
-          marginBottom: 10,
-
-          color:
-            theme.colors.text
+          width: 48,
+          height: 48,
+          minWidth: 48,
+          borderRadius: 15,
+          background: "#DBEAFE",
+          color: "#2563EB",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {t("dailyClosing.closeDailyCash")}
+        <BadgeDollarSign size={25} />
       </div>
 
-      <div
-        style={{
-          color:
-            theme.colors.textSecondary,
-
-          marginBottom: 24,
-
-          fontSize: 14
-        }}
-      >
-        {lang === "ar"
-          ? t("dailyClosing.enterActualCash")
-          : "Enter actual cash amount"}
-      </div>
-
-      {/* INPUT */}
-
-      <div
-        style={{
-          marginBottom: 18
-        }}
-      >
-
-        <label
+      <div>
+        <div
           style={{
-            display: "block",
-
-            marginBottom: 8,
-
-            fontSize: 14,
-
-            fontWeight: 600
+            fontSize: isMobile ? 18 : 21,
+            fontWeight: 850,
+            color: "#0F172A",
+            marginBottom: 5,
           }}
         >
-          {t("dailyClosing.actualCash")}
-        </label>
+          {t("dailyClosing.closeDailyCash")}
+        </div>
 
-        <input
-          type="number"
-          min="0"
-          inputMode="numeric"
-          value={actualCash}
-          onWheel={(e) => e.currentTarget.blur()}
-
-          onChange={(e) =>
-            setActualCash(
-              e.target.value
-            )
-          }
-
-          placeholder="0"
-
+        <div
           style={{
-            width: "100%",
-
-            height: 54,
-
-            borderRadius: 14,
-
-            border:
-              `1px solid ${theme.colors.border}`,
-
-            padding:
-              "0 16px",
-
-            fontSize: 18,
-
-            outline: "none",
-
-            background:
-              theme.colors.white
-          }}
-        />
-        <label>الفيزا الفعلية</label>
-<input
-  type="number"
-  min="0"
-  inputMode="decimal"
-  value={actualVisa}
-  onChange={(e) => setActualVisa(e.target.value)}
-  onWheel={(e) => e.currentTarget.blur()}
-/>
-
-<label>الإنستاباي الفعلي</label>
-<input
-  type="number"
-  min="0"
-  inputMode="decimal"
-  value={actualInstapay}
-  onChange={(e) => setActualInstapay(e.target.value)}
-  onWheel={(e) => e.currentTarget.blur()}
-/>
-
-      </div>
-
-      {/* NOTES */}
-
-      <div
-        style={{
-          marginBottom: 20
-        }}
-      >
-
-        <label
-          style={{
-            display: "block",
-
-            marginBottom: 8,
-
-            fontSize: 14,
-
-            fontWeight: 600
+            fontSize: 12,
+            color: "#64748B",
           }}
         >
           {lang === "ar"
-            ? t("dailyClosing.notes")
-            : "Notes"}
+            ? "مراجعة المبالغ الفعلية ومطابقتها مع حسابات النظام"
+            : "Review actual amounts and reconcile them with system balances"}
+        </div>
+      </div>
+    </div>
+
+    {/* STATUS */}
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "9px 14px",
+        borderRadius: 30,
+        background: !closingStatusLoaded
+          ? "#F1F5F9"
+          : alreadyClosed
+          ? "#DCFCE7"
+          : wasReopened
+          ? "#FFF7ED"
+          : "#EFF6FF",
+        color: !closingStatusLoaded
+          ? "#64748B"
+          : alreadyClosed
+          ? "#15803D"
+          : wasReopened
+          ? "#C2410C"
+          : "#2563EB",
+        fontSize: 12,
+        fontWeight: 800,
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: "50%",
+          background: "currentColor",
+        }}
+      />
+
+      {!closingStatusLoaded
+        ? lang === "ar"
+          ? "جارٍ التحقق..."
+          : "Checking..."
+        : alreadyClosed
+        ? lang === "ar"
+          ? "اليومية مغلقة"
+          : "Daily Closed"
+        : wasReopened
+        ? lang === "ar"
+          ? "تمت إعادة الفتح"
+          : "Reopened"
+        : lang === "ar"
+        ? "جاهزة للإغلاق"
+        : "Ready to Close"}
+    </div>
+  </div>
+
+  {/* BODY */}
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: isMobile
+        ? "1fr"
+        : "minmax(0, 1.35fr) minmax(310px, 0.85fr)",
+      gap: 0,
+    }}
+  >
+    {/* LEFT: INPUTS */}
+    <div
+      style={{
+        padding: isMobile ? 18 : 28,
+        minWidth: 0,
+      }}
+    >
+      <div style={{ marginBottom: 22 }}>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: theme.colors.text,
+            marginBottom: 6,
+          }}
+        >
+          {lang === "ar" ? "المبالغ الفعلية" : "Actual Amounts"}
+        </div>
+
+        <div
+          style={{
+            fontSize: 12,
+            color: theme.colors.textSecondary,
+          }}
+        >
+          {lang === "ar"
+            ? "أدخل المبالغ الموجودة فعليًا في الفرع"
+            : "Enter the actual amounts available at the branch"}
+        </div>
+      </div>
+
+      {/* PAYMENT INPUTS */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : "repeat(3, minmax(0, 1fr))",
+          gap: 13,
+          marginBottom: 22,
+        }}
+      >
+        {/* CASH */}
+        <div
+          style={{
+            padding: 15,
+            border: "1px solid #DBEAFE",
+            borderRadius: 17,
+            background: alreadyClosed ? "#F8FAFC" : "#FFFFFF",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: 15,
+            }}
+          >
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 11,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#DCFCE7",
+                color: "#16A34A",
+              }}
+            >
+              <Banknote size={18} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>
+                {t("dailyClosing.actualCash")}
+              </div>
+              <div style={{ fontSize: 10, color: "#64748B", marginTop: 3 }}>
+                {lang === "ar" ? "النقدية" : "Cash"}
+              </div>
+            </div>
+          </div>
+
+          <input
+            type="number"
+            min="0"
+            inputMode="decimal"
+            value={actualCash}
+            disabled={!closingStatusLoaded || alreadyClosed}
+            onChange={(e) => setActualCash(e.target.value)}
+            onWheel={(e) => e.currentTarget.blur()}
+            placeholder="0"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              height: 50,
+              padding: "0 12px",
+              border: "1px solid #DCE4EF",
+              borderRadius: 11,
+              background: alreadyClosed ? "#F1F5F9" : "#FFFFFF",
+              color: "#0F172A",
+              fontSize: 19,
+              fontWeight: 800,
+              outline: "none",
+              cursor: alreadyClosed ? "not-allowed" : "text",
+              fontVariantNumeric: "tabular-nums",
+              direction: "ltr",
+              textAlign: "left",
+            }}
+          />
+        </div>
+
+        {/* VISA */}
+        <div
+          style={{
+            padding: 15,
+            border: "1px solid #DBEAFE",
+            borderRadius: 17,
+            background: alreadyClosed ? "#F8FAFC" : "#FFFFFF",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: 15,
+            }}
+          >
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 11,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#EDE9FE",
+                color: "#7C3AED",
+              }}
+            >
+              <CreditCard size={18} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>
+                {lang === "ar" ? "الفيزا الفعلية" : "Actual Visa"}
+              </div>
+              <div style={{ fontSize: 10, color: "#64748B", marginTop: 3 }}>
+                Visa
+              </div>
+            </div>
+          </div>
+
+          <input
+            type="number"
+            min="0"
+            inputMode="decimal"
+            value={actualVisa}
+            disabled={!closingStatusLoaded || alreadyClosed}
+            onChange={(e) => setActualVisa(e.target.value)}
+            onWheel={(e) => e.currentTarget.blur()}
+            placeholder="0"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              height: 50,
+              padding: "0 12px",
+              border: "1px solid #DCE4EF",
+              borderRadius: 11,
+              background: alreadyClosed ? "#F1F5F9" : "#FFFFFF",
+              color: "#0F172A",
+              fontSize: 19,
+              fontWeight: 800,
+              outline: "none",
+              cursor: alreadyClosed ? "not-allowed" : "text",
+              fontVariantNumeric: "tabular-nums",
+              direction: "ltr",
+              textAlign: "left",
+            }}
+          />
+        </div>
+
+        {/* INSTAPAY */}
+        <div
+          style={{
+            padding: 15,
+            border: "1px solid #DBEAFE",
+            borderRadius: 17,
+            background: alreadyClosed ? "#F8FAFC" : "#FFFFFF",
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: 15,
+            }}
+          >
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 11,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#CCFBF1",
+                color: "#0F766E",
+              }}
+            >
+              <Smartphone size={18} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>
+                {lang === "ar" ? "الإنستاباي الفعلي" : "Actual InstaPay"}
+              </div>
+              <div style={{ fontSize: 10, color: "#64748B", marginTop: 3 }}>
+                InstaPay
+              </div>
+            </div>
+          </div>
+
+          <input
+            type="number"
+            min="0"
+            inputMode="decimal"
+            value={actualInstapay}
+            disabled={!closingStatusLoaded || alreadyClosed}
+            onChange={(e) => setActualInstapay(e.target.value)}
+            onWheel={(e) => e.currentTarget.blur()}
+            placeholder="0"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              height: 50,
+              padding: "0 12px",
+              border: "1px solid #DCE4EF",
+              borderRadius: 11,
+              background: alreadyClosed ? "#F1F5F9" : "#FFFFFF",
+              color: "#0F172A",
+              fontSize: 19,
+              fontWeight: 800,
+              outline: "none",
+              cursor: alreadyClosed ? "not-allowed" : "text",
+              fontVariantNumeric: "tabular-nums",
+              direction: "ltr",
+              textAlign: "left",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* NOTES */}
+      <div style={{ marginBottom: 22 }}>
+        <label
+          style={{
+            display: "block",
+            fontSize: 13,
+            fontWeight: 800,
+            color: theme.colors.text,
+            marginBottom: 9,
+          }}
+        >
+          {t("dailyClosing.notes")}
         </label>
 
         <textarea
           value={closingNotes}
-
-          onChange={(e) =>
-            setClosingNotes(
-              e.target.value
-            )
-          }
-
-          rows={4}
-
-          placeholder={
-            lang === "ar"
-              ? t("dailyClosing.writeNotes")
-              : "Write notes..."
-          }
-
+          disabled={!closingStatusLoaded || alreadyClosed}
+          onChange={(e) => setClosingNotes(e.target.value)}
+          rows={3}
+          placeholder={t("dailyClosing.writeNotes")}
           style={{
             width: "100%",
-
+            boxSizing: "border-box",
+            border: "1px solid #DCE4EF",
             borderRadius: 14,
-
-            border:
-              `1px solid ${theme.colors.border}`,
-
-            padding: 16,
-
-            resize: "none",
-
+            padding: 15,
+            resize: "vertical",
             outline: "none",
-
-            fontFamily:
-              "inherit",
-
-            fontSize: 14
+            fontFamily: "inherit",
+            fontSize: 13,
+            lineHeight: 1.7,
+            background: alreadyClosed ? "#F1F5F9" : "#FFFFFF",
+            color: "#0F172A",
+            cursor: alreadyClosed ? "not-allowed" : "text",
           }}
         />
-
       </div>
-    {alreadyClosed && (
 
-  <div
-    style={{
-      marginBottom: 16,
-      padding: "14px 16px",
-      borderRadius: 14,
-      background: "#dcfce7",
-      color: "#166534",
-      fontWeight: 700,
-      fontSize: 14
-    }}
-  >
-    {lang === "ar"
-      ? "تم إغلاق اليومية لهذا اليوم"
-      : "Daily closing already completed"}
-  </div>
+      {/* STATUS MESSAGES */}
+      {alreadyClosed && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 11,
+            padding: 15,
+            borderRadius: 14,
+            background: "#F0FDF4",
+            border: "1px solid #BBF7D0",
+            color: "#166534",
+            marginBottom: 18,
+          }}
+        >
+          <BadgeDollarSign size={20} />
 
-)}
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 4 }}>
+              {lang === "ar" ? "تم إغلاق اليومية بنجاح" : "Daily Closing Completed"}
+            </div>
+            <div style={{ fontSize: 11, lineHeight: 1.7 }}>
+              {lang === "ar"
+                ? "تم حفظ المبالغ. التعديل متوقف حاليًا، ويمكن للـ Owner إعادة فتح اليومية."
+                : "Amounts are saved and editing is locked. The owner can reopen this day."}
+            </div>
+          </div>
+        </div>
+      )}
 
-{alreadyClosed && isOwner && (
-  <button
-    type="button"
-    onClick={handleReopenClosing}
-    disabled={reopening || saving}
-    style={{
-      minHeight: 48,
-      padding: "0 22px",
-      marginBottom: 16,
-      border: "1px solid #f59e0b",
-      borderRadius: 12,
-      background: "#fffbeb",
-      color: "#92400e",
-      fontSize: 14,
-      fontWeight: 800,
-      cursor: reopening || saving ? "not-allowed" : "pointer",
-      opacity: reopening ? 0.65 : 1
-    }}
-  >
-    {reopening
-      ? (lang === "ar" ? "جارٍ إعادة فتح اليومية..." : "Reopening...")
-      : (lang === "ar" ? "إعادة فتح اليومية للتعديل" : "Reopen Daily Closing")}
-  </button>
-)}
+      {wasReopened && !alreadyClosed && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 11,
+            padding: 15,
+            borderRadius: 14,
+            background: "#FFF7ED",
+            border: "1px solid #FED7AA",
+            color: "#9A3412",
+            marginBottom: 18,
+          }}
+        >
+          <RotateCcw size={19} />
+          <div style={{ fontSize: 12, lineHeight: 1.8, fontWeight: 700 }}>
+            {lang === "ar"
+              ? "تمت إعادة فتح اليومية. يمكنك تعديل المبالغ وحفظ تقفيل جديد بعد الانتهاء."
+              : "This day was reopened. You can edit the amounts and save a new closing."}
+          </div>
+        </div>
+      )}
 
-{wasReopened && !alreadyClosed && (
-  <div
-    style={{
-      marginBottom: 16,
-      padding: "14px 16px",
-      borderRadius: 14,
-      background: "#fff7ed",
-      color: "#9a3412",
-      fontWeight: 700,
-      fontSize: 14
-    }}
-  >
-    {lang === "ar"
-      ? "تمت إعادة فتح اليومية. التعديلات مسموحة الآن، وبعد الانتهاء احفظ تقفيلًا جديدًا."
-      : "This daily closing was reopened. Transactions can be edited; save a new closing when finished."}
-  </div>
-)}
-      {/* BUTTON */}
-
-      <button
-        onClick={
-          handleSaveClosing
-        }
-
-        disabled={
-          saving ||
-          alreadyClosed ||
-          branchToUse === "all"
-        }
-
-        style={{
-          height: 52,
-
-          padding:
-            "0 28px",
-
-          border: "none",
-
-          borderRadius: 14,
-
-          background:
-            alreadyClosed || branchToUse === "all"
-              ? "#94a3b8"
-              : theme.colors.primary,
-
-          color: "#fff",
-
-          fontSize: 15,
-
-          fontWeight: 700,
-
-          cursor:
-  saving ||
-  alreadyClosed ||
-  branchToUse === "all"
-    ? "not-allowed"
-    : "pointer",
-
-          opacity:
-            saving
-              ? 0.7
-              : 1
-        }}
-      >
-
-        {alreadyClosed
-
-  ? lang === "ar"
-      ? "تم إغلاق اليومية"
-      : "Already Closed"
-
-  : branchToUse === "all"
-
-  ? lang === "ar"
-      ? "اختر فرع أولاً"
-      : "Select Branch First"
-
-  : saving
-
-  ? lang === "ar"
-      ? t("dailyClosing.saving")
-      : "Saving..."
-
-  : lang === "ar"
-      ? "حفظ اليومية"
-      : "Save Closing"}
-
-      </button>
-
-    </div>
-
-    {/* RIGHT */}
-
-    <div
-      style={{
-        width:
-  isMobile
-    ? "100%"
-    : 320
-      }}
-    >
-
+      {/* ACTIONS */}
       <div
         style={{
-          ...cardStyle,
-
-          padding: 24,
-
-          background:
-            "#f8fafc"
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
         }}
       >
+        <button
+          type="button"
+          onClick={handleSaveClosing}
+          disabled={
+            saving ||
+            !closingStatusLoaded ||
+            alreadyClosed ||
+            branchToUse === "all"
+          }
+          style={{
+            minHeight: 50,
+            padding: "0 25px",
+            border: "none",
+            borderRadius: 13,
+            background:
+              saving ||
+              !closingStatusLoaded ||
+              alreadyClosed ||
+              branchToUse === "all"
+                ? "#94A3B8"
+                : theme.colors.primary,
+            color: "#FFFFFF",
+            fontSize: 13,
+            fontWeight: 800,
+            cursor:
+              saving ||
+              !closingStatusLoaded ||
+              alreadyClosed ||
+              branchToUse === "all"
+                ? "not-allowed"
+                : "pointer",
+            boxShadow: "0 5px 14px rgba(37,99,235,0.16)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          {alreadyClosed
+            ? lang === "ar"
+              ? "تم إغلاق اليومية"
+              : "Already Closed"
+            : saving
+            ? lang === "ar"
+              ? "جارٍ الحفظ..."
+              : "Saving..."
+            : branchToUse === "all"
+            ? lang === "ar"
+              ? "اختر فرع أولاً"
+              : "Select Branch"
+            : lang === "ar"
+            ? "حفظ التقفيل اليومي"
+            : "Save Daily Closing"}
+        </button>
 
-        <ClosingInfoRow
-  label="الكاش المتوقع"
-  value={analytics.expectedCash}
-/>
+        {alreadyClosed && isOwner && (
+          <button
+            type="button"
+            onClick={handleReopenClosing}
+            disabled={reopening || saving}
+            style={{
+              minHeight: 50,
+              padding: "0 22px",
+              border: "1px solid #F59E0B",
+              borderRadius: 13,
+              background: "#FFFBEB",
+              color: "#B45309",
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: reopening || saving ? "not-allowed" : "pointer",
+              opacity: reopening ? 0.65 : 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <RotateCcw size={16} />
+            {reopening
+              ? lang === "ar"
+                ? "جارٍ إعادة الفتح..."
+                : "Reopening..."
+              : lang === "ar"
+              ? "إعادة فتح اليومية"
+              : "Reopen Daily Closing"}
+          </button>
+        )}
+      </div>
+    </div>
 
-<ClosingInfoRow
-  label="الكاش الفعلي"
-  value={Number(actualCash || 0)}
-/>
-
-<ClosingInfoRow
-  label="فرق الكاش"
-  value={cashDifference}
-  color={
-    differenceStatus === "matched"
-      ? theme.colors.success
-      : differenceStatus === "over"
-      ? theme.colors.warning
-      : theme.colors.danger
-  }
-/>
-
-<div style={{ margin: "16px 0", borderTop: `1px dashed ${theme.colors.border}` }} />
-
-<ClosingInfoRow
-  label="الفيزا المتوقعة"
-  value={analytics.expectedVisa}
-/>
-
-<ClosingInfoRow
-  label="الفيزا الفعلية"
-  value={Number(actualVisa || 0)}
-/>
-
-<ClosingInfoRow
-  label="فرق الفيزا"
-  value={visaDifference}
-  color={
-    visaDifferenceStatus === "matched"
-      ? theme.colors.success
-      : visaDifferenceStatus === "over"
-      ? theme.colors.warning
-      : theme.colors.danger
-  }
-/>
-
-<div style={{ margin: "16px 0", borderTop: `1px dashed ${theme.colors.border}` }} />
-
-<ClosingInfoRow
-  label="الإنستاباي المتوقع"
-  value={analytics.expectedInstapay}
-/>
-
-<ClosingInfoRow
-  label="الإنستاباي الفعلي"
-  value={Number(actualInstapay || 0)}
-/>
-
-<ClosingInfoRow
-  label="فرق الإنستاباي"
-  value={instapayDifference}
-  color={
-    instapayDifferenceStatus === "matched"
-      ? theme.colors.success
-      : instapayDifferenceStatus === "over"
-      ? theme.colors.warning
-      : theme.colors.danger
-  }
-/>
-
+    {/* RIGHT: RECONCILIATION SUMMARY */}
+    <div
+      style={{
+        padding: isMobile ? 18 : 24,
+        background: "#F8FAFC",
+        borderInlineStart: isMobile ? "none" : "1px solid #E2E8F0",
+        borderTop: isMobile ? "1px solid #E2E8F0" : "none",
+        minWidth: 0,
+      }}
+    >
+      <div style={{ marginBottom: 18 }}>
         <div
+          style={{
+            fontSize: 16,
+            fontWeight: 850,
+            color: "#0F172A",
+            marginBottom: 5,
+          }}
+        >
+          {lang === "ar" ? "ملخص المطابقة" : "Reconciliation Summary"}
+        </div>
+
+        <div style={{ fontSize: 11, color: "#64748B" }}>
+          {lang === "ar"
+            ? "مقارنة المتوقع بالفعلي لكل وسيلة دفع"
+            : "Expected versus actual for each payment method"}
+        </div>
+      </div>
+
+      {/* CASH SUMMARY */}
+      <div
+        style={{
+          padding: 17,
+          background: "#EFF6FF",
+          border: "1px solid #BFDBFE",
+          borderRadius: 17,
+          marginBottom: 13,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            marginBottom: 15,
+          }}
+        >
+          <div
+            style={{
+              width: 33,
+              height: 33,
+              borderRadius: 10,
+              background: "#DBEAFE",
+              color: "#2563EB",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Banknote size={18} />
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 850, color: "#1E40AF" }}>
+            {lang === "ar" ? "الكاش" : "Cash"}
+          </span>
+        </div>
+
+        
+<div
   style={{
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 14,
-
-    background: allPaymentsMatched
-      ? "#dcfce7"
-      : "#fef3c7",
-
-    color: allPaymentsMatched
-      ? "#166534"
-      : "#92400e",
-
-    fontWeight: 700,
-    textAlign: "center"
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 8,
   }}
 >
-  {allPaymentsMatched
-    ? lang === "ar"
-      ? "كل الحسابات مطابقة"
-      : "All Payments Matched"
-    : lang === "ar"
-    ? "يوجد فرق في وسائل الدفع"
-    : "Payment Differences Found"}
+  {[
+    {
+      label: lang === "ar" ? "المتوقع" : "Expected",
+      value: analytics.expectedCash,
+      color: "#1E40AF",
+    },
+    {
+      label: lang === "ar" ? "الفعلي" : "Actual",
+      value: Number(actualCash || 0),
+      color: "#1E40AF",
+    },
+    {
+      label: lang === "ar" ? "الفرق" : "Difference",
+      value: cashDifference,
+      color:
+        differenceStatus === "matched"
+          ? "#16A34A"
+          : differenceStatus === "over"
+          ? "#D97706"
+          : "#DC2626",
+    },
+  ].map((item, index) => (
+    <div
+      key={index}
+      style={{
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          color: "#64748B",
+          fontSize: 10,
+          marginBottom: 7,
+          fontWeight: 600,
+          textAlign: "center",
+        }}
+      >
+        {item.label}
+      </div>
+
+      <div
+        dir="ltr"
+        style={{
+          width: "100%",
+          fontSize: 13,
+          fontWeight: 850,
+          color: item.color,
+          fontVariantNumeric: "tabular-nums",
+          overflowWrap: "anywhere",
+          textAlign: "center",
+        }}
+      >
+        {formatMoney(item.value)}
+      </div>
+    </div>
+  ))}
 </div>
 
       </div>
 
+      {/* VISA SUMMARY */}
+      <div
+        style={{
+          padding: 16,
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: 16,
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 13 }}>
+          <CreditCard size={17} color="#7C3AED" />
+          <span style={{ fontSize: 12, fontWeight: 850, color: "#334155" }}>
+            Visa
+          </span>
+        </div>
+
+        
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 8,
+  }}
+>
+  {[
+    {
+      label: lang === "ar" ? "المتوقع" : "Expected",
+      value: analytics.expectedVisa,
+    },
+    {
+      label: lang === "ar" ? "الفعلي" : "Actual",
+      value: Number(actualVisa || 0),
+    },
+    {
+      label: lang === "ar" ? "الفرق" : "Difference",
+      value: visaDifference,
+      color:
+        visaDifferenceStatus === "matched"
+          ? "#16A34A"
+          : visaDifferenceStatus === "over"
+          ? "#D97706"
+          : "#DC2626",
+    },
+  ].map((item, index) => (
+    <div
+      key={index}
+      style={{
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          color: "#64748B",
+          fontSize: 10,
+          marginBottom: 7,
+          fontWeight: 600,
+          textAlign: "center",
+        }}
+      >
+        {item.label}
+      </div>
+
+      <div
+        dir="ltr"
+        style={{
+          width: "100%",
+          fontSize: 12,
+          fontWeight: 800,
+          color: item.color || "#334155",
+          fontVariantNumeric: "tabular-nums",
+          overflowWrap: "anywhere",
+          textAlign: "center",
+        }}
+      >
+        {formatMoney(item.value)}
+      </div>
     </div>
-
-  </div>
-
+  ))}
 </div>
+
+      </div>
+
+      {/* INSTAPAY SUMMARY */}
+      <div
+        style={{
+          padding: 16,
+          background: "#FFFFFF",
+          border: "1px solid #E2E8F0",
+          borderRadius: 16,
+          marginBottom: 15,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 13 }}>
+          <Smartphone size={17} color="#0F766E" />
+          <span style={{ fontSize: 12, fontWeight: 850, color: "#334155" }}>
+            InstaPay
+          </span>
+        </div>
+
+        
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 8,
+  }}
+>
+  {[
+    {
+      label: lang === "ar" ? "المتوقع" : "Expected",
+      value: analytics.expectedInstapay,
+    },
+    {
+      label: lang === "ar" ? "الفعلي" : "Actual",
+      value: Number(actualInstapay || 0),
+    },
+    {
+      label: lang === "ar" ? "الفرق" : "Difference",
+      value: instapayDifference,
+      color:
+        instapayDifferenceStatus === "matched"
+          ? "#16A34A"
+          : instapayDifferenceStatus === "over"
+          ? "#D97706"
+          : "#DC2626",
+    },
+  ].map((item, index) => (
+    <div
+      key={index}
+      style={{
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          color: "#64748B",
+          fontSize: 10,
+          marginBottom: 7,
+          fontWeight: 600,
+          textAlign: "center",
+        }}
+      >
+        {item.label}
+      </div>
+
+      <div
+        dir="ltr"
+        style={{
+          width: "100%",
+          fontSize: 12,
+          fontWeight: 800,
+          color: item.color || "#334155",
+          fontVariantNumeric: "tabular-nums",
+          overflowWrap: "anywhere",
+          textAlign: "center",
+        }}
+      >
+        {formatMoney(item.value)}
+      </div>
+    </div>
+  ))}
+</div>
+
+      </div>
+
+      {/* FINAL MATCH STATUS */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 11,
+          padding: 15,
+          borderRadius: 15,
+          background: allPaymentsMatched ? "#DCFCE7" : "#FEF3C7",
+          border: `1px solid ${allPaymentsMatched ? "#BBF7D0" : "#FDE68A"}`,
+          color: allPaymentsMatched ? "#166534" : "#92400E",
+        }}
+      >
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            minWidth: 34,
+            borderRadius: 11,
+            background: allPaymentsMatched ? "#BBF7D0" : "#FDE68A",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {allPaymentsMatched
+            ? <BadgeDollarSign size={19} />
+            : <AlertCircle size={19} />}
+        </div>
+
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 850, marginBottom: 4 }}>
+            {allPaymentsMatched
+              ? lang === "ar"
+                ? "كل الحسابات مطابقة"
+                : "All Payments Matched"
+              : lang === "ar"
+              ? "يوجد فرق في وسائل الدفع"
+              : "Payment Differences Found"}
+          </div>
+
+          <div style={{ fontSize: 10, opacity: 0.85 }}>
+            {allPaymentsMatched
+              ? lang === "ar"
+                ? "الأرصدة الفعلية متوافقة مع الأرصدة المتوقعة"
+                : "Actual balances match expected balances"
+              : lang === "ar"
+              ? "راجع الفروق قبل إتمام التقفيل"
+              : "Review the differences before closing"}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
       {/* ====================================================== */}
       {/* TABLES */}
       {/* ====================================================== */}

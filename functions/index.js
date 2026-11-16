@@ -1144,6 +1144,322 @@ exports.updateBonus = onCall(
   )
 );
 
+exports.createDailyClosing = onCall(
+  withLog(
+    {
+      action: "CREATE_DAILY_CLOSING",
+      module: "DailyClosing",
+      severity: "success",
+    },
+    async (request) => {
+      const auth = request.auth;
+
+      if (!auth) {
+        throw new HttpsError(
+          "unauthenticated",
+          "Login first"
+        );
+      }
+
+      const data = request.data || {};
+      const { branchId, businessDate } = data;
+
+      if (!branchId) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Branch is required"
+        );
+      }
+
+      const validBusinessDate =
+        validateBusinessDate(businessDate);
+
+      const storedBusinessDate =
+        toStoredBusinessDateKey(validBusinessDate);
+
+      const db = admin.firestore();
+
+      // =====================================
+      // VERIFY USER
+      // =====================================
+
+      const callerSnap = await db
+        .collection("users")
+        .doc(auth.uid)
+        .get();
+
+      if (!callerSnap.exists) {
+        throw new HttpsError(
+          "not-found",
+          "User not found"
+        );
+      }
+
+      const caller = callerSnap.data();
+
+      if (caller.status === "disabled") {
+        throw new HttpsError(
+          "permission-denied",
+          "Your account is disabled"
+        );
+      }
+
+      const isOwner = caller.role === "owner";
+      const allowedBranches = Array.isArray(caller.branchIds)
+        ? caller.branchIds
+        : [];
+
+      if (
+        !isOwner &&
+        !allowedBranches.includes(branchId)
+      ) {
+        throw new HttpsError(
+          "permission-denied",
+          "You cannot close this branch"
+        );
+      }
+
+      // =====================================
+      // VERIFY BRANCH
+      // =====================================
+
+      const branchSnap = await db
+        .collection("branches")
+        .doc(branchId)
+        .get();
+
+      if (!branchSnap.exists) {
+        throw new HttpsError(
+          "not-found",
+          "Branch not found"
+        );
+      }
+
+      const branchName =
+        branchSnap.data().name || "";
+
+      // =====================================
+      // VALIDATE NUMBERS
+      // =====================================
+
+      const readNumber = (key) => {
+        const value = Number(data[key] ?? 0);
+
+        if (!Number.isFinite(value)) {
+          throw new HttpsError(
+            "invalid-argument",
+            `Invalid value: ${key}`
+          );
+        }
+
+        return value;
+      };
+
+      const expectedCash = readNumber("expectedCash");
+      const actualCash = readNumber("actualCash");
+
+      const expectedVisa = readNumber("expectedVisa");
+      const actualVisa = readNumber("actualVisa");
+
+      const expectedInstapay =
+        readNumber("expectedInstapay");
+
+      const actualInstapay =
+        readNumber("actualInstapay");
+
+      if (
+        actualCash < 0 ||
+        actualVisa < 0 ||
+        actualInstapay < 0
+      ) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Actual amounts cannot be negative"
+        );
+      }
+
+      const difference = actualCash - expectedCash;
+      const visaDifference = actualVisa - expectedVisa;
+      const instapayDifference =
+        actualInstapay - expectedInstapay;
+
+      const getDifferenceStatus = (value) => {
+        if (value === 0) return "matched";
+        return value > 0 ? "over" : "short";
+      };
+
+      const differenceStatus =
+        getDifferenceStatus(difference);
+
+      const visaDifferenceStatus =
+        getDifferenceStatus(visaDifference);
+
+      const instapayDifferenceStatus =
+        getDifferenceStatus(instapayDifference);
+
+      const allPaymentsMatched =
+        difference === 0 &&
+        visaDifference === 0 &&
+        instapayDifference === 0;
+
+      const invoices = readNumber("invoices");
+
+      if (
+        invoices < 0 ||
+        !Number.isInteger(invoices)
+      ) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid invoice count"
+        );
+      }
+
+      // =====================================
+      // CLOSING DATA
+      // =====================================
+
+      const createdBy =
+        caller.name ||
+        caller.displayName ||
+        auth.token?.name ||
+        "Unknown";
+
+      const closingData = {
+        branchId,
+        branchName,
+
+        businessDate: storedBusinessDate,
+
+        expectedCash,
+        actualCash,
+        difference,
+        differenceStatus,
+
+        expectedVisa,
+        actualVisa,
+        visaDifference,
+        visaDifferenceStatus,
+
+        expectedInstapay,
+        actualInstapay,
+        instapayDifference,
+        instapayDifferenceStatus,
+
+        allPaymentsMatched,
+
+        totalSales: readNumber("totalSales"),
+        cashSales: readNumber("cashSales"),
+        visaSales: readNumber("visaSales"),
+        instapaySales: readNumber("instapaySales"),
+
+        refunds: readNumber("refunds"),
+        expenses: readNumber("expenses"),
+        loans: readNumber("loans"),
+        bonuses: readNumber("bonuses"),
+
+        invoices,
+
+        notes:
+          typeof data.notes === "string"
+            ? data.notes.trim()
+            : "",
+
+        status: "closed",
+
+        createdBy,
+        createdById: auth.uid,
+
+        createdAt:
+          admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // =====================================
+      // CREATE CLOSING - PREVENT DUPLICATES
+      // =====================================
+
+      const closingRef = db
+        .collection("dailyClosings")
+        .doc();
+
+      const closingQuery = db
+        .collection("dailyClosings")
+        .where("branchId", "==", branchId)
+        .where("businessDate", "==", storedBusinessDate);
+
+      await db.runTransaction(async (transaction) => {
+        const existingSnapshot =
+          await transaction.get(closingQuery);
+
+        const activeClosingExists =
+          existingSnapshot.docs.some(
+            (doc) => doc.data()?.status !== "reopened"
+          );
+
+        if (activeClosingExists) {
+          throw new HttpsError(
+            "already-exists",
+            "This business day is already closed"
+          );
+        }
+
+        transaction.create(
+          closingRef,
+          closingData
+        );
+      });
+
+      // =====================================
+      // AUDIT LOG RESPONSE
+      // =====================================
+
+      // =====================================
+// AUDIT LOG RESPONSE
+// =====================================
+
+// Remove server timestamp from audit response.
+// Firestore does not accept undefined values.
+const closingDataForLog = { ...closingData };
+delete closingDataForLog.createdAt;
+
+return {
+  success: true,
+
+  branchId,
+  branchName,
+
+  targetId: closingRef.id,
+  targetName: `Daily Closing ${validBusinessDate}`,
+
+  before: null,
+
+  after: closingDataForLog,
+
+  logDetails: {
+    branchId,
+    branchName,
+    businessDate: validBusinessDate,
+
+    expectedCash,
+    actualCash,
+    difference,
+    differenceStatus,
+
+    expectedVisa,
+    actualVisa,
+    visaDifference,
+
+    expectedInstapay,
+    actualInstapay,
+    instapayDifference,
+
+    allPaymentsMatched,
+    invoices,
+  },
+};
+    }
+  )
+);
+
 exports.reopenDailyClosing = onCall(
   withLog(
     {
