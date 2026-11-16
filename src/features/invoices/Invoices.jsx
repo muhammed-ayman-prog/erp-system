@@ -97,10 +97,18 @@ user?.role==="owner" &&
 selectedBranch==="all"
 
 });
+
 const {
   returns,
   loadingReturns,
-} = useReturns();
+} = useReturns({
+  branchId: selectedBranch,
+
+  allBranches:
+    user?.role === "owner" &&
+    selectedBranch === "all",
+});
+
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const todayRange = getTodayRange();
     const [fromDate,setFromDate] =
