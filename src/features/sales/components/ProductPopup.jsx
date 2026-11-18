@@ -309,7 +309,6 @@ if (!popupState.showPopup) return null;
   <>
     <p>{t("products.chooseContainer")}</p>
     <PopupContainerButtons
-      isMusk={isMusk}
 
       containerType={
         containerType

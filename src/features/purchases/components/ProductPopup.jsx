@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import {
   Minus,
   Plus,
@@ -46,49 +47,58 @@ export default function ProductPopup() {
     addToCart,
   } = usePurchaseContext();
 
-  const [quantity, setQuantity] =
-    useState(1);
+  const [quantity, setQuantity] = useState("");
+  const quantityInputRef = useRef(null);
 
   useEffect(() => {
-    if (popupOpen) {
-      setQuantity(1);
-    }
-  }, [popupOpen]);
+    if (!popupOpen) return;
+
+    setQuantity("");
+
+    // التركيز على خانة الكمية بعد فتح الـ Popup
+    const timer = setTimeout(() => {
+      quantityInputRef.current?.focus();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [popupOpen, selectedProduct]);
 
   useEffect(() => {
     if (!popupOpen) return;
 
     const handleKeyDown = (e) => {
       if (e.key === "Enter") {
+        e.preventDefault();
         handleAdd();
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    window.addEventListener("keydown", handleKeyDown);
 
     return () =>
-      window.removeEventListener(
-        "keydown",
-        handleKeyDown
-      );
+      window.removeEventListener("keydown", handleKeyDown);
   }, [popupOpen, quantity, selectedProduct]);
 
   const close = () => {
     setPopupOpen(false);
     setSelectedProduct(null);
-    setQuantity(1);
+    setQuantity("");
   };
 
   const handleAdd = () => {
     if (!selectedProduct) return;
 
-    addToCart(
-      selectedProduct,
-      quantity
-    );
+    const parsedQuantity = Number(quantity);
+
+    if (
+      !Number.isInteger(parsedQuantity) ||
+      parsedQuantity < 1
+    ) {
+      quantityInputRef.current?.focus();
+      return;
+    }
+
+    addToCart(selectedProduct, parsedQuantity);
 
     close();
   };
@@ -127,23 +137,15 @@ export default function ProductPopup() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background:
-                theme.colors.cardSoft,
-              color:
-                theme.colors.primary,
+              background: theme.colors.cardSoft,
+              color: theme.colors.primary,
             }}
           >
-            {getIcon(
-              selectedProduct.category
-            )}
+            {getIcon(selectedProduct.category)}
           </div>
         </div>
 
-        <div
-          style={{
-            textAlign: "center",
-          }}
-        >
+        <div style={{ textAlign: "center" }}>
           <div
             style={{
               fontSize: 24,
@@ -154,71 +156,119 @@ export default function ProductPopup() {
             {selectedProduct.name}
           </div>
 
-          <div
-            style={{
-              marginTop:
-                theme.spacing.sm,
-            }}
-          >
+          <div style={{ marginTop: theme.spacing.sm }}>
             <AppBadge>
               {selectedProduct.category}
             </AppBadge>
           </div>
         </div>
 
-        <AppFormField
-          label={t("common.quantity")}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: theme.spacing.sm,
-            }}
-          >
-            <AppButton
-              variant="secondary"
-              onClick={() =>
-                setQuantity((q) =>
-                  Math.max(1, q - 1)
-                )
-              }
-            >
-              <Minus size={18} />
-            </AppButton>
+        
+<AppFormField
+  label={t("common.quantity")}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: theme.spacing.sm,
+    }}
+  >
+    <AppButton
+      variant="secondary"
+      onClick={() =>
+        setQuantity((q) =>
+          q === "" ? "" : String(Math.max(1, Number(q) - 1))
+        )
+      }
+    >
+      <Minus size={18} />
+    </AppButton>
 
-            <AppInput
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={(e) =>
-                setQuantity(
-                  Math.max(
-                    1,
-                    Number(
-                      e.target.value
-                    ) || 1
-                  )
-                )
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      <AppInput
+        ref={quantityInputRef}
+        type="number"
+        min={1}
+        step={1}
+        required
+        value={quantity}
+        onChange={(e) =>
+          setQuantity(e.target.value)
+        }
+        style={{
+          textAlign: "center",
+          fontWeight: 700,
+          fontSize: 18,
+        }}
+      />
+
+      {/* Quick Quantity Buttons */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          gap: 6,
+        }}
+      >
+        {[125, 250, 500, 1000].map((amount) => {
+          const isSelected =
+            String(quantity) === String(amount);
+
+          return (
+            <button
+              key={amount}
+              type="button"
+              onClick={() =>
+                setQuantity(String(amount))
               }
               style={{
-                flex: 1,
-                textAlign: "center",
+                padding: "8px 4px",
+                borderRadius: theme.radius.md,
+                border: `1px solid ${
+                  isSelected
+                    ? theme.colors.primary
+                    : theme.colors.border
+                }`,
+                background: isSelected
+                  ? theme.colors.primary
+                  : theme.colors.secondary,
+                color: isSelected
+                  ? "#fff"
+                  : theme.colors.text,
+                fontSize: 13,
                 fontWeight: 700,
-                fontSize: 18,
+                cursor: "pointer",
+                transition: "0.15s ease",
               }}
-            />
-
-            <AppButton
-              variant="secondary"
-              onClick={() =>
-                setQuantity((q) => q + 1)
-              }
             >
-              <Plus size={18} />
-            </AppButton>
-          </div>
-        </AppFormField>
+              {amount.toLocaleString("en-US")}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+
+    <AppButton
+      variant="secondary"
+      onClick={() =>
+        setQuantity((q) =>
+          q === "" ? "1" : String(Number(q) + 1)
+        )
+      }
+    >
+      <Plus size={18} />
+    </AppButton>
+  </div>
+</AppFormField>
+
 
         <div
           style={{
@@ -226,10 +276,7 @@ export default function ProductPopup() {
             justifyContent: "center",
           }}
         >
-          <AppBadge
-            variant="outline"
-            size="md"
-          >
+          <AppBadge variant="outline" size="md">
             {selectedProduct.category}
           </AppBadge>
         </div>

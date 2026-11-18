@@ -48,18 +48,20 @@ const getLocalDateAtNoon = (dateString) => {
 };
 
     export const processCheckout = async ({
-      cart,
-      branchToUse,
-      total,
-      paymentMethod,
-      payments = [],
-      customerName,
-      customerPhone,
-      employeeId,
-      employeeName,
-      user,
-      saleDate
-    }) => {
+  cart,
+  branchToUse,
+  total,
+  subtotal = total,
+  discount = 0,
+  paymentMethod,
+  payments = [],
+  customerName,
+  customerPhone,
+  employeeId,
+  employeeName,
+  user,
+  saleDate
+}) => {
       let branchName = "Unknown";
        let branchCode = "BRCH";
       try {
@@ -1131,7 +1133,12 @@ for (const movement of stockMovements) {
 
       items: cleanedCart,
 
-      total: total || 0,
+      // Discount breakdown
+      subtotal: Number(subtotal) || 0,
+      discount: Number(discount) || 0,
+
+      // Final amount after discount
+      total: Number(total) || 0,
 
       totalCost,
       totalProfit,
@@ -1273,7 +1280,8 @@ try {
         payments: Array.isArray(payments)
           ? payments
           : [],
-
+        subtotal,
+        discount,
         total,
 
         totalProfit,
@@ -1363,7 +1371,8 @@ try {
             customerPhone,
 
             paymentMethod,
-
+            subtotal,
+            discount,
             total,
 
             cartSize:

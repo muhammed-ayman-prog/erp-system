@@ -76,29 +76,22 @@ setProductsMap(productsMapData);
     ...doc.data()
   }));
 
-  // 🔥 Hide pricing linked to archived products
- const filteredPricing = data.filter(item => {
-  const isContainerPricing =
-    (item.category === "french" || item.category === "oriental") &&
-    (item.container === "bottle" || item.container === "sample");
 
-  // 🔥 Pricing الخاصة بالـ Bottles / Samples
-  if (isContainerPricing) {
-    const product = item.productId
-  ? productsMapData.get(item.productId)
-  : null;
+  // Hide pricing linked to archived or deleted products
+  const filteredPricing = data.filter(item => {
+    // Keep general pricing records that are not linked to products
+    if (!item.productId) return true;
 
-    // لازم يكون لها Product موجود فعلًا و Active
+    const product = productsMapData.get(item.productId);
+
+    // Hide pricing if product doesn't exist or is archived
     return (
       !!product &&
       product.isArchived !== true &&
       product.archived !== true
     );
-  }
+  });
 
-  // باقي أنواع الـ Pricing تفضل كما هي
-  return true;
-});
 
   setPricing(
     filteredPricing.sort((a, b) => {

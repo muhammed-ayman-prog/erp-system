@@ -15,7 +15,10 @@ import {
   subscribeToWasteHistory,
   subscribeToWasteStock,
 } from "../services/wasteService";
-
+import {
+  getTodayBusinessDate,
+  isValidBusinessDate,
+} from "../../expenses/utils/businessDate";
 import {
   INITIAL_WASTE_ITEM,
   WASTE_TYPES,
@@ -48,9 +51,13 @@ export default function useWaste() {
   // Form
   // ==================================================
 
-  const [items, setItems] = useState([
-    { ...INITIAL_WASTE_ITEM },
-  ]);
+const [items, setItems] = useState([
+  { ...INITIAL_WASTE_ITEM },
+]);
+
+const [businessDate, setBusinessDate] = useState(
+  getTodayBusinessDate
+);
 
   // ==================================================
   // UI State
@@ -265,13 +272,15 @@ export default function useWaste() {
   // Reset Form
   // ==================================================
 
-  const resetForm = useCallback(() => {
-    setItems([
-      {
-        ...INITIAL_WASTE_ITEM,
-      },
-    ]);
-  }, []);
+const resetForm = useCallback(() => {
+  setItems([
+    {
+      ...INITIAL_WASTE_ITEM,
+    },
+  ]);
+
+  setBusinessDate(getTodayBusinessDate());
+}, []);
 
   // ==================================================
   // Product Helpers
@@ -710,7 +719,11 @@ export default function useWaste() {
 
           return;
         }
-
+        // Validate Waste Date
+        if (!isValidBusinessDate(businessDate)) {
+          showMessage("اختر تاريخ الهدر بشكل صحيح");
+          return;
+        }
         // --------------------------------------------
         // Valid Items
         // --------------------------------------------
@@ -844,14 +857,10 @@ export default function useWaste() {
         try {
           await createWasteTransaction(
             {
-              branchId:
-                branchToUse,
-
-              userId:
-                user?.uid,
-
-              items:
-                validItems,
+              branchId: branchToUse,
+              userId: user?.uid,
+              items: validItems,
+              businessDate,
             }
           );
 
@@ -920,6 +929,7 @@ export default function useWaste() {
       },
       [
         branchToUse,
+        businessDate,
         getProductStock,
         items,
         resetForm,
@@ -944,7 +954,8 @@ export default function useWaste() {
     // ----------------------------------------------
     // Data
     // ----------------------------------------------
-
+    businessDate,
+    setBusinessDate,
     products,
     productMap,
     stockMap,

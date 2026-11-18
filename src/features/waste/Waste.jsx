@@ -39,6 +39,8 @@ export default function Waste() {
     items,
     wasteList,
     stats,
+    businessDate,
+    setBusinessDate,
 
     updateItem,
 
@@ -110,6 +112,23 @@ export default function Waste() {
       }
     ).format(date);
   };
+  const formatOperationDate = (operation) => {
+  if (operation?.businessDate) {
+    const [year, month, day] =
+      operation.businessDate.split("-").map(Number);
+
+    const date = new Date(year, month - 1, day);
+
+    return new Intl.DateTimeFormat(
+      lang === "ar" ? "ar-EG" : "en-US",
+      {
+        dateStyle: "medium",
+      }
+    ).format(date);
+  }
+
+  return formatDate(operation?.createdAt);
+};
 
   const getOperationKey = (waste) =>
     waste.wasteOperationId || `legacy-${waste.id}`;
@@ -131,6 +150,7 @@ export default function Waste() {
         id: key,
         wasteOperationId: waste.wasteOperationId || null,
         createdAt: waste.createdAt,
+        businessDate: waste.businessDate || null,
         userId: waste.userId,
         branchId: waste.branchId,
         items: [waste],
@@ -326,6 +346,24 @@ export default function Waste() {
             gap: theme.spacing.lg,
           }}
         >
+          {/* ==================================================
+    WASTE DATE
+================================================== */}
+
+<div style={{ maxWidth: 320 }}>
+  <AppFormField
+    label={t("common.date")}
+    required
+  >
+    <AppInput
+      type="date"
+      value={businessDate || ""}
+      onChange={(e) =>
+        setBusinessDate(e.target.value)
+      }
+    />
+  </AppFormField>
+</div>
           {/* ==================================================
               ITEMS
           ================================================== */}
@@ -900,7 +938,7 @@ export default function Waste() {
                       }}
                     >
                       <div style={{ color: theme.colors.textSecondary, fontSize: 13 }}>
-                        {formatDate(operation.createdAt)}
+                        {formatOperationDate(operation)}
                       </div>
 
                       <div style={{ fontWeight: 700 }}>
@@ -987,7 +1025,7 @@ export default function Waste() {
                             color: theme.colors.textSecondary,
                           }}
                         >
-                          {formatDate(operation.createdAt)}
+                          {formatOperationDate(operation)}
                         </div>
                       </div>
 
@@ -1065,7 +1103,7 @@ export default function Waste() {
                     color: theme.colors.textSecondary,
                   }}
                 >
-                  {formatDate(selectedOperation.createdAt)}
+                  {formatOperationDate(selectedOperation)}
                 </div>
               </div>
 

@@ -6,15 +6,28 @@ export default function InvoiceTotalCard({
   netTotal,
   lang = "ar",
 }) {
-  const originalTotal = Number(
+  // إجمالي الفاتورة بعد الخصم
+  const finalTotal = Number(
     selectedInvoice?.total ??
     selectedInvoice?.newTotal ??
     0
   );
 
+  // إجمالي المنتجات قبل الخصم
+  // الفواتير القديمة التي لا تحتوي على subtotal تستخدم total
+  const subtotal = Number(
+    selectedInvoice?.subtotal ?? finalTotal
+  );
+
+  // قيمة الخصم
+  const discount = Math.max(
+    0,
+    Number(selectedInvoice?.discount) || 0
+  );
+
   const refundedAmount = Number(
     selectedInvoice?.refundedAmount ??
-    Math.max(0, originalTotal - Number(netTotal || 0))
+    Math.max(0, finalTotal - Number(netTotal || 0))
   );
 
   const formatMoney = (amount) =>
@@ -22,19 +35,35 @@ export default function InvoiceTotalCard({
       lang === "ar" ? "ar-EG" : "en-US"
     )} ${lang === "ar" ? "ج.م" : "EGP"}`;
 
+  const isArabic = lang === "ar";
+
   const items = [
     {
-      label: lang === "ar" ? "إجمالي الفاتورة" : "Invoice Total",
-      value: originalTotal,
+      label: isArabic ? "الإجمالي قبل الخصم" : "Subtotal",
+      value: subtotal,
+      color: theme.colors.text,
+    },
+    ...(discount > 0
+      ? [
+          {
+            label: isArabic ? "قيمة الخصم" : "Discount",
+            value: -discount,
+            color: theme.colors.success,
+          },
+        ]
+      : []),
+    {
+      label: isArabic ? "الإجمالي بعد الخصم" : "Total After Discount",
+      value: finalTotal,
       color: theme.colors.text,
     },
     {
-      label: lang === "ar" ? "المبلغ المسترد" : "Refunded",
+      label: isArabic ? "المبلغ المسترد" : "Refunded",
       value: refundedAmount,
       color: "#DC2626",
     },
     {
-      label: lang === "ar" ? "صافي الفاتورة" : "Net Total",
+      label: isArabic ? "صافي الفاتورة" : "Net Total",
       value: netTotal,
       color: theme.colors.success,
       highlight: true,
@@ -59,13 +88,13 @@ export default function InvoiceTotalCard({
           marginBottom: 12,
         }}
       >
-        {lang === "ar" ? "الملخص المالي" : "Financial Summary"}
+        {isArabic ? "الملخص المالي" : "Financial Summary"}
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
           gap: 8,
         }}
       >

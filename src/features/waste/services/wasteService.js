@@ -11,7 +11,9 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../../../firebase";
-
+import {
+  isValidBusinessDate,
+} from "../../expenses/utils/businessDate";
 // ==================================================
 // Products
 // ==================================================
@@ -168,6 +170,7 @@ export const createWasteTransaction =
     branchId,
     userId,
     items,
+    businessDate,
   }) => {
     // ------------------------------------------------
     // Basic Validation
@@ -190,7 +193,9 @@ export const createWasteTransaction =
         "WASTE_NO_ITEMS"
       );
     }
-
+    if (!isValidBusinessDate(businessDate)) {
+  throw new Error("WASTE_INVALID_DATA");
+}
     // ------------------------------------------------
     // Valid Items
     // ------------------------------------------------
@@ -451,7 +456,7 @@ source: "WASTE",
               // ----------------------------------------
               // Audit
               // ----------------------------------------
-
+              businessDate,
               createdAt:
                 serverTimestamp(),
 

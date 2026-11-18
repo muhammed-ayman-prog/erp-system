@@ -299,19 +299,19 @@ const getPrice = (product, size, containerType) => {
     return qty * (found?.price || 0);
   }
 
-  // 🟢 Musk Oil
-  if (
-    category.includes("musk")
-  ) {
+// 🟢 Musk Oil = Oriental B Oil Price
+if (
+  category.includes("musk")
+) {
 
-    const found = pricing.find(
-      p =>
-        p.category === "oriental_oil" &&
-        p.grade === "A"
-    );
+  const found = pricing.find(
+    p =>
+      p.category === "oriental_oil" &&
+      p.grade === "B"
+  );
 
-    return qty * (found?.price || 0);
-  }
+  return qty * (found?.price || 0);
+}
 
   return 0;
 }
@@ -329,29 +329,47 @@ const getPrice = (product, size, containerType) => {
   // 🟣 READY PRODUCTS (fixed price)
   
 
-  // 🔥 MUSK (sample only)
-  const isMuskProduct =
+ // 🔥 MUSK = Same Pricing as Oriental Grade B
+const isMuskProduct =
   cat.includes("musk") ||
   product.subCategory?.toLowerCase() === "musk";
 
-
-
 if (isMuskProduct) {
-  const type = product.muskType || "tahara"; // مهم
 
-  const found = pricing.find(p =>
-    p.category === `musk_${type}` &&
-    p.container === "sample" &&
-    normalizeSize(p.size) === normalizeSize(sizeValue)
-  );
+  // 📦 BOX = Selected French Box Price + Oriental B Extra
+  if (containerType === "box") {
 
-  if (!found) {
-    console.warn("❌ Musk price not found:", {
-      type,
-      size,
-      product
-    });
+    const basePrice = Number(
+      size?.sellingPrice ??
+      size?.price ??
+      0
+    );
+
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      return 0;
+    }
+
+    const extraPricing = pricing.find(
+      p =>
+        p.category === "box_extra" &&
+        String(p.grade).toUpperCase() === "B"
+    );
+
+    const extraPrice = Number(extraPricing?.price ?? 0);
+
+    return basePrice + (
+      Number.isFinite(extraPrice) ? extraPrice : 0
+    );
   }
+
+  // 🧴 BOTTLE / SAMPLE = Oriental B Pricing
+  const found = pricing.find(
+    p =>
+      p.category === "oriental" &&
+      p.grade === "B" &&
+      p.container === containerType &&
+      normalizeSize(p.size) === normalizeSize(sizeValue)
+  );
 
   return found?.price || 0;
 }
@@ -379,26 +397,30 @@ if (!grade) return 0; // A / B / C
       return found?.price || 0;
     }
 
-    // 🔥 BOX = 100ml bottle + extra
-   const base = pricing.find(p =>
-  p.category === "oriental" &&
-  p.grade === grade &&
-  p.container === "bottle" &&
-  normalizeSize(p.size) === "100ml"
-);
 
-    if (!base) return 0;
+    // 🔥 Oriental BOX = Selected French Box Price + Grade Extra
+    const basePrice = Number(
+      size?.sellingPrice ??
+      size?.price ??
+      0
+    );
+
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      return 0;
+    }
 
     const extraPricing = pricing.find(
-  p =>
-    p.category === "box_extra" &&
-    p.grade === grade
-);
+      p =>
+        p.category === "box_extra" &&
+        String(p.grade).toUpperCase() === grade
+    );
 
-return (
-  base.price +
-  (extraPricing?.price || 0)
-);
+    const extraPrice = Number(extraPricing?.price ?? 0);
+
+    return basePrice + (
+      Number.isFinite(extraPrice) ? extraPrice : 0
+    );
+
   }
 
   // 🔵 FRENCH
@@ -594,10 +616,11 @@ if (!employeeId || !employeeName?.trim()) {
 
   try {
     const invoiceNumber = await processCheckout({
-
   cart,
   branchToUse: selectedBranch,
   total,
+  subtotal,
+  discount,
 
   paymentMethod: resolvedPaymentMethod,
   payments: checkoutPayments,
