@@ -162,6 +162,8 @@ export default function DailyClosingHistory() {
     }
 
     setLoading(true);
+setClosings([]);
+setExpandedRow(null);
 
     const closingsQuery =
       isOwner && branchToUse === "all"
