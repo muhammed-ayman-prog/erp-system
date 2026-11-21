@@ -9,6 +9,7 @@ export const translations = {
       undoneMessage: "This operation has been undone",
       totalItems: "Total Items",
       totalQuantity: "Total Quantity",
+      noHistory: "No purchase history yet",
     },
 
     sidebar: {
@@ -1295,6 +1296,7 @@ export const translations = {
       undoneMessage: "تم التراجع عن هذه العملية",
       totalItems: "عدد الأصناف",
       totalQuantity: "إجمالي الكمية",
+      noHistory: "لا توجد عمليات شراء حتى الآن",
     },
 
     sidebar: {

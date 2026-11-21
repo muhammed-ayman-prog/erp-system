@@ -55,10 +55,10 @@ export default function PurchaseHistory() {
   setOpenId={setOpenId}
 />
 
-        {loading && <div>Loading...</div>}
+        {loading && <div>{t("common.loading")}</div>}
 
         {!loading && purchases.length === 0 && (
-          <div>لا توجد عمليات شراء.</div>
+          <div>{t("purchaseHistory.noHistory")}</div>
         )}
       </div>
     </>
