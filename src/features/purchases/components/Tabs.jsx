@@ -1,5 +1,8 @@
 import AppCard from "../../../components/ui/AppCard";
+import { useTranslate } from "../../../useTranslate";
 
 export default function Tabs() {
-  return <AppCard>History / Timeline</AppCard>;
+  const { t } = useTranslate();
+
+  return <AppCard>{t("stockEntry.historyTimeline")}</AppCard>;
 }
