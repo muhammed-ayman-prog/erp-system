@@ -1143,7 +1143,6 @@ export const translations = {
         "Failed to save purchase.",
 
       totalQuantity: "Total Quantity",
-      historyTimeline: "History / Timeline",
     },
 
     greetings: {
@@ -2449,7 +2448,6 @@ export const translations = {
       addItemsFirst: "ضيف منتجات الأول",
 
       noData: "لا توجد عمليات",
-      historyTimeline: "السجل الزمني",
     },
 
     greetings: {
