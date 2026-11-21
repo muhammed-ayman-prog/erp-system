@@ -241,7 +241,7 @@ export const translations = {
         Operations: "Operations",
         Finance: "Finance",
       },
-  
+
 },
 
     topbar: {
@@ -408,7 +408,7 @@ export const translations = {
       no: "No",
 
       excel: "Excel",
-      exportExcel: "Export Excel", 
+      exportExcel: "Export Excel",
       pdf: "PDF",
 
       currency: "EGP",
@@ -428,7 +428,8 @@ export const translations = {
       days: "days",
 
       updated: "Updated successfully",
-    },
+
+      back: "Back",},
 
     subCategories: {
       french: "French",
@@ -506,6 +507,24 @@ export const translations = {
 
       undo: "Undo",
       undoSuccess: "Undo successful",
+
+      alreadyReversed: "This operation has already been reversed",
+
+      invalidInventoryState: "Invalid inventory state",
+
+      fillRequiredFields: "Please fill all required fields",
+
+      productAlreadyExists: "Product already exists",
+
+      confirmArchive: "Are you sure you want to archive this product?",
+
+      invalidReverseTransfer: "This transfer cannot be reversed",
+
+      invalidReverseOperation: "This operation cannot be reversed",
+
+      invalidQuantity: "Invalid quantity",
+
+      reverse: "Reverse",
     },
 
     system: {
@@ -537,6 +556,8 @@ export const translations = {
     employees: {
       employee: "Employee",
       selectEmployee: "Select Employee",
+
+      noEmployees: "No employees found",
     },
 
     expenses: {
@@ -590,6 +611,9 @@ export const translations = {
       noBonuses: "No Bonuses",
 
       enterAmount: "Enter amount",
+
+      totalEmployees: "Total Employees",
+      selectEmployee: "Select employee",
     },
 
     waste: {
@@ -634,7 +658,9 @@ export const translations = {
     "Waste transactions will appear here once recorded",
 
   removeItem: "Remove Item",
-},
+
+      topWasteType: "Top Waste Type",
+      operations: "Operations",},
 
     customer: {
       customer: "Customer",
@@ -688,7 +714,6 @@ export const translations = {
     products: {
       title: "Products",
 
-      categories: "Categories",
       categoriesLabel: "Categories",
 
       search: "Search product...",
@@ -777,7 +802,7 @@ export const translations = {
         cream: "Cream",
         makhmaria: "Makhmaria",
         original: "Original",
-        
+
       },
 
       oilCategories: {
@@ -797,12 +822,20 @@ export const translations = {
       },
       categories:{
         makhmaria:"Makhmaria"
-      },
+      ,
+        original: "Original",},
       subCategories: {
         cream:"Cream",
-        
-      }
-    },
+
+
+        bottle: "Bottle",
+        box: "Box",
+        sample: "Sample",
+        makhmaria: "Makhmaria",}
+    ,
+      enterOilQty: "Enter oil quantity",
+      noPrice: "No price for this product",
+      name: "Name",},
 
         payment: {
       method: "Payment Method",
@@ -884,7 +917,9 @@ export const translations = {
       filter: {
         sales: "Filter by sales",
       },
-    },
+
+      cancelWarning: "Are you sure you want to cancel this invoice?",
+      print: "Print Invoice",},
 
     inventory: {
       title: "Inventory",
@@ -988,7 +1023,8 @@ export const translations = {
       employee: "Employee",
 
       permissions: "Permissions",
-    },
+
+      single: "User",},
 
        roles: {
       owner: "Owner",
@@ -1103,7 +1139,8 @@ export const translations = {
 
       purchaseSaveFailed:
         "Failed to save purchase.",
-    },
+
+      totalQuantity: "Total Quantity",},
 
     greetings: {
       morning: "Good Morning",
@@ -1232,7 +1269,20 @@ export const translations = {
       somethingWentWrong:
         "Something went wrong",
     },
-    
+
+
+      dir: "ltr",
+    categories: {
+      body: "Body",
+
+      containers: "Containers",
+
+      french: "French",
+
+      oriental: "Oriental",
+
+      original: "Original",
+    },
   },
 
   ar: {
@@ -1460,7 +1510,9 @@ export const translations = {
       days: "أيام",
 
       updated: "تم التعديل بنجاح",
-    },
+
+      back: "رجوع",
+      exportExcel: "تصدير Excel",},
 
     subCategories: {
       french: "فرنسي",
@@ -1784,6 +1836,24 @@ export const translations = {
 
       undo: "تراجع",
       undoSuccess: "تم التراجع بنجاح",
+
+      alreadyReversed: "تم التراجع عن هذه العملية بالفعل",
+
+      invalidInventoryState: "حالة المخزون غير صالحة",
+
+      fillRequiredFields: "يرجى ملء جميع الحقول المطلوبة",
+
+      productAlreadyExists: "المنتج موجود بالفعل",
+
+      confirmArchive: "هل تريد أرشفة هذا المنتج؟",
+
+      invalidReverseTransfer: "لا يمكن التراجع عن هذا التحويل",
+
+      invalidReverseOperation: "لا يمكن التراجع عن هذه العملية",
+
+      invalidQuantity: "الكمية غير صالحة",
+
+      reverse: "تراجع",
     },
 
     cart: {
@@ -1811,7 +1881,8 @@ export const translations = {
     employees: {
       employee: "الموظف",
       selectEmployee: "اختر الموظف",
-    },
+
+      noEmployees: "لا يوجد موظفون",},
 
     expenses: {
       title: "إدارة المصروفات",
@@ -1866,7 +1937,8 @@ export const translations = {
       noBonuses: "لا توجد حوافز",
 
       enterAmount: "اكتب المبلغ",
-    },
+
+      selectEmployee: "اختر الموظف",},
 
    waste: {
   title: "الهدر",
@@ -1885,8 +1957,6 @@ export const translations = {
   product: "منتج",
   type: "نوع الهدر",
   selectType: "اختر نوع الهدر",
-  topWasteType: "أكثر نوع هدر",
-  operations: "عملية",
   topWasteType: "أكثر نوع هدر",
   operations: "عملية",
 
@@ -1971,11 +2041,10 @@ export const translations = {
       oriental:"شرقي",
       french:"فرنسي"
     },
-    
+
     products: {
       title: "المنتجات",
-      
-      categories: "الأقسام",
+
       categoriesLabel: "الأقسام",
 
       search: "ابحث عن منتج...",
@@ -2074,7 +2143,8 @@ export const translations = {
       categories:{
         makhmaria:"مخمرية",
 
-      },
+
+        original: "أوريجينال",},
 
       categoriesMap: {
         cream: "كريم",
@@ -2182,7 +2252,8 @@ export const translations = {
       filter: {
         sales: "فلترة بالبائع",
       },
-    },
+
+      cancelWarning: "هل تريد إلغاء هذه الفاتورة؟",},
 
     inventory: {
       title: "المخزون",
@@ -2253,7 +2324,8 @@ export const translations = {
 
       admin: "مدير",
       employee: "موظف",
-    },
+
+      single: "مستخدم",},
 
     roles: {
       owner: "مالك النظام",
@@ -2481,6 +2553,9 @@ export const translations = {
       cash: "كاش",
       visa: "فيزا",
       instapay: "انستاباي",
-    },
-  }
+
+      cashOnly: "نقداً",
+      shortages: "العجز",},
+
+      dir: "rtl",}
 };
