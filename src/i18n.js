@@ -1065,6 +1065,7 @@ export const translations = {
       employees: "Employees",
       employeeName: "Employee Name",
       addEmployee: "Add Employee",
+      removeEmployee: "Remove employee",
 
       archiveConfirm: "Archive {{name}} ?",
 
@@ -2380,6 +2381,7 @@ export const translations = {
       employees: "الموظفين",
       employeeName: "اسم الموظف",
       addEmployee: "إضافة موظف",
+      removeEmployee: "حذف الموظف",
 
       salesToday: "مبيعات اليوم",
 

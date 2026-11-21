@@ -915,7 +915,7 @@ export default function Branches() {
                       <button
                         type="button"
                         className="brx-remove-employee"
-                        aria-label={isRTL ? "حذف الموظف" : "Remove employee"}
+                        aria-label={t("branches.removeEmployee")}
                         onClick={() => {
                           const updated = form.employees.filter((_, employeeIndex) => employeeIndex !== index);
                           setForm((prev) => ({
