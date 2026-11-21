@@ -1,4 +1,98 @@
 
+// Money helpers used to keep discount allocation consistent across partial refunds.
+const toNumber = value => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const roundMoney = value => Math.round((toNumber(value) + Number.EPSILON) * 100) / 100;
+
+function getInvoiceGrossTotal(invoice) {
+  const explicitSubtotal = [
+    invoice?.subtotal,
+    invoice?.subTotal,
+    invoice?.itemsSubtotal,
+    invoice?.totalBeforeDiscount,
+    invoice?.grossTotal,
+  ].map(toNumber).find(value => value > 0);
+
+  if (explicitSubtotal) return roundMoney(explicitSubtotal);
+
+  return roundMoney((invoice?.items || []).reduce((sum, item) => {
+    const isOil = (item?.containerType || '').toLowerCase() === 'oil';
+    const lineTotal = toNumber(item?.price) * (isOil ? 1 : toNumber(item?.qty));
+    return sum + lineTotal;
+  }, 0));
+}
+
+function getInvoiceDiscount(invoice, grossTotal) {
+  const discountType = String(invoice?.discountType || invoice?.discount?.type || '').toLowerCase();
+  const isPercentage = discountType.includes('percent') || discountType.includes('نسبة');
+  const discountObject = invoice?.discount && typeof invoice.discount === 'object'
+    ? invoice.discount
+    : null;
+
+  const percentageValue = [
+    invoice?.discountPercentage,
+    invoice?.discountPercent,
+    isPercentage ? invoice?.discountValue : undefined,
+    isPercentage ? invoice?.discount : undefined,
+    discountObject?.percentage,
+    discountObject?.percent,
+    isPercentage ? discountObject?.value : undefined,
+  ].map(value => value === undefined ? NaN : Number(value))
+    .find(value => Number.isFinite(value) && value > 0);
+
+  if (percentageValue !== undefined) {
+    return roundMoney(Math.min(grossTotal, grossTotal * percentageValue / 100));
+  }
+
+  const amountValue = [
+    invoice?.discountAmount,
+    invoice?.totalDiscount,
+    invoice?.discountTotal,
+    discountObject?.amount,
+    !isPercentage ? discountObject?.value : undefined,
+    // `discount` / `discountValue` are treated as amounts unless their type says percent.
+    !isPercentage && (typeof invoice?.discount === 'number' || typeof invoice?.discount === 'string')
+      ? invoice.discount
+      : undefined,
+    !isPercentage ? invoice?.discountValue : undefined,
+  ].map(value => value === undefined ? NaN : Number(value))
+    .find(value => Number.isFinite(value) && value > 0);
+
+  if (amountValue !== undefined) {
+    return roundMoney(Math.min(grossTotal, amountValue));
+  }
+
+  // Fallback for invoices that store only the pre-discount subtotal and final total.
+  const storedTotal = [invoice?.total, invoice?.finalTotal, invoice?.netTotal]
+    .map(value => value === undefined ? NaN : Number(value))
+    .find(value => Number.isFinite(value) && value >= 0);
+
+  return storedTotal !== undefined && grossTotal > storedTotal
+    ? roundMoney(grossTotal - storedTotal)
+    : 0;
+}
+
+function getRefundGrossAmount(item, originalItem) {
+  const isOil = (item?.containerType || originalItem?.containerType || '').toLowerCase() === 'oil';
+  const quantity = toNumber(item?.refundQty);
+
+  if (isOil) {
+    const originalMl = toNumber(
+      originalItem?.selectedMl ??
+      (toNumber(originalItem?.oilQty) * toNumber(originalItem?.qty))
+    );
+    const linePrice = toNumber(originalItem?.price ?? item?.price);
+    return originalMl > 0
+      ? roundMoney((linePrice / originalMl) * quantity)
+      : roundMoney(toNumber(item?.pricePerMl) * quantity);
+  }
+
+  return roundMoney(toNumber(originalItem?.price ?? item?.price) * quantity);
+}
+
 export default async function handlePartialRefund({
   loading,
   setLoading,
@@ -120,12 +214,97 @@ const fullyRefunded =
     setLoading(false);
     return;
   }
-    
+
+  // Calculate the real refundable amount after allocating the invoice discount.
+  const invoiceGrossTotal = getInvoiceGrossTotal(freshInvoice);
+  const invoiceDiscount = getInvoiceDiscount(freshInvoice, invoiceGrossTotal);
+  const storedInvoiceTotal = [freshInvoice.total, freshInvoice.finalTotal, freshInvoice.netTotal]
+    .map(value => value === undefined ? NaN : Number(value))
+    .find(value => Number.isFinite(value) && value >= 0);
+
+  // `total` is the final invoice amount in the current sales schema. If it still
+  // equals the gross subtotal despite a saved discount, use subtotal - discount.
+  const calculatedNetTotal = Math.max(0, invoiceGrossTotal - invoiceDiscount);
+  const invoiceNetTotal = roundMoney(
+    storedInvoiceTotal !== undefined &&
+    !(invoiceDiscount > 0 && storedInvoiceTotal >= invoiceGrossTotal)
+      ? storedInvoiceTotal
+      : calculatedNetTotal
+  );
+  const previousRefundedAmount = roundMoney(
+    freshInvoice.refundedAmount ?? freshInvoice.returnedTotal ?? 0
+  );
+
+  const refundLines = validItems.map(item => {
+    const originalItem = freshInvoice.items?.find(i => getKey(i) === getKey(item)) ||
+      selectedInvoice.items.find(i => getKey(i) === getKey(item));
+    return { item, originalItem, grossAmount: getRefundGrossAmount(item, originalItem) };
+  });
+  const grossRefundAmountNow = roundMoney(
+    refundLines.reduce((sum, line) => sum + line.grossAmount, 0)
+  );
+
+  const refundedQtyNow = validItems.reduce((sum, item) =>
+    (item.containerType || '').toLowerCase() === 'oil' ? sum : sum + toNumber(item.refundQty), 0
+  );
+  const refundedMlNow = validItems.reduce((sum, item) =>
+    (item.containerType || '').toLowerCase() === 'oil' ? sum + toNumber(item.refundQty) : sum, 0
+  );
+
+  const totalProductsForFreshInvoice = (freshInvoice.items || [])
+    .filter(item => (item.containerType || '').toLowerCase() !== 'oil')
+    .reduce((sum, item) => sum + toNumber(item.qty), 0);
+  const totalMlForFreshInvoice = (freshInvoice.items || [])
+    .filter(item => (item.containerType || '').toLowerCase() === 'oil')
+    .reduce((sum, item) => sum + toNumber(item.selectedMl ?? (toNumber(item.oilQty) * toNumber(item.qty))), 0);
+  const fullRefundAfterThisOperation = isFullyRefunded(
+    toNumber(freshInvoice.refundedQty) + refundedQtyNow,
+    toNumber(freshInvoice.refundedMl) + refundedMlNow,
+    totalProductsForFreshInvoice,
+    totalMlForFreshInvoice
+  );
+
+  const remainingRefundableAmount = Math.max(0, invoiceNetTotal - previousRefundedAmount);
+  const proportionalRefundAmount = invoiceGrossTotal > 0
+    ? grossRefundAmountNow * (invoiceNetTotal / invoiceGrossTotal)
+    : grossRefundAmountNow;
+  const refundAmountNow = roundMoney(Math.min(
+    remainingRefundableAmount,
+    fullRefundAfterThisOperation ? remainingRefundableAmount : proportionalRefundAmount
+  ));
+
+  // Allocate the operation's net refund back to each return document. The final
+  // line receives the rounding remainder so the saved line amounts sum exactly.
+  const refundAmountByItem = new Map();
+  let allocatedRefundAmount = 0;
+  refundLines.forEach((line, index) => {
+    const isLastLine = index === refundLines.length - 1;
+    const lineRefundAmount = isLastLine
+      ? roundMoney(refundAmountNow - allocatedRefundAmount)
+      : roundMoney(grossRefundAmountNow > 0
+          ? refundAmountNow * (line.grossAmount / grossRefundAmountNow)
+          : 0);
+    refundAmountByItem.set(line.item, lineRefundAmount);
+    allocatedRefundAmount = roundMoney(allocatedRefundAmount + lineRefundAmount);
+  });
+
+  const newReturnedTotal = roundMoney(previousRefundedAmount + refundAmountNow);
+  const newNetTotal = roundMoney(Math.max(0, invoiceNetTotal - newReturnedTotal));
+
+  console.info("Refund discount allocation", {
+    invoiceGrossTotal,
+    invoiceDiscount,
+    invoiceNetTotal,
+    grossRefundAmountNow,
+    refundAmountNow,
+    previousRefundedAmount,
+    fullRefundAfterThisOperation,
+  });
 
   const batch = writeBatch(db); 
   const refundBatchId = crypto.randomUUID();
   for (const item of validItems) {
-    const sourceItem = selectedInvoice.items.find(
+    const sourceItem = (freshInvoice.items || selectedInvoice.items).find(
     i => getKey(i) === getKey(item)
   );
     const alreadyRefunded = freshReturns
@@ -157,7 +336,7 @@ const maxAllowed =
     
       for (const item of validItems) {
 
-    const originalItem = selectedInvoice.items.find(
+    const originalItem = (freshInvoice.items || selectedInvoice.items).find(
       i => getKey(i) === getKey(item)
     );
     const originalOilComponents =
@@ -310,9 +489,8 @@ invoiceDocId: selectedInvoice.id,
       });
     }
   }
-  const returnPrice = isOil
-  ? (item.pricePerMl || 0) * item.refundQty
-  : (item.price || 0) * item.refundQty;
+  const returnGrossPrice = refundLines.find(line => line.item === item)?.grossAmount || 0;
+  const returnPrice = refundAmountByItem.get(item) || 0;
     // 🔥 ده لازم يكون جوه اللوب وتحت الكل
     batch.set(returnRef, {
       invoiceId: selectedInvoice.invoiceNumber,
@@ -324,7 +502,10 @@ invoiceDocId: selectedInvoice.id,
       size: item.size || "",
       unit: (item.size || "").includes("ml") ? "ml" : "",
       quantity: item.refundQty,
+      // `price` is the actual cash refund (after allocated invoice discount).
       price: returnPrice,
+      grossPrice: returnGrossPrice,
+      discountShare: roundMoney(returnGrossPrice - returnPrice),
       pricePerMl: item.pricePerMl || 0,
 
       type: "refund",
@@ -373,70 +554,8 @@ createdAt: serverTimestamp()
   }
 
 
-  const refundedQtyNow = validItems.reduce((s, i) => {
-  const isOil =
-    (i.containerType || "").toLowerCase() === "oil";
-
-  return isOil ? s : s + i.refundQty;
-}, 0);
-
-const refundedMlNow = validItems.reduce((s, i) => {
-  const isOil =
-    (i.containerType || "").toLowerCase() === "oil";
-
-  return isOil
-    ? s + (i.refundQty || 0)
-    : s;
-}, 0);
-
   const saleRef = doc(db, "sales", selectedInvoice.id);
 
-  const refundAmountNow = validItems.reduce(
-  (sum, item) => {
-    const originalItem =
-     selectedInvoice.items.find(
-      i => getKey(i) === getKey(item)
-    );
-    const isOil =
-      (item.containerType || "")
-        .toLowerCase() === "oil";
-
-    if (isOil) {
-
-const originalMl =
-
-  originalItem?.selectedMl ??
-  (
-    (item.oilQty || 0) *
-    (originalItem?.qty || 1)
-  );
-
-  const pricePerMl =
-
-    originalMl > 0
-      ? (item.price || 0) / originalMl
-      : 0;
-
-  return sum + (
-  pricePerMl * item.refundQty
-);
-}
-
-    return sum + (
-  (item.price || 0) *
-  (item.refundQty || 0)
-);
-
-  },
-  0
-);
-const newReturnedTotal =
-  (selectedInvoice.returnedTotal || 0) + refundAmountNow;
-
-const newNetTotal = Math.max(
-  0,
-  (selectedInvoice.total || 0) - newReturnedTotal
-);
 batch.update(saleRef, {
   hasRefund: true,
 
@@ -445,6 +564,8 @@ batch.update(saleRef, {
   refundedMl: increment(refundedMlNow),
 
   refundedAmount: increment(refundAmountNow),
+  refundedGrossAmount: increment(grossRefundAmountNow),
+  refundedDiscountAmount: increment(roundMoney(grossRefundAmountNow - refundAmountNow)),
 
   // 👇 جديد
   returnedTotal: newReturnedTotal,
@@ -469,28 +590,16 @@ batch.update(saleRef, {
   prev.map(s =>
     s.id === selectedInvoice.id
       ? {
-  ...s,
-
-  refundedQty:
-    (s.refundedQty || 0) + refundedQtyNow,
-
-  refundedMl:
-    (s.refundedMl || 0) + refundedMlNow,
-
-  refundedAmount:
-    (s.refundedAmount || 0) + refundAmountNow,
-
-  returnedTotal:
-    (s.returnedTotal || 0) + refundAmountNow,
-
-  newTotal: Math.max(
-    0,
-    (s.total || 0) -
-      ((s.returnedTotal || 0) + refundAmountNow)
-  ),
-
-  hasRefund: true
-}
+          ...s,
+          refundedQty: toNumber(freshInvoice.refundedQty) + refundedQtyNow,
+          refundedMl: toNumber(freshInvoice.refundedMl) + refundedMlNow,
+          refundedAmount: newReturnedTotal,
+          refundedGrossAmount: toNumber(freshInvoice.refundedGrossAmount) + grossRefundAmountNow,
+          refundedDiscountAmount: toNumber(freshInvoice.refundedDiscountAmount) + roundMoney(grossRefundAmountNow - refundAmountNow),
+          returnedTotal: newReturnedTotal,
+          newTotal: newNetTotal,
+          hasRefund: true
+        }
       : s
   )
 );
@@ -518,19 +627,11 @@ if (
 
 });
 }
-const totalRefundedQty =
-  (selectedInvoice.refundedQty || 0) + refundedQtyNow;
+const totalRefundedQty = toNumber(freshInvoice.refundedQty) + refundedQtyNow;
 
-const totalRefundedMl =
-  (selectedInvoice.refundedMl || 0) + refundedMlNow;
+const totalRefundedMl = toNumber(freshInvoice.refundedMl) + refundedMlNow;
 
-const fullRefund =
-  isFullyRefunded(
-    totalRefundedQty,
-    totalRefundedMl,
-    totalProducts,
-    totalMl
-  );
+const fullRefund = fullRefundAfterThisOperation;
 await logAction({
   action: fullRefund
   ? "FULL_REFUND"
@@ -568,6 +669,9 @@ branchName: branchName || selectedBranch,
       refundPaymentMethod,
     refundAmount:
       refundAmountNow,
+    grossRefundAmount: grossRefundAmountNow,
+    allocatedDiscount: roundMoney(grossRefundAmountNow - refundAmountNow),
+    invoiceDiscount,
 
     refundedItems:
       validItems.map(i => ({
@@ -578,17 +682,17 @@ branchName: branchName || selectedBranch,
   changes: [
   {
     field: "refundedAmount",
-    before: selectedInvoice.refundedAmount || 0,
-    after: (selectedInvoice.refundedAmount || 0) + refundAmountNow
+    before: previousRefundedAmount,
+    after: newReturnedTotal
   },
   {
     field: "refundedQty",
-    before: selectedInvoice.refundedQty || 0,
+    before: toNumber(freshInvoice.refundedQty),
     after: totalRefundedQty
   },
   {
     field: "refundedMl",
-    before: selectedInvoice.refundedMl || 0,
+    before: toNumber(freshInvoice.refundedMl),
     after: totalRefundedMl
   }
 ]
@@ -602,23 +706,13 @@ setRefundItems([]);
 
 setSelectedInvoice(prev => ({
   ...prev,
-  returnedTotal:
-  (prev?.returnedTotal || 0) + refundAmountNow,
-
-newTotal: Math.max(
-  0,
-  (prev?.total || 0) -
-    ((prev?.returnedTotal || 0) + refundAmountNow)
-),
-  refundedQty:
-    (prev?.refundedQty || 0) + refundedQtyNow,
-
-  refundedMl:
-    (prev?.refundedMl || 0) + refundedMlNow,
-
-  refundedAmount:
-    (prev?.refundedAmount || 0) + refundAmountNow,
-
+  returnedTotal: newReturnedTotal,
+  newTotal: newNetTotal,
+  refundedQty: totalRefundedQty,
+  refundedMl: totalRefundedMl,
+  refundedAmount: newReturnedTotal,
+  refundedGrossAmount: toNumber(freshInvoice.refundedGrossAmount) + grossRefundAmountNow,
+  refundedDiscountAmount: toNumber(freshInvoice.refundedDiscountAmount) + roundMoney(grossRefundAmountNow - refundAmountNow),
   hasRefund: true
 }));
 

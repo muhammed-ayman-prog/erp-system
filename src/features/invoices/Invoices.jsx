@@ -4,7 +4,6 @@
   import printInvoice from "./utils/printInvoice";
   import AppPageHeader from "../../components/ui/AppPageHeader";
 import AppFilterBar from "../../components/ui/AppFilterBar";
-import AppCard from "../../components/ui/AppCard";
   import {
   doc,
   increment,
@@ -44,7 +43,7 @@ import AppCard from "../../components/ui/AppCard";
   import { useAuth } from "../../store/useAuth";
   import { getTodayRange } from "../../utils/dateFilter.js";
   import useResponsive from "./hooks/useResponsive";
-  import { ArrowRight } from "lucide-react";
+  import { ArrowRight, X } from "lucide-react";
   import AppButton from "../../components/ui/AppButton";
 import {
   getKey,
@@ -110,6 +109,7 @@ const {
 });
 
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [showInvoicePopup, setShowInvoicePopup] = useState(false);
     const todayRange = getTodayRange();
     const [fromDate,setFromDate] =
      useState(todayRange.fromDate);
@@ -151,10 +151,8 @@ const {
 
     if (invoice) {
 
-      setSelectedInvoice(
-        invoice
-      );
-
+      setSelectedInvoice(invoice);
+      setShowInvoicePopup(true);
     }
 
   }, [id, sales]);
@@ -178,12 +176,18 @@ const {
   }, [selectedInvoice]);
 
   useEffect(() => {
-    if (showRefundPopup || showConfirm) {
+    const shouldLockBody =
+      showInvoicePopup || showRefundPopup || showConfirm;
+
+    const previousOverflow = document.body.style.overflow;
+    if (shouldLockBody) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
     }
-  }, [showRefundPopup, showConfirm]);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showInvoicePopup, showRefundPopup, showConfirm]);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -480,6 +484,7 @@ const handleSelectInvoiceRow = async (row) => {
   // فاتورة بيع عادية
   if (row.rowType !== "return") {
     setSelectedInvoice(row);
+    setShowInvoicePopup(true);
     return;
   }
 
@@ -490,6 +495,7 @@ const handleSelectInvoiceRow = async (row) => {
 
   if (originalInvoice) {
     setSelectedInvoice(originalInvoice);
+    setShowInvoicePopup(true);
     return;
   }
 
@@ -521,6 +527,7 @@ const handleSelectInvoiceRow = async (row) => {
       id: invoiceSnap.id,
       ...invoiceSnap.data(),
     });
+    setShowInvoicePopup(true);
   } catch (error) {
     console.error("Error loading original invoice:", error);
 
@@ -605,100 +612,156 @@ const handleSelectInvoiceRow = async (row) => {
 
         
 
-        <div style={{
-          display: "flex",
-          gap: 20,
-          marginTop: 20,
-          alignItems: "flex-start",
-          flexWrap: isMobile ? "wrap" : "nowrap"
-        }}>
+        <div
+          style={{
+            marginTop: 20,
+            width: "100%",
+            minWidth: 0,
+          }}
+        >
           <InvoiceTable
-  isMobile={isMobile}
-  loadingSales={loadingSales || loadingReturns}
-  paginated={paginated}
-  selectedInvoice={selectedInvoice}
-  setSelectedInvoice={setSelectedInvoice}
-  onSelectRow={handleSelectInvoiceRow}
-  theme={theme}
-  t={t}
-  page={page}
-  setPage={setPage}
-  totalPages={totalPages}
-  handleRowHover={handleRowHover}
-  handleRowLeave={handleRowLeave}
-  formatDate={formatDate}
-  isFullyRefunded={isFullyRefunded}
-  lang={lang}
-  dropdownOpen={dropdownOpen}
-  setDropdownOpen={setDropdownOpen}
-/>
-
-          {/* SIDE PANEL */}
-          <AppCard
-style={{
-flex:2,
-minWidth:0,
-width:isMobile ? "100%" : undefined,
-position:isMobile ? "static" : "sticky",
-top:20,
-
-height:"fit-content",
-
-transform:selectedInvoice
-?"translateX(0)"
-:"translateX(20px)",
-
-opacity:selectedInvoice?1:.6,
-
-transition:"0.3s"
-}}
->
-          {!selectedInvoice && <p>{t("invoices.select")}</p>}
-          
-          {selectedInvoice && (
-
-<InvoiceDetails
-  selectedInvoice={selectedInvoice}
-  isMobile={isMobile}
-  showDetails={showDetails}
-  setShowDetails={setShowDetails}
-  theme={theme}
-  t={t}
-  lang={lang}
-
-  setRefundItems={setRefundItems}
-
-  branchName={branchName}
-  branchNameMap={branchNameMap}
-
-  dropdownOpen={dropdownOpen}
-  setDropdownOpen={setDropdownOpen}
-
-  cancelling={cancelling}
-  handlePrint={handlePrint}
-  handleRowHover={handleRowHover}
-  handleRowLeave={handleRowLeave}
-
-  action={action}
-  setAction={setAction}
-  setShowRefundPopup={setShowRefundPopup}
-  setShowConfirm={setShowConfirm}
-
-  formatDateTime={formatDateTime}
-  formatDate={formatDate}
-
-  netTotal={netTotal}
-
-  previousReturns={previousReturns}
-  groupedReturns={groupedReturns}
-
-  getKey={getKey}
-  isFullyRefunded={isFullyRefunded}
-/>
-)}
-          
-          </AppCard>
+            isMobile={isMobile}
+            loadingSales={loadingSales || loadingReturns}
+            paginated={paginated}
+            selectedInvoice={selectedInvoice}
+            setSelectedInvoice={setSelectedInvoice}
+            onSelectRow={handleSelectInvoiceRow}
+            theme={theme}
+            t={t}
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+            handleRowHover={handleRowHover}
+            handleRowLeave={handleRowLeave}
+            formatDate={formatDate}
+            isFullyRefunded={isFullyRefunded}
+            lang={lang}
+            dropdownOpen={dropdownOpen}
+            setDropdownOpen={setDropdownOpen}
+          />
         </div>
+
+        {/* INVOICE DETAILS POPUP - RESPONSIVE FOR ALL SCREENS */}
+        {showInvoicePopup && selectedInvoice && (
+          <div
+            onClick={() => setShowInvoicePopup(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 900,
+              display: "flex",
+              alignItems: isMobile ? "stretch" : "center",
+              justifyContent: "center",
+              padding: isMobile ? 0 : 16,
+              background: "rgba(0, 0, 0, 0.48)",
+              backdropFilter: "blur(3px)",
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("invoices.title")}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: isMobile ? "100%" : "min(960px, calc(100vw - 32px))",
+                height: isMobile ? "100dvh" : "min(90vh, 900px)",
+                maxHeight: isMobile ? "100dvh" : "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                background: theme.colors.background,
+                borderRadius: isMobile ? 0 : 20,
+                boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
+              }}
+            >
+              {/* Popup Header */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: isMobile ? "12px 16px" : "16px 22px",
+                  background: theme.colors.card,
+                  borderBottom: `1px solid ${theme.colors.cardSoft}`,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18 }}>
+                    {t("invoices.title")}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: theme.colors.textSecondary,
+                      marginTop: 2,
+                    }}
+                  >
+                    {selectedInvoice.invoiceNumber || selectedInvoice.id}
+                  </div>
+                </div>
+
+                <AppButton
+                  variant="secondary"
+                  onClick={() => setShowInvoicePopup(false)}
+                  aria-label={lang === "ar" ? "إغلاق" : "Close"}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 40,
+                    width: 40,
+                    height: 40,
+                    padding: 0,
+                  }}
+                >
+                  <X size={20} />
+                </AppButton>
+              </div>
+
+              {/* Scrollable Details */}
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  padding: isMobile ? 10 : 18,
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                <InvoiceDetails
+                  selectedInvoice={selectedInvoice}
+                  isMobile={isMobile}
+                  showDetails={showDetails}
+                  setShowDetails={setShowDetails}
+                  theme={theme}
+                  t={t}
+                  lang={lang}
+                  setRefundItems={setRefundItems}
+                  branchName={branchName}
+                  branchNameMap={branchNameMap}
+                  dropdownOpen={dropdownOpen}
+                  setDropdownOpen={setDropdownOpen}
+                  cancelling={cancelling}
+                  handlePrint={handlePrint}
+                  handleRowHover={handleRowHover}
+                  handleRowLeave={handleRowLeave}
+                  action={action}
+                  setAction={setAction}
+                  setShowRefundPopup={setShowRefundPopup}
+                  setShowConfirm={setShowConfirm}
+                  formatDateTime={formatDateTime}
+                  formatDate={formatDate}
+                  netTotal={netTotal}
+                  previousReturns={previousReturns}
+                  groupedReturns={groupedReturns}
+                  getKey={getKey}
+                  isFullyRefunded={isFullyRefunded}
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <RefundModal
   showRefundPopup={showRefundPopup}
   selectedInvoice={selectedInvoice}
@@ -717,6 +780,7 @@ transition:"0.3s"
   setRefundItems={setRefundItems}
   refundPaymentMethod={refundPaymentMethod}
   setRefundPaymentMethod={setRefundPaymentMethod}
+  isFullyRefunded={isFullyRefunded}
 />
         {/* 🔴 CONFIRM MODAL */}
         <CancelModal
